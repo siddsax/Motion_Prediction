@@ -1,0 +1,844 @@
+WARNING (theano.sandbox.cuda): The cuda backend is deprecated and will be removed in the next release (v0.10).  Please switch to the gpuarray backend. You can get more information about how to switch at this URL:
+ https://github.com/Theano/Theano/wiki/Converting-to-the-new-gpu-back-end%28gpuarray%29
+
+1 #include <Python.h>
+2 #include <iostream>
+3 #include "theano_mod_helper.h"
+4 #include "cudnn.h"
+5 //////////////////////
+6 ////  Support Code
+7 //////////////////////
+8 
+9 #if PY_MAJOR_VERSION >= 3
+10 #define PyInt_FromLong PyLong_FromLong
+11 #endif
+12 
+13 
+14     namespace {
+15     struct __struct_compiled_op_3442132e74e76f61361fb1c73112eef4 {
+16         PyObject* __ERROR;
+17 
+18         PyObject* storage_V1;
+19         
+20 
+21         __struct_compiled_op_3442132e74e76f61361fb1c73112eef4() {
+22             // This is only somewhat safe because we:
+23             //  1) Are not a virtual class
+24             //  2) Do not use any virtual classes in the members
+25             //  3) Deal with mostly POD and pointers
+26 
+27             // If this changes, we would have to revise this, but for
+28             // now I am tired of chasing segfaults because
+29             // initialization code had an error and some pointer has
+30             // a junk value.
+31             memset(this, 0, sizeof(*this));
+32         }
+33         ~__struct_compiled_op_3442132e74e76f61361fb1c73112eef4(void) {
+34             cleanup();
+35         }
+36 
+37         int init(PyObject* __ERROR, PyObject* storage_V1) {
+38             Py_XINCREF(storage_V1);
+39             this->storage_V1 = storage_V1;
+40             
+41 
+42 
+43             this->__ERROR = __ERROR;
+44             return 0;
+45         }
+46         void cleanup(void) {
+47             __label_1:
+48 
+49 double __DUMMY_1;
+50 __label_4:
+51 
+52 double __DUMMY_4;
+53 
+54             Py_XDECREF(this->storage_V1);
+55         }
+56         int run(void) {
+57             int __failure = 0;
+58             
+59     PyObject* py_V1;
+60     
+61         PyObject* V1;
+62         
+63 {
+64 
+65     py_V1 = Py_None;
+66     {Py_XINCREF(py_V1);}
+67     
+68         V1 = NULL;
+69         
+70 {
+71 // Op class DnnVersion
+72 
+73 #if defined(CUDNN_VERSION)
+74 V1 = PyTuple_Pack(2, PyInt_FromLong(CUDNN_VERSION), PyInt_FromLong(cudnnGetVersion()));
+75 #else
+76 V1 = PyInt_FromLong(-1);
+77 #endif
+78 __label_3:
+79 
+80 double __DUMMY_3;
+81 
+82 }
+83 __label_2:
+84 
+85     if (!__failure) {
+86       
+87         assert(py_V1->ob_refcnt > 1);
+88         Py_DECREF(py_V1);
+89         py_V1 = V1 ? V1 : Py_None;
+90         Py_INCREF(py_V1);
+91         
+92       PyObject* old = PyList_GET_ITEM(storage_V1, 0);
+93       {Py_XINCREF(py_V1);}
+94       PyList_SET_ITEM(storage_V1, 0, py_V1);
+95       {Py_XDECREF(old);}
+96     }
+97     
+98         Py_XDECREF(V1);
+99         
+100     {Py_XDECREF(py_V1);}
+101     
+102 double __DUMMY_2;
+103 
+104 }
+105 
+106             
+107         if (__failure) {
+108             // When there is a failure, this code puts the exception
+109             // in __ERROR.
+110             PyObject* err_type = NULL;
+111             PyObject* err_msg = NULL;
+112             PyObject* err_traceback = NULL;
+113             PyErr_Fetch(&err_type, &err_msg, &err_traceback);
+114             if (!err_type) {err_type = Py_None;Py_INCREF(Py_None);}
+115             if (!err_msg) {err_msg = Py_None; Py_INCREF(Py_None);}
+116             if (!err_traceback) {err_traceback = Py_None; Py_INCREF(Py_None);}
+117             PyObject* old_err_type = PyList_GET_ITEM(__ERROR, 0);
+118             PyObject* old_err_msg = PyList_GET_ITEM(__ERROR, 1);
+119             PyObject* old_err_traceback = PyList_GET_ITEM(__ERROR, 2);
+120             PyList_SET_ITEM(__ERROR, 0, err_type);
+121             PyList_SET_ITEM(__ERROR, 1, err_msg);
+122             PyList_SET_ITEM(__ERROR, 2, err_traceback);
+123             {Py_XDECREF(old_err_type);}
+124             {Py_XDECREF(old_err_msg);}
+125             {Py_XDECREF(old_err_traceback);}
+126         }
+127         // The failure code is returned to index what code block failed.
+128         return __failure;
+129         
+130         }
+131     };
+132     }
+133     
+134 
+135         static int __struct_compiled_op_3442132e74e76f61361fb1c73112eef4_executor(__struct_compiled_op_3442132e74e76f61361fb1c73112eef4* self) {
+136             return self->run();
+137         }
+138 
+139         static void __struct_compiled_op_3442132e74e76f61361fb1c73112eef4_destructor(void* executor, void* self) {
+140             delete ((__struct_compiled_op_3442132e74e76f61361fb1c73112eef4*)self);
+141         }
+142         
+143 //////////////////////
+144 ////  Functions
+145 //////////////////////
+146 static PyObject * instantiate(PyObject * self, PyObject *argtuple) {
+147   assert(PyTuple_Check(argtuple));
+148   if (2 != PyTuple_Size(argtuple)){ 
+149      PyErr_Format(PyExc_TypeError, "Wrong number of arguments, expected 2, got %i", (int)PyTuple_Size(argtuple));
+150      return NULL;
+151   }
+152   __struct_compiled_op_3442132e74e76f61361fb1c73112eef4* struct_ptr = new __struct_compiled_op_3442132e74e76f61361fb1c73112eef4();
+153   if (struct_ptr->init( PyTuple_GET_ITEM(argtuple, 0),PyTuple_GET_ITEM(argtuple, 1) ) != 0) {
+154     delete struct_ptr;
+155     return NULL;
+156   }
+157   PyObject* thunk = PyCObject_FromVoidPtrAndDesc((void*)(&__struct_compiled_op_3442132e74e76f61361fb1c73112eef4_executor), struct_ptr, __struct_compiled_op_3442132e74e76f61361fb1c73112eef4_destructor);
+158   return thunk; }
+159 
+160 //////////////////////
+161 ////  Module init
+162 //////////////////////
+163 static PyMethodDef MyMethods[] = {
+164 	{"instantiate", instantiate, METH_VARARGS, "undocumented"} ,
+165 	{NULL, NULL, 0, NULL}
+166 };
+167 PyMODINIT_FUNC init3442132e74e76f61361fb1c73112eef4(void){
+168    (void) Py_InitModule("3442132e74e76f61361fb1c73112eef4", MyMethods);
+169 }
+170 
+===============================
+/usr/bin/ld: cannot find -lcudart
+/usr/bin/ld: cannot find -lcudadevrt
+/usr/bin/ld: cannot find -lcudart_static
+collect2: error: ld returned 1 exit status
+Using gpu device 0: GeForce GTX TITAN X (CNMeM is disabled, cuDNN None)
+1 #include <Python.h>
+2 #include <iostream>
+3 #include "theano_mod_helper.h"
+4 #include "cuda_ndarray.cuh"
+5 //////////////////////
+6 ////  Support Code
+7 //////////////////////
+8 
+9             static __global__ void kernel_reduce_ccontig_node_544270fe7a21a748315f83abfe0913cc_0(
+10                     const unsigned int d0,
+11                     const float *A,
+12                     float * Z)
+13             {
+14                 const int threadCount = blockDim.x;
+15                 const int threadNum = threadIdx.x;
+16                 extern __shared__ float buf[];
+17                 float myresult = 0;
+18 
+19                 if (warpSize != 32)
+20                 {
+21                     return;  //TODO: set error code
+22                 }
+23 
+24                 for (int i0 = threadIdx.x; i0 < d0; i0 += blockDim.x)
+25                 {
+26                     myresult = myresult + A[i0];
+27                 }
+28                 
+29         __syncthreads(); // some kernel do multiple reduction.
+30         buf[threadNum] = myresult;
+31         __syncthreads();
+32 
+33         // rest of function is handled by one warp
+34         if (threadNum < warpSize)
+35         {
+36             //round up all the partial sums into the first `warpSize` elements
+37             for (int i = threadNum + warpSize; i < threadCount; i += warpSize)
+38             {
+39                 myresult = myresult + buf[i];
+40             }
+41             buf[threadNum] = myresult;
+42         /*Comment this optimization as it don't work on Fermi GPU.
+43         TODO: find why it don't work or put the GPU compute capability into the version
+44             // no sync because only one warp is running
+45             if(threadCount >32)
+46             {buf[threadNum] = buf[threadNum] + buf[threadNum+16];buf[threadNum] = buf[threadNum] + buf[threadNum+8];buf[threadNum] = buf[threadNum] + buf[threadNum+4];buf[threadNum] = buf[threadNum] + buf[threadNum+2];buf[threadNum] = buf[threadNum] + buf[threadNum+1];
+47                 if (threadNum == 0)
+48                 {
+49                     Z[0] = buf[0];
+50                 }
+51 
+52             }
+53             else */
+54             if (threadNum < 16)
+55             {
+56                 //reduce so that threadNum 0 has the reduction of everything
+57                 if (threadNum + 16 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+16];if (threadNum + 8 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+8];if (threadNum + 4 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+4];if (threadNum + 2 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+2];if (threadNum + 1 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+1];
+58                 if (threadNum == 0)
+59                 {
+60                     Z[0] = buf[0];
+61                 }
+62             }
+63         }
+64         
+65             }
+66             
+67 
+68             static __global__ void kernel_reduce_1_node_544270fe7a21a748315f83abfe0913cc_0(
+69                     const unsigned int d0,
+70                     const float *A, const int sA0,
+71                     float * Z)
+72             {
+73                 const int threadCount = blockDim.x;
+74                 const int threadNum = threadIdx.x;
+75                 extern __shared__ float buf[];
+76                 float myresult = 0;
+77 
+78                 if (warpSize != 32)
+79                 {
+80                     return;  //TODO: set error code
+81                 }
+82 
+83                 for (int i0 = threadIdx.x; i0 < d0; i0 += blockDim.x)
+84                 {
+85                     myresult = myresult + A[i0 * sA0];
+86                 }
+87                 
+88         __syncthreads(); // some kernel do multiple reduction.
+89         buf[threadNum] = myresult;
+90         __syncthreads();
+91 
+92         // rest of function is handled by one warp
+93         if (threadNum < warpSize)
+94         {
+95             //round up all the partial sums into the first `warpSize` elements
+96             for (int i = threadNum + warpSize; i < threadCount; i += warpSize)
+97             {
+98                 myresult = myresult + buf[i];
+99             }
+100             buf[threadNum] = myresult;
+101         /*Comment this optimization as it don't work on Fermi GPU.
+102         TODO: find why it don't work or put the GPU compute capability into the version
+103             // no sync because only one warp is running
+104             if(threadCount >32)
+105             {buf[threadNum] = buf[threadNum] + buf[threadNum+16];buf[threadNum] = buf[threadNum] + buf[threadNum+8];buf[threadNum] = buf[threadNum] + buf[threadNum+4];buf[threadNum] = buf[threadNum] + buf[threadNum+2];buf[threadNum] = buf[threadNum] + buf[threadNum+1];
+106                 if (threadNum == 0)
+107                 {
+108                     Z[0] = buf[0];
+109                 }
+110 
+111             }
+112             else */
+113             if (threadNum < 16)
+114             {
+115                 //reduce so that threadNum 0 has the reduction of everything
+116                 if (threadNum + 16 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+16];if (threadNum + 8 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+8];if (threadNum + 4 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+4];if (threadNum + 2 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+2];if (threadNum + 1 < threadCount) buf[threadNum] = buf[threadNum] + buf[threadNum+1];
+117                 if (threadNum == 0)
+118                 {
+119                     Z[0] = buf[0];
+120                 }
+121             }
+122         }
+123         
+124             }
+125             
+126 
+127 
+128     namespace {
+129     struct __struct_compiled_op_544270fe7a21a748315f83abfe0913cc {
+130         PyObject* __ERROR;
+131 
+132         PyObject* storage_V3;
+133 PyObject* storage_V1;
+134         
+135 
+136         __struct_compiled_op_544270fe7a21a748315f83abfe0913cc() {
+137             // This is only somewhat safe because we:
+138             //  1) Are not a virtual class
+139             //  2) Do not use any virtual classes in the members
+140             //  3) Deal with mostly POD and pointers
+141 
+142             // If this changes, we would have to revise this, but for
+143             // now I am tired of chasing segfaults because
+144             // initialization code had an error and some pointer has
+145             // a junk value.
+146             memset(this, 0, sizeof(*this));
+147         }
+148         ~__struct_compiled_op_544270fe7a21a748315f83abfe0913cc(void) {
+149             cleanup();
+150         }
+151 
+152         int init(PyObject* __ERROR, PyObject* storage_V3, PyObject* storage_V1) {
+153             Py_XINCREF(storage_V3);
+154 Py_XINCREF(storage_V1);
+155             this->storage_V3 = storage_V3;
+156 this->storage_V1 = storage_V1;
+157             
+158 
+159 
+160 
+161             this->__ERROR = __ERROR;
+162             return 0;
+163         }
+164         void cleanup(void) {
+165             __label_1:
+166 
+167 double __DUMMY_1;
+168 __label_3:
+169 
+170 double __DUMMY_3;
+171 __label_6:
+172 
+173 double __DUMMY_6;
+174 
+175             Py_XDECREF(this->storage_V3);
+176 Py_XDECREF(this->storage_V1);
+177         }
+178         int run(void) {
+179             int __failure = 0;
+180             
+181     PyObject* py_V1;
+182      CudaNdarray * V1;
+183     PyObject* py_V3;
+184      CudaNdarray * V3;
+185 {
+186 
+187     py_V1 = PyList_GET_ITEM(storage_V1, 0);
+188     {Py_XINCREF(py_V1);}
+189     
+190         if (py_V1 == Py_None)
+191         {
+192             V1 = NULL;
+193         }
+194         else
+195         {
+196             
+197         assert(py_V1->ob_refcnt >= 2); // There should be at least one ref from the container object,
+198         // and one ref from the local scope.
+199 
+200         if (CudaNdarray_Check(py_V1))
+201         {
+202             //fprintf(stderr, "c_extract CNDA object w refcnt %p %i\n", py_V1, (py_V1->ob_refcnt));
+203             V1 = (CudaNdarray*)py_V1;
+204             //std::cerr << "c_extract " << V1 << '\n';
+205         
+206 
+207                 if (V1->nd != 0)
+208                 {
+209                     PyErr_Format(PyExc_RuntimeError,
+210                                  "c_extract: Some CudaNdarray has rank %i, it was supposed to have rank 0",
+211                                  V1->nd);
+212                     V1 = NULL;
+213                     {
+214         __failure = 2;
+215         if (!PyErr_Occurred()) {
+216             PyErr_SetString(PyExc_RuntimeError,
+217                 "Unexpected error in an Op's C code. "
+218                 "No Python exception was set.");
+219             }
+220         goto __label_2;};
+221                 }
+222                 //std::cerr << "c_extract " << V1 << " nd check passed\n";
+223             
+224 
+225                 assert(V1);
+226                 Py_INCREF(py_V1);
+227             }
+228             else if (py_V1 == Py_None)
+229             {
+230                 PyErr_SetString(PyExc_TypeError,
+231                                 "expected a CudaNdarray, not None");
+232                 V1 = NULL;
+233                 {
+234         __failure = 2;
+235         if (!PyErr_Occurred()) {
+236             PyErr_SetString(PyExc_RuntimeError,
+237                 "Unexpected error in an Op's C code. "
+238                 "No Python exception was set.");
+239             }
+240         goto __label_2;};
+241             }
+242             else
+243             {
+244                 //fprintf(stderr, "FAILING c_extract CNDA object w refcnt %p %i\n", py_V1, (py_V1->ob_refcnt));
+245                 PyErr_SetString(PyExc_TypeError, "Argument not a CudaNdarray");
+246                 V1 = NULL;
+247                 {
+248         __failure = 2;
+249         if (!PyErr_Occurred()) {
+250             PyErr_SetString(PyExc_RuntimeError,
+251                 "Unexpected error in an Op's C code. "
+252                 "No Python exception was set.");
+253             }
+254         goto __label_2;};
+255             }
+256             //std::cerr << "c_extract done " << V1 << '\n';
+257             
+258 
+259         }
+260         
+261 {
+262 
+263     py_V3 = PyList_GET_ITEM(storage_V3, 0);
+264     {Py_XINCREF(py_V3);}
+265     
+266         assert(py_V3->ob_refcnt >= 2); // There should be at least one ref from the container object,
+267         // and one ref from the local scope.
+268 
+269         if (CudaNdarray_Check(py_V3))
+270         {
+271             //fprintf(stderr, "c_extract CNDA object w refcnt %p %i\n", py_V3, (py_V3->ob_refcnt));
+272             V3 = (CudaNdarray*)py_V3;
+273             //std::cerr << "c_extract " << V3 << '\n';
+274         
+275 
+276                 if (V3->nd != 1)
+277                 {
+278                     PyErr_Format(PyExc_RuntimeError,
+279                                  "c_extract: Some CudaNdarray has rank %i, it was supposed to have rank 1",
+280                                  V3->nd);
+281                     V3 = NULL;
+282                     {
+283         __failure = 4;
+284         if (!PyErr_Occurred()) {
+285             PyErr_SetString(PyExc_RuntimeError,
+286                 "Unexpected error in an Op's C code. "
+287                 "No Python exception was set.");
+288             }
+289         goto __label_4;};
+290                 }
+291                 //std::cerr << "c_extract " << V3 << " nd check passed\n";
+292             
+293 
+294                 assert(V3);
+295                 Py_INCREF(py_V3);
+296             }
+297             else if (py_V3 == Py_None)
+298             {
+299                 PyErr_SetString(PyExc_TypeError,
+300                                 "expected a CudaNdarray, not None");
+301                 V3 = NULL;
+302                 {
+303         __failure = 4;
+304         if (!PyErr_Occurred()) {
+305             PyErr_SetString(PyExc_RuntimeError,
+306                 "Unexpected error in an Op's C code. "
+307                 "No Python exception was set.");
+308             }
+309         goto __label_4;};
+310             }
+311             else
+312             {
+313                 //fprintf(stderr, "FAILING c_extract CNDA object w refcnt %p %i\n", py_V3, (py_V3->ob_refcnt));
+314                 PyErr_SetString(PyExc_TypeError, "Argument not a CudaNdarray");
+315                 V3 = NULL;
+316                 {
+317         __failure = 4;
+318         if (!PyErr_Occurred()) {
+319             PyErr_SetString(PyExc_RuntimeError,
+320                 "Unexpected error in an Op's C code. "
+321                 "No Python exception was set.");
+322             }
+323         goto __label_4;};
+324             }
+325             //std::cerr << "c_extract done " << V3 << '\n';
+326             
+327 
+328 {
+329 // Op class GpuCAReduce
+330 
+331         if (V3->nd != 1)
+332         {
+333             PyErr_Format(PyExc_TypeError,
+334                          "required nd=1, got nd=%i", V3->nd);
+335             {
+336         __failure = 5;
+337         if (!PyErr_Occurred()) {
+338             PyErr_SetString(PyExc_RuntimeError,
+339                 "Unexpected error in an Op's C code. "
+340                 "No Python exception was set.");
+341             }
+342         goto __label_5;};
+343         }
+344         
+345 
+346         if (  !V1
+347            || (V1->nd != 0)
+348         
+349 
+350            )
+351         {
+352             
+353 int *new_dims=NULL; 
+354 
+355             Py_XDECREF(V1);
+356             V1 = (CudaNdarray*) CudaNdarray_NewDims(0, new_dims);
+357             if (NULL == V1)
+358             {
+359                 {
+360         __failure = 5;
+361         if (!PyErr_Occurred()) {
+362             PyErr_SetString(PyExc_RuntimeError,
+363                 "Unexpected error in an Op's C code. "
+364                 "No Python exception was set.");
+365             }
+366         goto __label_5;};
+367             }
+368         }
+369         
+370 
+371         if (CudaNdarray_SIZE(V1) && ! CudaNdarray_SIZE(V3)){
+372             cudaMemset(V1->devdata, 0, CudaNdarray_SIZE(V1) * sizeof(float));
+373         }
+374         else if (CudaNdarray_SIZE(V1))
+375         {
+376         
+377 if(CudaNdarray_is_c_contiguous( V3)){
+378 
+379         {
+380           if(CudaNdarray_SIZE(V3)==0){
+381             cudaMemset(V1->devdata, 0, CudaNdarray_SIZE(V1) * sizeof(float));
+382           }else{
+383             int verbose = 0;
+384             dim3 n_threads(
+385                     std::min(CudaNdarray_SIZE(V3),
+386                              (size_t) NUM_VECTOR_OP_THREADS_PER_BLOCK));
+387             dim3 n_blocks(1);
+388             if (verbose) printf("running kernel_reduce_ccontig_node_544270fe7a21a748315f83abfe0913cc_0"
+389                                 " n_threads.x=%d, size=%d, ndim=%d\n",
+390                                 n_threads.x,CudaNdarray_SIZE(V3),V3->nd);
+391             int n_shared = sizeof(float) * n_threads.x;
+392             kernel_reduce_ccontig_node_544270fe7a21a748315f83abfe0913cc_0<<<n_blocks, n_threads, n_shared>>>(
+393                     CudaNdarray_SIZE(V3),
+394                     CudaNdarray_DEV_DATA(V3),
+395                     CudaNdarray_DEV_DATA(V1));
+396             CNDA_THREAD_SYNC;
+397             cudaError_t sts = cudaGetLastError();
+398             if (cudaSuccess != sts)
+399             {
+400                 PyErr_Format(PyExc_RuntimeError,
+401                              "Cuda error: %s: %s."
+402                              " (grid: %i x %i; block: %i x %i x %i)\n",
+403                     "kernel_reduce_ccontig_node_544270fe7a21a748315f83abfe0913cc_0",
+404                     cudaGetErrorString(sts),
+405                     n_blocks.x,
+406                     n_blocks.y,
+407                     n_threads.x,
+408                     n_threads.y,
+409                     n_threads.z);
+410                 {
+411         __failure = 5;
+412         if (!PyErr_Occurred()) {
+413             PyErr_SetString(PyExc_RuntimeError,
+414                 "Unexpected error in an Op's C code. "
+415                 "No Python exception was set.");
+416             }
+417         goto __label_5;};
+418             }
+419          }
+420         }
+421         
+422 }else{
+423 
+424         {
+425             int verbose = 0;
+426             dim3 n_threads(
+427                     std::min(CudaNdarray_HOST_DIMS(V3)[0],
+428                             NUM_VECTOR_OP_THREADS_PER_BLOCK));
+429             dim3 n_blocks(1);
+430             
+431             if (verbose)
+432                 printf("running kernel_reduce_1_node_544270fe7a21a748315f83abfe0913cc_0\n");
+433             int n_shared = sizeof(float) * n_threads.x * n_threads.y * n_threads.z;
+434             if (verbose>1)
+435                 printf("n_threads.x=%d, n_threads.y=%d, n_threads.z=%d,"
+436                        " nb_threads=%d, n_blocks.x=%d, n_blocks.y=%d,"
+437                        " nb_block=%d, n_shared=%d, shape=(%d)\n",
+438                                   n_threads.x,n_threads.y,n_threads.z,
+439                                   n_threads.x*n_threads.y*n_threads.z,
+440                                   n_blocks.x,n_blocks.y,
+441                                   n_blocks.x*n_blocks.y, n_shared, CudaNdarray_HOST_DIMS(V3)[0]);
+442             kernel_reduce_1_node_544270fe7a21a748315f83abfe0913cc_0<<<n_blocks, n_threads, n_shared>>>(
+443             
+444 
+445                     CudaNdarray_HOST_DIMS(V3)[0],
+446             
+447 
+448                     CudaNdarray_DEV_DATA(V3)
+449             
+450 
+451                     ,CudaNdarray_HOST_STRIDES(V3)[0]
+452             
+453 
+454                     ,CudaNdarray_DEV_DATA(V1)
+455             
+456 
+457                     );
+458             CNDA_THREAD_SYNC;
+459             cudaError_t sts = cudaGetLastError();
+460             if (cudaSuccess != sts)
+461             {
+462                 PyErr_Format(PyExc_RuntimeError,
+463                     "Cuda error: %s: %s."
+464                     " (grid: %i x %i; block: %i x %i x %i)"
+465                     " shape=(%d) \n",
+466                     "kernel_reduce_1_node_544270fe7a21a748315f83abfe0913cc_0",
+467                     cudaGetErrorString(sts),
+468                     n_blocks.x,
+469                     n_blocks.y,
+470                     n_threads.x,
+471                     n_threads.y,
+472                     n_threads.z,
+473                     CudaNdarray_HOST_DIMS(V3)[0]);
+474                 {
+475         __failure = 5;
+476         if (!PyErr_Occurred()) {
+477             PyErr_SetString(PyExc_RuntimeError,
+478                 "Unexpected error in an Op's C code. "
+479                 "No Python exception was set.");
+480             }
+481         goto __label_5;};
+482             }
+483         
+484 
+485         }
+486         
+487 }
+488 
+489         }
+490         
+491 __label_5:
+492 
+493 double __DUMMY_5;
+494 
+495 }
+496 __label_4:
+497 
+498         //std::cerr << "cleanup " << py_V3 << " " << V3 << "\n";
+499         //fprintf(stderr, "c_cleanup CNDA py_object w refcnt %p %i\n", py_V3, (py_V3->ob_refcnt));
+500         if (V3)
+501         {
+502             //fprintf(stderr, "c_cleanup CNDA cn_object w refcnt %p %i\n", V3, (V3->ob_refcnt));
+503             Py_XDECREF(V3);
+504         }
+505         //std::cerr << "cleanup done" << py_V3 << "\n";
+506         
+507     {Py_XDECREF(py_V3);}
+508     
+509 double __DUMMY_4;
+510 
+511 }
+512 __label_2:
+513 
+514     if (!__failure) {
+515       
+516         //std::cerr << "sync\n";
+517         if (NULL == V1) {
+518             // failure: sync None to storage
+519             Py_XDECREF(py_V1);
+520             py_V1 = Py_None;
+521             Py_INCREF(py_V1);
+522         }
+523         else
+524         {
+525             if (py_V1 != (PyObject*)V1)
+526             {
+527                 Py_XDECREF(py_V1);
+528                 py_V1 = (PyObject*)V1;
+529                 Py_INCREF(py_V1);
+530             }
+531             assert(py_V1->ob_refcnt);
+532         }
+533         
+534       PyObject* old = PyList_GET_ITEM(storage_V1, 0);
+535       {Py_XINCREF(py_V1);}
+536       PyList_SET_ITEM(storage_V1, 0, py_V1);
+537       {Py_XDECREF(old);}
+538     }
+539     
+540         //std::cerr << "cleanup " << py_V1 << " " << V1 << "\n";
+541         //fprintf(stderr, "c_cleanup CNDA py_object w refcnt %p %i\n", py_V1, (py_V1->ob_refcnt));
+542         if (V1)
+543         {
+544             //fprintf(stderr, "c_cleanup CNDA cn_object w refcnt %p %i\n", V1, (V1->ob_refcnt));
+545             Py_XDECREF(V1);
+546         }
+547         //std::cerr << "cleanup done" << py_V1 << "\n";
+548         
+549     {Py_XDECREF(py_V1);}
+550     
+551 double __DUMMY_2;
+552 
+553 }
+554 
+555             
+556         if (__failure) {
+557             // When there is a failure, this code puts the exception
+558             // in __ERROR.
+559             PyObject* err_type = NULL;
+560             PyObject* err_msg = NULL;
+561             PyObject* err_traceback = NULL;
+562             PyErr_Fetch(&err_type, &err_msg, &err_traceback);
+563             if (!err_type) {err_type = Py_None;Py_INCREF(Py_None);}
+564             if (!err_msg) {err_msg = Py_None; Py_INCREF(Py_None);}
+565             if (!err_traceback) {err_traceback = Py_None; Py_INCREF(Py_None);}
+566             PyObject* old_err_type = PyList_GET_ITEM(__ERROR, 0);
+567             PyObject* old_err_msg = PyList_GET_ITEM(__ERROR, 1);
+568             PyObject* old_err_traceback = PyList_GET_ITEM(__ERROR, 2);
+569             PyList_SET_ITEM(__ERROR, 0, err_type);
+570             PyList_SET_ITEM(__ERROR, 1, err_msg);
+571             PyList_SET_ITEM(__ERROR, 2, err_traceback);
+572             {Py_XDECREF(old_err_type);}
+573             {Py_XDECREF(old_err_msg);}
+574             {Py_XDECREF(old_err_traceback);}
+575         }
+576         // The failure code is returned to index what code block failed.
+577         return __failure;
+578         
+579         }
+580     };
+581     }
+582     
+583 
+584         static int __struct_compiled_op_544270fe7a21a748315f83abfe0913cc_executor(__struct_compiled_op_544270fe7a21a748315f83abfe0913cc* self) {
+585             return self->run();
+586         }
+587 
+588         static void __struct_compiled_op_544270fe7a21a748315f83abfe0913cc_destructor(void* executor, void* self) {
+589             delete ((__struct_compiled_op_544270fe7a21a748315f83abfe0913cc*)self);
+590         }
+591         
+592 //////////////////////
+593 ////  Functions
+594 //////////////////////
+595 static PyObject * instantiate(PyObject * self, PyObject *argtuple) {
+596   assert(PyTuple_Check(argtuple));
+597   if (3 != PyTuple_Size(argtuple)){ 
+598      PyErr_Format(PyExc_TypeError, "Wrong number of arguments, expected 3, got %i", (int)PyTuple_Size(argtuple));
+599      return NULL;
+600   }
+601   __struct_compiled_op_544270fe7a21a748315f83abfe0913cc* struct_ptr = new __struct_compiled_op_544270fe7a21a748315f83abfe0913cc();
+602   if (struct_ptr->init( PyTuple_GET_ITEM(argtuple, 0),PyTuple_GET_ITEM(argtuple, 1),PyTuple_GET_ITEM(argtuple, 2) ) != 0) {
+603     delete struct_ptr;
+604     return NULL;
+605   }
+606   PyObject* thunk = PyCObject_FromVoidPtrAndDesc((void*)(&__struct_compiled_op_544270fe7a21a748315f83abfe0913cc_executor), struct_ptr, __struct_compiled_op_544270fe7a21a748315f83abfe0913cc_destructor);
+607   return thunk; }
+608 
+609 //////////////////////
+610 ////  Module init
+611 //////////////////////
+612 static PyMethodDef MyMethods[] = {
+613 	{"instantiate", instantiate, METH_VARARGS, "undocumented"} ,
+614 	{NULL, NULL, 0, NULL}
+615 };
+616 PyMODINIT_FUNC init544270fe7a21a748315f83abfe0913cc(void){
+617    (void) Py_InitModule("544270fe7a21a748315f83abfe0913cc", MyMethods);
+618 }
+619 
+===============================
+mod.cu: In member function ‘int _GLOBAL__N__38_tmpxft_000079b9_00000000_9_mod_cpp1_ii_ae46f2fe::__struct_compiled_op_544270fe7a21a748315f83abfe0913cc::run()’:
+mod.cu:388:172: warning: format ‘%d’ expects argument of type ‘int’, but argument 3 has type ‘size_t {aka long unsigned int}’ [-Wformat=]
+             if (verbose) printf("running kernel_reduce_ccontig_node_544270fe7a21a748315f83abfe0913cc_0"
+                                                                                                                                                                            ^
+/usr/bin/ld: cannot find -lcudart
+/usr/bin/ld: cannot find -lcublas
+/usr/bin/ld: cannot find -lcudadevrt
+/usr/bin/ld: cannot find -lcudart_static
+collect2: error: ld returned 1 exit status
+Traceback (most recent call last):
+  File "generateMotionData.py", line 3, in <module>
+    import theano
+  File "/usr/local/lib/python2.7/dist-packages/theano/__init__.py", line 116, in <module>
+    theano.sandbox.cuda.tests.test_driver.test_nvidia_driver1()
+  File "/usr/local/lib/python2.7/dist-packages/theano/sandbox/cuda/tests/test_driver.py", line 32, in test_nvidia_driver1
+    profile=False)
+  File "/usr/local/lib/python2.7/dist-packages/theano/compile/function.py", line 326, in function
+    output_keys=output_keys)
+  File "/usr/local/lib/python2.7/dist-packages/theano/compile/pfunc.py", line 486, in pfunc
+    output_keys=output_keys)
+  File "/usr/local/lib/python2.7/dist-packages/theano/compile/function_module.py", line 1795, in orig_function
+    defaults)
+  File "/usr/local/lib/python2.7/dist-packages/theano/compile/function_module.py", line 1661, in create
+    input_storage=input_storage_lists, storage_map=storage_map)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/link.py", line 699, in make_thunk
+    storage_map=storage_map)[:3]
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/vm.py", line 1047, in make_all
+    impl=impl))
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/op.py", line 935, in make_thunk
+    no_recycling)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/op.py", line 839, in make_c_thunk
+    output_storage=node_output_storage)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/cc.py", line 1190, in make_thunk
+    keep_lock=keep_lock)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/cc.py", line 1131, in __compile__
+    keep_lock=keep_lock)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/cc.py", line 1586, in cthunk_factory
+    key=key, lnk=self, keep_lock=keep_lock)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/cmodule.py", line 1159, in module_from_key
+    module = lnk.compile_cmodule(location)
+  File "/usr/local/lib/python2.7/dist-packages/theano/gof/cc.py", line 1489, in compile_cmodule
+    preargs=preargs)
+  File "/usr/local/lib/python2.7/dist-packages/theano/sandbox/cuda/nvcc_compiler.py", line 405, in compile_str
+    'for cmd', ' '.join(cmd))
+Exception: ('The following error happened while compiling the node', GpuCAReduce{add}{1}(<CudaNdarrayType(float32, vector)>), '\n', 'nvcc return status', 1, 'for cmd', 'nvcc -shared -O3 -use_fast_math -arch=sm_52 -m64 -Xcompiler -fno-math-errno,-Wno-unused-label,-Wno-unused-variable,-Wno-write-strings,-DCUDA_NDARRAY_CUH=c72d035fdf91890f3b36710688069b2e,-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION,-fPIC,-fvisibility=hidden -Xlinker -rpath,/data/gpu/siddsax/.theano/compiledir_Linux-3.13--generic-x86_64-with-Ubuntu-14.04-trusty-x86_64-2.7.6-64/cuda_ndarray -I/data/gpu/siddsax/.theano/compiledir_Linux-3.13--generic-x86_64-with-Ubuntu-14.04-trusty-x86_64-2.7.6-64/cuda_ndarray -I/usr/local/cuda/include -I/usr/local/lib/python2.7/dist-packages/numpy/core/include -I/usr/include/python2.7 -I/usr/local/lib/python2.7/dist-packages/theano/gof -I/usr/local/lib/python2.7/dist-packages/theano/sandbox/cuda -L/data/gpu/siddsax/.theano/compiledir_Linux-3.13--generic-x86_64-with-Ubuntu-14.04-trusty-x86_64-2.7.6-64/cuda_ndarray -L/usr/lib -o /data/gpu/siddsax/.theano/compiledir_Linux-3.13--generic-x86_64-with-Ubuntu-14.04-trusty-x86_64-2.7.6-64/tmpfJf9ve/544270fe7a21a748315f83abfe0913cc.so mod.cu -lcudart -lcublas -lcuda_ndarray -lpython2.7', '[GpuCAReduce{add}{1}(<CudaNdarrayType(float32, vector)>)]')
