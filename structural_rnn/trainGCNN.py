@@ -139,12 +139,21 @@ def GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength, temporalNodeFe
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
 			] # ------------------- NEED TO CHECK THE ARGUMENTS ARE IN LINE
 
+		# ---------------------Original---------------------------------------------------------	 
+		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm])
+		# 		multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+		# 		FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+		# 		FCLayer('rectify',args.fc_init,size=100,rng=rng),
+		# 		FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+		# 		]
+		# -------------------------------------------------------------------------------------
+		
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm])
 				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
-				]# ------------------ Dont know whether the output size fits???? size=num_classes
+				FCLayer('linear',args.fc_init,size=50,rng=rng)
+				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				#AddNoiseToInput(rng=rng),
@@ -152,22 +161,17 @@ def GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength, temporalNodeFe
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 
-	# Add graph CNN related variables
-	#--------------------------------
+	# ----------------------- Add graph CNN related variables -------------------------------
+	# 
+	#----------------------------------------------------------------------------------------
 	gcnn = GCNN(preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return gcnn
-
-
-
-
-
-
 
 def trainGCNN():
 	crf_file = './CRFProblems/H3.6m/crf' + args.crf
@@ -181,33 +185,30 @@ def trainGCNN():
 
 	# --------- Read the graph from here ------------------
 	# Things that we need are nodeNames, the feature length of temoral nodes*, 
-	[nodeNames,
-	temporalNodeFeatureLength, # Need to be added
-	nodeFeatureLength, # NOT THE SAME #
-	nodeConnections,#edgeList,edgeListComplete,edgeFeatures,
-	#nodeToEdgeConnections,
-	trY,trY_validation,trY_forecasting,trX_forecast_nodeFeatures,
-	temporal_trX,temporal_trX_validation,temporal_trX_forecasting,
-	trX,trX_validation,trX_forecasting,
-	preGraphNets] = graph.readCRFgraph(poseDataset)
+	[nodeNames, # List with names of the nodes
+	temporalNodeFeatureLength, # dictonary {node name} = temp node feat. length
+	nodeFeatureLength, # {node name} = node feat. length
+	nodeConnections,# {node name} = node names it is connected to
+	trY,trY_validation,trY_forecasting, # the output values of the model i.e. the coordinates of the different joints as a dictionary {node name} = value of the coordinate 
+	trX_forecast_nodeFeatures,
+	trX,trX_validation,trX_forecasting, # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
+	preGraphNets # {node name} = {temporal/normal} = {high,low}  
+	] = graph.readCRFgraph(poseDataset)
 
-	
-
-	new_idx = poseDataset.new_idx
-	featureRange = poseDataset.nodeFeaturesRanges
+	new_idx = poseDataset.new_idx # all the dimensions which are not used ( the dimensions that have very little varianc ) are -1 and other have their respective index number like 0 1 2 3 -1 4 5 ......
+	featureRange = poseDataset.nodeFeaturesRanges # range of torso, right hand, left hand ...
 	gcnn = []
-	# ------------- Here we load the model using the function
+	# ------------- Here we load the model using the function ------------------------------
 	if args.use_pretrained == 1:
 		gcnn = loadDRA(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
 		gcnn = GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength,,temporalNodeFeatureLength)
-	# -----------------------------------------------------------------------------------	
-
-
-	saveForecastedMotion(gcnn.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
-	saveForecastedMotion(gcnn.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+	# ----------------------- To be used finally commented as work in this part is not done --------------------
+	# saveForecastedMotion(gcnn.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
+	# saveForecastedMotion(gcnn.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+	#-------------------------------------------------------------------------------------------------------------
 
 	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,

@@ -225,7 +225,7 @@ def getlabels(nodeName):
 	# D = predictFeatures[nodeName].shape[2]
 	return predictFeatures[nodeName],validate_predictFeatures[nodeName],forecast_predictFeatures[nodeName],forecast_nodeFeatures[nodeName]
 
-def getfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_on_noisy_features=False):
+def getfeatures(nodeName,forecast_on_noisy_features=False):
 	train_features,temporal_train_features = getGCNNfeatures(nodeName,nodeFeatures_noisy,nodeFeatures_t_1_noisy)
 	validate_features,temporal_validate_features = getGCNNfeatures(nodeName,validate_nodeFeatures_noisy,validate_nodeFeatures_t_1_noisy)
 
@@ -448,7 +448,9 @@ def runall():
 
 
 #Generate normalized data for trajectory forecasting
-	trX_forecast,trX_forecast_t_1,trY_forecast,forecastidx = generateForecastingExamples(validateData,motion_prefix,motion_suffix,validateSubject[0])
+	trX_forecast,trX_forecast_t_1,trY_forecast,forecastidx = generateForecastingExamples(validateData,motion_prefix,motion_suffix,validateSubject[0]) # motion_prefix = 50  motion_suffix =100 validateData = normal validation data from the subject
+
+	# trX_forecast is passed through the function that makes a dictionary with node name as keys and the value as their respective features from the input. That is my unidentified object passed along with the input features (temporal and normal) to predictMotion...?
 
 	data_stats['forecastidx'] = forecastidx
 #Create training and validation features for DRA

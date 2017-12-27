@@ -127,32 +127,6 @@ params['drop_features'] = 0
 params['drop_id'] = '9'
 params['subsample_data'] = 1
 
-'''
-#Malik
-params['truncate_gradient'] = 100
-params['use_pretrained'] = 1
-params['iter_to_load'] = 1250
-params['model_to_train'] = 'lstm'
-params['sequence_length'] = 150
-params['sequence_overlap'] = 50
-params['batch_size'] = 100
-params['lstm_size'] = 1000
-params['node_lstm_size'] = 1000
-params['fc_size'] = 500
-params['snapshot_rate'] = 250
-params['crf'] = ''
-params['copy_state'] = 0
-params['full_skeleton'] = 1
-params['weight_decay'] = 0.0
-params['train_for'] = 'eating'
-params['temporal_features'] = 0
-params['dra_type'] = 'simple'
-params['dataset_prefix'] = ''
-params['drop_features'] = 0
-params['drop_id'] = '9'
-
-'''
-
 
 load_pretrained_model_from = '/scail/scratch/group/cvgl/ashesh/h3.6m/checkpoints_lstm_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.7]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_discussion'
 
@@ -251,7 +225,7 @@ for value_list in cv_list:
 			os.system('cp {0}/complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
 
 	print 'Dir: {0}'.format(path_to_checkpoint)
-	args = ['python','trainDRA.py']
+	args = ['python','trainGCNN.py']
 	for k in params.keys():
 		args.append('--{0}'.format(k))
 		if not isinstance(params[k],list):

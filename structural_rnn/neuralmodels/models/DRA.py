@@ -53,7 +53,6 @@ class DRA(object):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
-# -----------------------------------------------------------------------------------------------------------
 		for nt in nodeTypes:
 			self.params[nt] = []
 			self.masterlayer[nt] = unConcatenateVectors(nodeToEdgeConnections[nt])
@@ -74,7 +73,6 @@ class DRA(object):
 					if hasattr(l,'params'):
 						self.params[nt].extend(l.params)
 
-# -------------------------------------------------------------------------------------------------------------
 			'''We now connect the bottom layer of nodeRNN with the concatenated output of edgeRNNs'''
 			cv = ConcatenateVectors()
 			cv.connect(layers_below)
@@ -88,6 +86,7 @@ class DRA(object):
 				if hasattr(l,'params'):
 					self.params[nt].extend(l.params)
 
+# -----------------------------------------------------------------------------------------------------------
 			self.Y_pr[nt] = nodeLayers[-1].output()
 			self.Y[nt] = self.nodeLabels[nt]
 			
@@ -285,7 +284,7 @@ class DRA(object):
 							tr_Y[nt] = np.concatenate((tr_Y[nt],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm])]),axis=1)
 						elif outputDim == 3:
 							tr_Y[nt] = np.concatenate((tr_Y[nt],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
-
+# how do the temporal edge nodes get input, their 'something-something-something' is [0,0]
 				loss = 0.0
 				skel_loss = 0.0
 				grad_norms = []

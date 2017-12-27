@@ -80,8 +80,14 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	trX_forecast = {}
 	trY_forecast = {}
 	trX_nodeFeatures = {}
+	node_features = {}
+	temporal_node_features = {}
+	forecast_node_features = {}
+	temporal_validate_node_features = {}
+	forecast_node_features = {}
+	temporal_forecast_node_features = {}
 	poseDataset.addNoiseToFeatures(noise=noise)
-	for nodeName in nodeNames.keys():
+	for nodeName in nodeNames:
 		# edge_features = {}
 		# validate_edge_features = {}
 		# forecast_edge_features = {}
@@ -90,7 +96,6 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		# edgeTypesConnectedTo = nodeToEdgeConnections[nodeType].keys()
 		low = 0
 		high = 0
-
 		# for edgeType in edgeTypesConnectedTo:
 		[node_features[nodeName],temporal_node_features[nodeName],
 		 validate_node_features[nodeName],temporal_validate_node_features[nodeName],
@@ -108,8 +113,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		low = high
 
 		high += temporalNodeFeatureLength[nodeName]
-		preGraphNets[nodeName]['normal'][0] = low
-		preGraphNets[nodeName]['normal'][1] = high
+		preGraphNets[nodeName]['temporal'][0] = low
+		preGraphNets[nodeName]['temporal'][1] = high
 		low = high
 
 		#  ---------------------------------------------------------------------------
@@ -136,18 +141,23 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		# trX is same as node_features.....
 
 		# idx = nodeName + ':' + nodeType
-		# trX[idx] = nodeRNNFeatures
-		# trX_validate[idx] = validate_nodeRNNFeatures
-		# trX_forecast[idx] = forecast_nodeRNNFeatures
-		trY[nodeName] = Y
-		trY_validate[nodeName] = Y_validate
-		trY_forecast[nodeName] = Y_forecast
-		trX_nodeFeatures[nodeName] = X_forecast
+		trX[nodeName] = np.concatenate((node_features[nodeName],temporal_node_features[nodeName]),axis=2)
+		trX_validate[nodeName] = np.concatenate((validate_node_features[nodeName],temporal_validate_node_features[nodeName]),axis=2)
+		trX_forecast[nodeName] = np.concatenate((forecast_node_features[nodeName],temporal_forecast_node_features[nodeName]),axis=2)
+		
+		trY[nodeName] = Y # Output ground truths i.e. the limb position at next time step for each name
+		trY_validate[nodeName] = Y_validate # -- Validation set
+		trY_forecast[nodeName] = Y_forecast # -- Test set
+		
+		trX_nodeFeatures[nodeName] = X_forecast # these are position of joints using which the input fetures are made. trX_forecast[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1}) 
 	print nodeToEdgeConnections
-	# print edgeListComplete
+
 	return nodeNames,temporalNodeFeatureLength,nodeFeatureLength,nodeConnections,trY,trY_validate,trY_forecast,trX_nodeFeatures,
-	  node_features,temporal_node_features,validate_node_features,temporal_validate_node_features,
-		forecast_node_features[nodeName],temporal_forecast_node_features,preGraphNets	
+	  trX,
+	  trX_validate,
+		trX_forecast,
+		preGraphNets	
+
 
 def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):
 	edge_features = {}
