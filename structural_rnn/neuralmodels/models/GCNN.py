@@ -183,7 +183,7 @@ class GCNN(object):
 		skel_dim = 0
 		
 
-
+# ----------------------data cleaning related tasks ------------------------------------------------
 		nodeNames = trX.keys()
 		print "nodeNames: ",nodeNames
 
@@ -291,6 +291,8 @@ class GCNN(object):
 				loss = 0.0
 				skel_loss = 0.0
 				grad_norms = []
+# ---------------------------------------------------------------------------------------------
+# ------------------------------ Model relted tasks -------------------------------------------
 				for nm in nodeNames:
 					loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
 					g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
@@ -321,41 +323,41 @@ class GCNN(object):
 					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
-					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-					forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
-					fname = 'forecast_iteration_{0}'.format(int(iterations))
-					self.saveForecastedMotion(forecasted_motion,path,fname)
-					skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
-					err_per_dof = skel_err / trY_forecasting.shape[2]
-					fname = 'forecast_error_iteration_{0}'.format(int(iterations))
-					self.saveForecastError(skel_err,err_per_dof,path,fname)
+				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
+				# 	forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# 	forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+				# 	fname = 'forecast_iteration_{0}'.format(int(iterations))
+				# 	self.saveForecastedMotion(forecasted_motion,path,fname)
+				# 	skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
+				# 	err_per_dof = skel_err / trY_forecasting.shape[2]
+				# 	fname = 'forecast_error_iteration_{0}'.format(int(iterations))
+				# 	self.saveForecastError(skel_err,err_per_dof,path,fname)
 
 			'''Computing error on validation set'''
-			if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
-				validation_error = 0.0
-				Tvalidation = 0
-				for nm in trX_validation.keys():
-					nt = nm.split(':')[1]
-					validation_error += self.predict_node_loss[nt](trX_validation[nm],trY_validation[nm],std)
-					Tvalidation = trX_validation[nm].shape[0]
-				validation_set[-1] = validation_error
-				termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
-				complete_logger += termout + '\n'
-				print termout
+			# if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
+			# 	validation_error = 0.0
+			# 	Tvalidation = 0
+			# 	for nm in trX_validation.keys():
+			# 		nt = nm.split(':')[1]
+			# 		validation_error += self.predict_node_loss[nt](trX_validation[nm],trY_validation[nm],std)
+			# 		Tvalidation = trX_validation[nm].shape[0]
+			# 	validation_set[-1] = validation_error
+			# 	termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 		
-			if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
-				prediction = self.predict_nextstep(trX_validation)
-				prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
-				prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
-				for i in range(N1):
-					prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
-				predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
-				joint_error = np.linalg.norm(predict - gth)
-				validation_set[-1] = joint_error
-				termout = 'Missing joint error {0}'.format(joint_error )
-				complete_logger += termout + '\n'
-				print termout
+			# if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
+			# 	prediction = self.predict_nextstep(trX_validation)
+			# 	prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
+			# 	prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
+			# 	for i in range(N1):
+			# 		prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
+			# 	predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
+			# 	joint_error = np.linalg.norm(predict - gth)
+			# 	validation_set[-1] = joint_error
+			# 	termout = 'Missing joint error {0}'.format(joint_error )
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 
 			'''Saving the learned model so far'''
 			if path:
