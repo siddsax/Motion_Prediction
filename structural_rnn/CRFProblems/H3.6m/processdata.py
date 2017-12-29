@@ -222,8 +222,8 @@ def addNoiseToFeatures(noise=1e-5):
 
 
 def getlabels(nodeName):
-	# D = predictFeatures[nodeName].shape[2]
-	return predictFeatures[nodeName],validate_predictFeatures[nodeName],forecast_predictFeatures[nodeName],forecast_nodeFeatures[nodeName]
+	D = predictFeatures[nodeName].shape[2]
+	return predictFeatures[nodeName],validate_predictFeatures[nodeName],forecast_predictFeatures[nodeName],forecast_nodeFeatures[nodeName],D
 
 def getfeatures(nodeName,forecast_on_noisy_features=False):
 	train_features,temporal_train_features = getGCNNfeatures(nodeName,nodeFeatures_noisy,nodeFeatures_t_1_noisy)
@@ -441,7 +441,7 @@ def runall():
 		[validate3Dtensor,validateY3Dtensor,validate3Dtensor_t_1,minibatch_size_ignore] = sampleTrainSequences(validateData,T,delta_shift)
 
 	print 'Training data stats (T,N,D) is ',data3Dtensor.shape
-	print 'Training data stats (T,N,D) is ',validate3Dtensor.shape
+	print 'Validate data stats (T,N,D) is ',validate3Dtensor.shape
 
 	if drop_features:
 		[validate3Dtensor,drop_start,drop_end] = dropFeaturesfromData(validate3Dtensor,drop_id)

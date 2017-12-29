@@ -25,6 +25,12 @@ import copy
 import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
 global rng
+
+
+theano.config.optimizer='None'
+# theano.config.exception_verbosity='high'
+# theano.config.compute_test_value = 'warn'
+
 rng = np.random.RandomState(1234567890)
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -51,7 +57,7 @@ parser.add_argument('--g_clip',type=float,default=25.0)
 parser.add_argument('--truncate_gradient',type=int,default=50)
 parser.add_argument('--use_pretrained',type=int,default=0)
 parser.add_argument('--iter_to_load',type=int,default=None)
-parser.add_argument('--model_to_train',type=str,default='dra')
+parser.add_argument('--model_to_train',type=str,default='gcnn')
 parser.add_argument('--checkpoint_path',type=str,default='checkpoint')
 parser.add_argument('--sequence_length',type=int,default=150)
 parser.add_argument('--sequence_overlap',type=int,default=50)
@@ -128,12 +134,13 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 
 
 
-def GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength, temporalNodeFeatureLength):
+def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFeatureLength):
 
 	temporalNodeRNN = {} # --- Node_Feature:(Node_Feature - Node_Feature_-1)
 	nodeRNNs = {} 
 	topLayer = {}
 	nodeLabels = {}
+	nodeNames = nodeList.keys()
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
@@ -148,20 +155,22 @@ def GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength, temporalNodeFe
 		# 		]
 		# -------------------------------------------------------------------------------------
 		
-		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm])
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				FCLayer('linear',args.fc_init,size=50,rng=rng)
+		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				# FCLayer('linear',args.fc_init,size=50,rng=rng)
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				#AddNoiseToInput(rng=rng),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
-		topLayer[nm] = [FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+		topLayer[nm] = [
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
@@ -182,10 +191,9 @@ def trainGCNN():
 		os.mkdir(path_to_checkpoint)
 	saveNormalizationStats(path_to_checkpoint)
 	
-
 	# --------- Read the graph from here ------------------
 	# Things that we need are nodeNames, the feature length of temoral nodes*, 
-	[nodeNames, # List with names of the nodes
+	[nodeList, # {node name} = output dimension
 	temporalNodeFeatureLength, # dictonary {node name} = temp node feat. length
 	nodeFeatureLength, # {node name} = node feat. length
 	nodeConnections,# {node name} = node names it is connected to
@@ -204,7 +212,7 @@ def trainGCNN():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		gcnn = GCNNmodelRegression(preGraphNets,nodeNames,nodeFeatureLength,,temporalNodeFeatureLength)
+		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength)
 	# ----------------------- To be used finally commented as work in this part is not done --------------------
 	# saveForecastedMotion(gcnn.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
 	# saveForecastedMotion(gcnn.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')

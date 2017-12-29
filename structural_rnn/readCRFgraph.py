@@ -21,14 +21,14 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	lines = open(filename).readlines()
 	# nodeOrder = []
 	nodeNames = []
-	# nodeList = {}
-	# preGraphNets = {}
+	nodeList = {}
+	preGraphNets = {}
 	temporalNodeFeatureLength = {}
 	nodeFeatureLength = {}
 	for node_name in lines[0].strip().split(','):
 		nodeNames.append(node_name)
 		# nodeNames[node_name] = node_type
-		# nodeList[node_type] = 0
+		nodeList[node_name] = 0
 		preGraphNets[node_name] = {}
 		preGraphNets[node_name]['temporal'] = [0,0]
 		preGraphNets[node_name]['normal'] = [0,0]
@@ -83,6 +83,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	node_features = {}
 	temporal_node_features = {}
 	forecast_node_features = {}
+	temporal_forecast_node_features = {}
+	validate_node_features = {}
 	temporal_validate_node_features = {}
 	forecast_node_features = {}
 	temporal_forecast_node_features = {}
@@ -99,8 +101,7 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		# for edgeType in edgeTypesConnectedTo:
 		[node_features[nodeName],temporal_node_features[nodeName],
 		 validate_node_features[nodeName],temporal_validate_node_features[nodeName],
-		 forecast_node_features[nodeName],temporal_forecast_node_features[nodeName]] =
-		 poseDataset.getfeatures(nodeName,forecast_on_noisy_features=forecast_on_noisy_features)
+		 forecast_node_features[nodeName],temporal_forecast_node_features[nodeName]] = poseDataset.getfeatures(nodeName,forecast_on_noisy_features=forecast_on_noisy_features)
 
 		nodeFeatureLength[nodeName] = node_features[nodeName].shape[2]
 		temporalNodeFeatureLength[nodeName] = temporal_node_features[nodeName].shape[2]
@@ -135,8 +136,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		# 	validate_nodeRNNFeatures = np.concatenate((validate_nodeRNNFeatures,validate_edge_features[edgeType]),axis=2)	
 		# 	forecast_nodeRNNFeatures = np.concatenate((forecast_nodeRNNFeatures,forecast_edge_features[edgeType]),axis=2)	
 
-		[Y,Y_validate,Y_forecast,X_forecast] = poseDataset.getlabels(nodeName)
-		# nodeList[nodeType] = num_classes
+		[Y,Y_validate,Y_forecast,X_forecast,output_dims] = poseDataset.getlabels(nodeName)
+		nodeList[nodeName] = output_dims
 		
 		# trX is same as node_features.....
 
@@ -150,13 +151,9 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		trY_forecast[nodeName] = Y_forecast # -- Test set
 		
 		trX_nodeFeatures[nodeName] = X_forecast # these are position of joints using which the input fetures are made. trX_forecast[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1}) 
-	print nodeToEdgeConnections
+	# print nodeToEdgeConnections
 
-	return nodeNames,temporalNodeFeatureLength,nodeFeatureLength,nodeConnections,trY,trY_validate,trY_forecast,trX_nodeFeatures,
-	  trX,
-	  trX_validate,
-		trX_forecast,
-		preGraphNets	
+	return nodeList,temporalNodeFeatureLength,nodeFeatureLength,nodeConnections,trY,trY_validate,trY_forecast,trX_nodeFeatures,trX,trX_validate,trX_forecast,preGraphNets	
 
 
 def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):

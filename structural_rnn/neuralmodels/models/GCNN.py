@@ -1,7 +1,7 @@
 from headers import *
 
 class GCNN(object):
-	def __init__(self,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -14,7 +14,7 @@ class GCNN(object):
 		
 		self.topLayer = topLayer
 		self.nodeRNNs = nodeRNNs
-		self.temporalNodeRNN = temporalNodeRNN
+		self.temporalNodeRNNs = temporalNodeRNNs
 		self.nodeLabels = nodeLabels
 		self.learning_rate = learning_rate
 		self.clipnorm = clipnorm
@@ -53,7 +53,7 @@ class GCNN(object):
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
 
-			layers = self.temporalNodeRNN[nm]
+			layers = self.temporalNodeRNNs[nm]
 			for i in range(1,len(layers)):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
@@ -94,6 +94,7 @@ class GCNN(object):
 #  -------------------------------------------------------------------------
 
 			self.Y_pr[nm] = nodeTopLayer[-1].output()
+			theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_" + str(nm) + ".png", var_with_name_simple=True)
 			self.Y[nm] = self.nodeLabels[nm]
 			
 			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay * nodeTopLayer[-1].L2_sqr
@@ -112,7 +113,7 @@ class GCNN(object):
 		
 			self.grad_norm[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.norm[nm],on_unused_input='ignore')
 		
-			self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')	
+			# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeTopLayer[0].output(),on_unused_input='ignore')	
 
 
 		self.num_params = 0
@@ -259,8 +260,8 @@ class GCNN(object):
 
 			'''Loading noisy data'''
 			noisy_data = graph.readCRFgraph(poseDataset,noise=std)
-			trX = noisy_data[9]
-			trY = noisy_data[5]
+			trX = noisy_data[8]
+			trY = noisy_data[4]
 			trX_validation = noisy_data[10]
 			trY_validation = noisy_data[6]
 
@@ -416,3 +417,162 @@ class GCNN(object):
 		print("KKKKKKKKKKKKTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
                 theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
 		return teY
+
+
+	def saveForecastError(self,skel_err,err_per_dof,path,fname):
+		f = open('{0}{1}'.format(path,fname),'w')
+		for i in range(skel_err.shape[0]):
+			f.write('T={0} {1}, {2}\n'.format(i,skel_err[i],err_per_dof[i]))
+		f.close()
+
+	def saveForecastedMotion(self,forecast,path,fname):
+		T = forecast.shape[0]
+		N = forecast.shape[1]
+		D = forecast.shape[2]
+		for j in range(N):
+			motion = forecast[:,j,:]
+			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
+			for i in range(T):
+				st = ''
+				for k in range(D):
+					st += str(motion[i,k]) + ','
+				st = st[:-1]
+				f.write(st+'\n')
+			f.close()
+	
+	def saveCellState(self,cellstate,path,fname):
+		nodeNames = cellstate.keys()
+		nm = nodeNames[0]
+		print nodeNames
+		T = cellstate[nm].shape[0]
+		N = cellstate[nm].shape[1]
+		D = cellstate[nm].shape[2]
+		for j in range(N):
+			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
+			for nm in nodeNames:
+				motion = cellstate[nm][:,j,:]
+				for i in range(T):
+					st = ''
+					for k in range(D):
+						st += str(motion[i,k]) + ','
+					st = st[:-1]
+					f.write(st+'\n')
+			f.close()
+
+# ------------------------- Not looked upon --------------------------------
+
+	def predict_output(self,teX):
+		nodeNames = teX.keys()
+		predict = {}
+		for nm in nodeNames:
+			nt = nm.split(':')[1]
+			predict[nm] = self.predict_node[nt](teX[nm],1e-5)
+		return predict
+
+
+	def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+		teX = copy.deepcopy(teX_original)
+		nodeNames = teX.keys()
+
+		teY = {}
+		to_return = {}
+		T = 0
+		nodeFeatures_t_1 = {}
+		for nm in nodeNames:
+			[T,N,D] = teX[nm].shape
+			to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
+			to_return[nm][:T,:,:] = teX[nm]
+			teY[nm] = []
+			nodeName = nm.split(':')[0]
+			nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
+
+
+		for i in range(sequence_length):
+			nodeFeatures = {}
+			for nm in nodeNames:
+				nt = nm.split(':')[1]
+				nodeName = nm.split(':')[0]
+				prediction = self.predict_node[nt](to_return[nm][:(T+i),:,:],1e-5)
+				#nodeFeatures[nodeName] = np.array([prediction])
+				nodeFeatures[nodeName] = prediction[-1:,:,:]
+				teY[nm].append(nodeFeatures[nodeName][0,:,:])
+			for nm in nodeNames:
+				nt = nm.split(':')[1]
+				nodeName = nm.split(':')[0]
+				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
+				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
+			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
+		for nm in nodeNames:
+			teY[nm] = np.array(teY[nm])
+		del teX
+		print("KKKKKKKKKKKKTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
+                theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
+		return teY
+
+	def predict_nextstep(self,teX):
+		nodeNames = teX.keys()
+		prediction = {}
+		for nm in nodeNames:
+			nt = nm.split(':')[1]
+			prediction[nm] = self.predict_node[nt](teX[nm],1e-5)
+		return prediction
+		
+	def predict_cell(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+		teX = copy.deepcopy(teX_original)
+		nodeNames = teX.keys()
+
+		teY = {}
+		to_return = {}
+		T = 0
+		nodeFeatures_t_1 = {}
+		for nm in nodeNames:
+			[T,N,D] = teX[nm].shape
+			to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
+			to_return[nm][:T,:,:] = teX[nm]
+			teY[nm] = []
+			nodeName = nm.split(':')[0]
+			nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
+		for i in range(sequence_length):
+			nodeFeatures = {}
+			for nm in nodeNames:
+				nt = nm.split(':')[1]
+				nodeName = nm.split(':')[0]
+				prediction = self.predict_node[nt](to_return[nm][:(T+i),:,:],1e-5)
+				#nodeFeatures[nodeName] = np.array([prediction])
+				nodeFeatures[nodeName] = prediction[-1:,:,:]
+				teY[nm].append(nodeFeatures[nodeName][0,:,:])
+			for nm in nodeNames:
+				nt = nm.split(':')[1]
+				nodeName = nm.split(':')[0]
+				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
+				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
+			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
+		cellstates = {}
+		for nm in nodeNames:
+			nt = nm.split(':')[1]
+			nodeName = nm.split(':')[0]
+			cellstates[nm] = self.get_cell[nt](to_return[nm],1e-5)
+		print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
+		theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
+		return cellstates
+
+	def concatenateDimensions(self,dictToconcatenate,axis=2):
+		conctArr = []
+		for k in dictToconcatenate.keys():
+			if len(conctArr) == 0:
+				conctArr = copy.deepcopy(dictToconcatenate[k])	
+			else:
+				conctArr = np.concatenate((conctArr,dictToconcatenate[k]),axis=axis)
+		return conctArr
+	
+	def convertToSingleVec(self,X,new_idx,featureRange):
+		keys = X.keys()
+		[T,N,D]  = X[keys[0]].shape
+		D = len(new_idx) - len(np.where(new_idx < 0)[0])
+		single_vec = np.zeros((T,N,D),dtype=np.float32)
+		for k in keys:
+			nm = k.split(':')[0]
+			idx = new_idx[featureRange[nm]]
+			insert_at = np.delete(idx,np.where(idx < 0))
+			single_vec[:,:,insert_at] = X[k]
+		return single_vec

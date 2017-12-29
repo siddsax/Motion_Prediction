@@ -104,7 +104,7 @@ class DRA(object):
 		
 			self.grad_norm[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.norm[nt],on_unused_input='ignore')
 		
-			self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
+			# self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
 		
 
 		self.num_params = 0

@@ -1,4 +1,5 @@
 from DRA import DRA
+from GCNN import GCNN
 from DRAanticipation import DRAanticipation
 from MultipleRNNsCombined import MultipleRNNsCombined  
 from RNN import RNN

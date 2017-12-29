@@ -4,6 +4,8 @@ import copy
 import socket as soc
 from datetime import datetime
 
+
+
 base_dir = ''
 gpus = []
 if soc.gethostname() == "napoli110.stanford.edu":
@@ -107,7 +109,7 @@ params['g_clip'] = 25.0
 params['truncate_gradient'] = 100
 params['use_pretrained'] = 0
 params['iter_to_load'] = 2500
-params['model_to_train'] = 'dra'
+params['model_to_train'] = 'gcnn'
 params['sequence_length'] = 150
 params['sequence_overlap'] = 50
 params['batch_size'] = 100
