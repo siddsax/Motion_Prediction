@@ -1,2 +1,2 @@
 # GCNN_HMP
-*Even More Underdevelopment* | Very Serious
+*Even More Under Development* | Very Serious
