@@ -1,5 +1,6 @@
 from headers import *
-
+theano.config.optimizer='None'
+theano.exception_verbosity='high'
 class GCNN(object):
 	def __init__(self,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
@@ -66,14 +67,15 @@ class GCNN(object):
 			layers_below = []
 			for pgnT in self.preGraphNetsTypes: # ADDED BY ME!!!!!!!!!!!!!!!!!!		
 				if (pgnT =='temporal'):
-					nodeLayers = self.nodeRNNs[nm]
-				elif(pgnT == 'normal'):
 					nodeLayers = self.temporalNodeRNNs[nm]
+				elif(pgnT == 'normal'):
+					nodeLayers = self.nodeRNNs[nm]
 				else:
 					print("Error in file GCNN.py, the pgnT is neither temporal or normal")	
 						
 				layers_below.append(nodeLayers)
 				nodeLayers[0].input = self.masterlayer[nm].output(pgnT)
+
 				for l in nodeLayers:
 					if hasattr(l,'params'):
 						self.params[nm].extend(l.params)
@@ -85,19 +87,21 @@ class GCNN(object):
 			for i in range(1,len(nodeTopLayer)):
 				nodeTopLayer[i].connect(nodeTopLayer[i-1])
 
-			for l in nodeTopLayer:
-				if hasattr(l,'params'):
-					self.params[nm].extend(l.params)
+			# for l in nodeTopLayer:
+			# 	if hasattr(l,'params'):
+			# 		self.params[nm].extend(l.params)
 
 # -------------------------------------------------------------------------------
 			# here will be work of gaph cnns
 #  -------------------------------------------------------------------------
 
 			self.Y_pr[nm] = nodeTopLayer[-1].output()
-			theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_" + str(nm) + ".png", var_with_name_simple=True)
+			print(nm)
+			# theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_foul_" + str(nm) + ".png", var_with_name_simple=True)
 			self.Y[nm] = self.nodeLabels[nm]
-			
-			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay * nodeTopLayer[-1].L2_sqr
+
+			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *nodeTopLayer[-1].L2_sqr
+			# self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *cv.L2_sqr#nodeTopLayer[-1].L2_sqr
 		
 			# ---------- Will need considerable work here joinging the backprop --------------------------- 
 			[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params[nm],self.cost[nm])
@@ -295,12 +299,14 @@ class GCNN(object):
 # ---------------------------------------------------------------------------------------------
 # ------------------------------ Model relted tasks -------------------------------------------
 				for nm in nodeNames:
+
 					loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
 					g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
 					grad_norms.append(g)
 					skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
 					loss += loss_for_current_node
 					skel_loss += skel_loss_for_current_node
+
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
@@ -308,20 +314,22 @@ class GCNN(object):
 				termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(loss,epoch,j,(skel_loss*1.0/(seq_length*skel_dim)),grad_norms,learning_rate,np.sqrt(skel_loss*1.0/seq_length),std,iterations)
 				complete_logger += termout + '\n'
 				print termout
-				forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-				del tr_X
-				del tr_Y
-							
-				tr_X = {}
-				tr_Y = {i}
-				forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-				for nt in nodeTypes:
-					tr_X[nt] = []
-					tr_Y[nt] = []
 
-				if int(iterations) % snapshot_rate == 0:
-					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)))
+# --------------------------- SAVING PERFORMACE CHECKING ET CETRA 
+				# forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# del tr_X
+				# del tr_Y
+							
+				# tr_X = {}
+				# tr_Y = {i}
+				# forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# for nt in nodeTypes:
+				# 	tr_X[nt] = []
+				# 	tr_Y[nt] = []
+
+				# if int(iterations) % snapshot_rate == 0:
+				# 	print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+				# 	saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
 				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
@@ -414,8 +422,6 @@ class GCNN(object):
 		for nm in nodeNames:
 			teY[nm] = np.array(teY[nm])
 		del teX
-		print("KKKKKKKKKKKKTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
-                theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
 		return teY
 
 
@@ -505,8 +511,6 @@ class GCNN(object):
 		for nm in nodeNames:
 			teY[nm] = np.array(teY[nm])
 		del teX
-		print("KKKKKKKKKKKKTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
-                theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
 		return teY
 
 	def predict_nextstep(self,teX):
@@ -552,8 +556,6 @@ class GCNN(object):
 			nt = nm.split(':')[1]
 			nodeName = nm.split(':')[0]
 			cellstates[nm] = self.get_cell[nt](to_return[nm],1e-5)
-		print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
-		theano.printing.pydotprint(train, outfile="pics/logreg_pydotprint_train.png", var_with_name_simple=True)
 		return cellstates
 
 	def concatenateDimensions(self,dictToconcatenate,axis=2):

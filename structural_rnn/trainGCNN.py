@@ -28,8 +28,10 @@ global rng
 
 
 theano.config.optimizer='None'
+#theano.config.optimizer='fast_compile'
+theano.config.exception_verbosity='high' 
 # theano.config.exception_verbosity='high'
-# theano.config.compute_test_value = 'warn'
+#theano.config.compute_test_value = 'warn'
 
 rng = np.random.RandomState(1234567890)
 
@@ -156,21 +158,21 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		# -------------------------------------------------------------------------------------
 		
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				# FCLayer('linear',args.fc_init,size=50,rng=rng)
+				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				FCLayer('linear',args.fc_init,size=50,rng=rng),
+				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				#AddNoiseToInput(rng=rng),
-				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
-				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
@@ -202,6 +204,29 @@ def trainGCNN():
 	trX,trX_validation,trX_forecasting, # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
 	preGraphNets # {node name} = {temporal/normal} = {high,low}  
 	] = graph.readCRFgraph(poseDataset)
+
+	print("###########################################################################")
+	print("nodeList")
+	print(nodeList)
+	print("###########################################################################")
+	print("temporalNodeFeatureLength")
+	print(temporalNodeFeatureLength)
+	print("###########################################################################")
+        print("nodeFeatureLength")
+        print(nodeFeatureLength)
+	print("###########################################################################")
+        print("nodeConnections")
+        print(nodeConnections)
+	print("###########################################################################")
+        print("trX_forecast_nodeFeatures right_arm")
+        #print(trX_forecast_nodeFeatures)
+	print(np.shape(trX_forecast_nodeFeatures['right_arm']))
+	print("###########################################################################")
+	print("trY right_arm")
+	print(np.shape(trY['right_arm']))
+	print("###########################################################################")
+	print("trX right_arm")
+	print(np.shape(trX['right_arm']))
 
 	new_idx = poseDataset.new_idx # all the dimensions which are not used ( the dimensions that have very little varianc ) are -1 and other have their respective index number like 0 1 2 3 -1 4 5 ......
 	featureRange = poseDataset.nodeFeaturesRanges # range of torso, right hand, left hand ...
@@ -261,33 +286,3 @@ if __name__ == '__main__':
 		trainGCNN()	
 	else:
 		print "Unknown model type ... existing"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	# saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
-	# saveForecastedMotion(dra.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
-
-	# dra.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
-	# 	decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
-	# 	trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
-	# 	decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
-	# 	use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-	# 	new_idx=new_idx,featureRange=featureRange,poseDataset=poseDataset,graph=graph,maxiter=args.maxiter,unNormalizeData=unNormalizeData)
