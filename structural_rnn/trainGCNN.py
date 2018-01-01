@@ -157,6 +157,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		# 		]
 		# -------------------------------------------------------------------------------------
 		
+
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=50,rng=rng),
@@ -200,7 +201,8 @@ def trainGCNN():
 	nodeFeatureLength, # {node name} = node feat. length
 	nodeConnections,# {node name} = node names it is connected to
 	trY,trY_validation,trY_forecasting, # the output values of the model i.e. the coordinates of the different joints as a dictionary {node name} = value of the coordinate 
-	trX_forecast_nodeFeatures,
+	trX_forecast_nodeFeatures, # {node name} -> ? these are position of joints using which the input fetures are made. trX_forecasting[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1})
+
 	trX,trX_validation,trX_forecasting, # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
 	preGraphNets # {node name} = {temporal/normal} = {high,low}  
 	] = graph.readCRFgraph(poseDataset)

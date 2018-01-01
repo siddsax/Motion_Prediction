@@ -157,21 +157,22 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 
 
 def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):
-	edge_features = {}
-	nodeType = nodeNames[nodeName]
-	edgeTypesConnectedTo = nodeToEdgeConnections[nodeType].keys()
-	low = 0
-	high = 0
+	# edge_features = {}
+	# nodeType = nodeNames[nodeName]
+	# edgeTypesConnectedTo = nodeToEdgeConnections[nodeType].keys()
+	# low = 0
+	# high = 0
 
-	for edgeType in edgeTypesConnectedTo:
-		edge_features[edgeType] = poseDataset.getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,nodeFeatures,nodeFeatures_t_1)
+	train_features,temporal_train_features = poseDataset.getGCNNfeatures(nodeName,nodeFeatures,nodeFeatures_t_1)
+	features = np.concatenate((train_features,temporal_train_features),axis=2)
+		# getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,nodeFeatures,nodeFeatures_t_1)
 
-	edgeType = nodeType + '_input'
-	nodeRNNFeatures = copy.deepcopy(edge_features[edgeType])
+	# edgeType = nodeType + '_input'
+	# nodeRNNFeatures = copy.deepcopy(edge_features[edgeType])
 
-	for edgeType in edgeList:
-		if edgeType not in edgeTypesConnectedTo:
-			continue
-		nodeRNNFeatures = np.concatenate((nodeRNNFeatures,edge_features[edgeType]),axis=2)
+	# for edgeType in edgeList:
+		# if edgeType not in edgeTypesConnectedTo:
+			# continue
+		# nodeRNNFeatures = np.concatenate((nodeRNNFeatures,edge_features[edgeType]),axis=2)
 
-	return nodeRNNFeatures
+	return features

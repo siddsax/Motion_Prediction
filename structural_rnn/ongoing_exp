@@ -8,3 +8,64 @@ mode=FAST_RUN,device=cpu,floatX=float32
 cseproj146
 mode=FAST_RUN,device=cpu,floatX=float32
 ./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 24585
+=====
+2018-01-01 03:53:43.659022
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-01 07:30:06.521703
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-01 07:30:59.739097
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-01 07:31:10.707118
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 1566
+=====
+2018-01-01 07:33:48.978913
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 2971
+=====
+2018-01-01 07:35:15.041544
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 3727
+=====
+2018-01-01 07:35:36.285908
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 3951
+=====
+2018-01-01 07:37:14.594892
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 4715
+=====
+2018-01-01 07:38:59.077658
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 5622
+=====
+2018-01-01 07:39:41.427557
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 6017
+=====
+2018-01-01 07:42:33.925650
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 7400
+=====
+2018-01-01 07:49:18.408287
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./checkpoints_gcnn_T_150_bs_100_tg_100_initial_lr_0.001_clipnorm_25.0_nschd_[250,500.0,1000.0,1300.0,2000.0,2500.0,3300.0]_nrate_[0.01,0.05,0.1,0.2,0.3,0.5,0.75]_decschd_[1500.0,4500.0]_decrate_[0.1,0.1]_fs_eating/ 10585
+=====
+2018-01-01 07:59:30.440607
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
