@@ -159,24 +159,43 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		
 
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				FCLayer('linear',args.fc_init,size=50,rng=rng),
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				# FCLayer('linear',args.fc_init,size=50,rng=rng),
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				#AddNoiseToInput(rng=rng),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
 				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 
+		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
+		# 		FCLayer('rectify',args.fc_init,size=100,rng=rng),
+		# 		FCLayer('linear',args.fc_init,size=50,rng=rng),
+		# 		multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+		# 		]
+
+		# temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
+		# 		#AddNoiseToInput(rng=rng),
+		# 		FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+		# 		FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+		# 		]
+		# topLayer[nm] = [
+		# 		# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+		# 		FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+		# 		FCLayer('rectify',args.fc_init,size=100,rng=rng),
+		# 		FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+		# 		]
+
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
+
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 
 	# ----------------------- Add graph CNN related variables -------------------------------
@@ -188,7 +207,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 def trainGCNN():
 	crf_file = './CRFProblems/H3.6m/crf' + args.crf
 
-	path_to_checkpoint = poseDataset.base_dir + '/{0}/'.format(args.checkpoint_path)
+	path_to_checkpoint = './{0}/'.format(args.checkpoint_path)
 	print path_to_checkpoint
 	if not os.path.exists(path_to_checkpoint):
 		os.mkdir(path_to_checkpoint)

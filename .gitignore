@@ -3,3 +3,4 @@ dataset
 structural_rnn/log*
 structural_rnn/pics
 structural_rnn/checkpoints*
+structural_rnn/saved_models

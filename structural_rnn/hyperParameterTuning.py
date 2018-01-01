@@ -160,59 +160,60 @@ for value_list in cv_list:
 		my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cpu,floatX=float32'.format(use_gpu)
 	ongoing_file.write(my_env['THEANO_FLAGS']+'\n')
 	if params['model_to_train'] == 'dra':
-		params['checkpoint_path'] = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
+		params['checkpoint_path'] = 'saved_models/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
 		if not params['node_lstm_size'] == params['lstm_size']:
 			params['checkpoint_path'] += 'nls_{0}_'.format(params['node_lstm_size'])
 	
 	else:
-		params['checkpoint_path'] = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'])
-	for v,k  in zip(value_list,cv_over):
+		params['checkpoint_path'] = 'saved_models/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'])
+	# for v,k  in zip(value_list,cv_over):
 		
-		st = ''
-		if isinstance(v,list):
-			if k == 'noise':
-				params['noise_schedule'] = v[0]
-				params['noise_rate_schedule'] = v[1]
-				params['checkpoint_path'] +=  'nschd_{0}_nrate_{1}_'.format(listToString(v[0]),listToString(v[1]))
+	# 	st = ''
+	# 	if isinstance(v,list):
+	# 		if k == 'noise':
+	# 			params['noise_schedule'] = v[0]
+	# 			params['noise_rate_schedule'] = v[1]
+	# 			params['checkpoint_path'] +=  'nschd_{0}_nrate_{1}_'.format(listToString(v[0]),listToString(v[1]))
 
-			if k == 'decay':
-				params['decay_schedule'] = v[0]
-				params['decay_rate_schedule'] = v[1]
-				params['checkpoint_path'] +=  'decschd_{0}_decrate_{1}_'.format(listToString(v[0]),listToString(v[1]))
-		else:
-			params[k] = v
-			st = v
-			params['checkpoint_path'] +=  '{0}_{1}_'.format(k,st)
+	# 		if k == 'decay':
+	# 			params['decay_schedule'] = v[0]
+	# 			params['decay_rate_schedule'] = v[1]
+	# 			params['checkpoint_path'] +=  'decschd_{0}_decrate_{1}_'.format(listToString(v[0]),listToString(v[1]))
+	# 	else:
+	# 		params[k] = v
+	# 		st = v
+	# 		params['checkpoint_path'] +=  '{0}_{1}_'.format(k,st)
 		
-	params['checkpoint_path'] = params['checkpoint_path'][:-1] + params['crf']
+	# params['checkpoint_path'] = params['checkpoint_path'][:-1] + params['crf']
 
 
 	if params['weight_decay'] > 1e-6:
 		params['checkpoint_path'] += '_wd_{0}'.format(params['weight_decay'])
 	
-	if params['full_skeleton']:
-		params['checkpoint_path'] += '_fs'
+	# if params['full_skeleton']:
+	# 	params['checkpoint_path'] += '_fs'
 
-	if not params['train_for'] == 'validate':
-		params['checkpoint_path'] += '_' + params['train_for']
+	# if not params['train_for'] == 'validate':
+	# 	params['checkpoint_path'] += '_' + params['train_for']
 
-	if params['temporal_features']:
-		params['checkpoint_path'] += '_tf'
+	# if params['temporal_features']:
+	# 	params['checkpoint_path'] += '_tf'
 
 	if params['drop_features']:
 		params['checkpoint_path'] += '_df_' + params['drop_id']
 
-	if (not params['dra_type'] == 'simple') and params['model_to_train'] == 'dra':
-		params['checkpoint_path'] += '_' + params['dra_type']
+	# if (not params['dra_type'] == 'simple') and params['model_to_train'] == 'dra':
+	# 	params['checkpoint_path'] += '_' + params['dra_type']
 
-	if len(params['dataset_prefix']) > 0:
-		params['checkpoint_path'] += params['dataset_prefix']
+	# if len(params['dataset_prefix']) > 0:
+	# 	params['checkpoint_path'] += params['dataset_prefix']
 	
-	if not params['subsample_data']:
-		params['checkpoint_path'] += '_fullrate'
+	# if not params['subsample_data']:
+	# 	params['checkpoint_path'] += '_fullrate'
 
 
 	path_to_checkpoint = base_dir + '/{0}/'.format(params['checkpoint_path'])
+	print(path_to_checkpoint)
 	if not os.path.exists(path_to_checkpoint):
 		os.mkdir(path_to_checkpoint)
 	
