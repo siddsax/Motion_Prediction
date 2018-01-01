@@ -90,10 +90,11 @@ if args.forecast == 'dra':
 		fname = 'motionprefixlong'
 		model.saveForecastedMotion(trX_forecast_nodeFeatures_,path,fname)
 
-		forecasted_motion = model.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-		forecasted_motion = model.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+		forecasted_motion_o = model.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+		forecasted_motion = model.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
+		forecasted_motion_2 = model.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
 		fname = 'forecast_iterationlong_{0}'.format(iteration)
-		model.saveForecastedMotion(forecasted_motion,path,fname)
+		model.saveForecastedMotion(forecasted_motion_2,path,fname)
 
 		skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
 		err_per_dof = skel_err / trY_forecasting.shape[2]

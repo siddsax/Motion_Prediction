@@ -47,7 +47,7 @@ parser.add_argument('--lstm_size',type=int,default=10)
 parser.add_argument('--fc_size',type=int,default=500)
 parser.add_argument('--lstm_init',type=str,default='uniform')
 parser.add_argument('--fc_init',type=str,default='uniform')
-parser.add_argument('--snapshot_rate',type=int,default=1)
+parser.add_argument('--snapshot_rate',type=int,default=10)
 parser.add_argument('--epochs',type=int,default=100)
 parser.add_argument('--batch_size',type=int,default=3000)
 parser.add_argument('--clipnorm',type=float,default=25.0)
@@ -260,8 +260,8 @@ def trainGCNN():
 		args.iter_to_load = 0
 		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength)
 	# ----------------------- To be used finally commented as work in this part is not done --------------------
-	# saveForecastedMotion(gcnn.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
-	# saveForecastedMotion(gcnn.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+	saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint)
+	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
 	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,

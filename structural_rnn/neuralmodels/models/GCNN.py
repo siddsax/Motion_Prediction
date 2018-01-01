@@ -144,7 +144,7 @@ class GCNN(object):
 
 # --------------------------------------------------------------------------------------------------
 
-	def fitModel(self,trX,trY,snapshot_rate=1,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
+	def fitModel(self,trX,trY,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
@@ -334,10 +334,14 @@ class GCNN(object):
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
-					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-					forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+					forecasted_motion_o = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+
+					forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
+					forecasted_motion_2 = self.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
+
 					fname = 'forecast_iteration_{0}'.format(int(iterations))
-					self.saveForecastedMotion(forecasted_motion,path,fname)
+					# self.saveForecastedMotion(forecasted_motion,path,fname)
+					self.saveForecastedMotion(forecasted_motion_2,path,fname)
 					skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
 					err_per_dof = skel_err / trY_forecasting.shape[2]
 					fname = 'forecast_error_iteration_{0}'.format(int(iterations))
@@ -542,3 +546,24 @@ class GCNN(object):
 			insert_at = np.delete(idx,np.where(idx < 0))
 			single_vec[:,:,insert_at] = X[k]
 		return single_vec
+
+	def convertToSingleLongVec(self,X,poseDataset,new_idx,featureRange):
+		keys = X.keys()
+		[T,N,D]  = X[keys[0]].shape
+		D = len(new_idx)
+		single_vec = np.zeros((T,N,D),dtype=np.float32)
+		k2 = 0
+		for k in keys:
+			nm = k.split(':')[0]
+			# idx = new_idx[featureRange[nm]]
+			k1 = np.size(featureRange[nm])
+			p = 0
+			for i in range(k1):
+				if(new_idx[featureRange[nm][i]]==-1):
+					a = poseDataset.data_stats['mean'][i]
+					single_vec[:,:,featureRange[nm][i]] = np.tile(a,(T,N))		
+				else:
+					single_vec[:,:,featureRange[nm][i]] = X[k][:,:,p]
+					p+=1	
+
+		return single_vec	
