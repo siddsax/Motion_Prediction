@@ -75,6 +75,8 @@ parser.add_argument('--dataset_prefix',type=str,default='')
 parser.add_argument('--drop_features',type=int,default=0)
 parser.add_argument('--subsample_data',type=int,default=1)
 parser.add_argument('--drop_id',type=str,default='')
+parser.add_argument('--hidden1',type=int,default=100)
+parser.add_argument('--drop_value',type=int,default=.5)
 args = parser.parse_args()
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
@@ -173,7 +175,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+				FCLayer('linear',args.fc_init,size=100,rng=rng)
 				]
 
 		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
@@ -197,11 +199,14 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
+	adjacency = T.matrix('adjacency_matrix', dtype=theano.config.floatX)
 
 	# ----------------------- Add graph CNN related variables -------------------------------
-	# 
+	graphLayers = [GraphConvolution_input(args.hidden1,adjacency,drop_value=args.drop_value),
+        GraphConvolution(num_classes,adjacency,activation_str='linear',drop_value=args.drop_value)
+	] 
 	#----------------------------------------------------------------------------------------
-	gcnn = GCNN(preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN(graphLayers,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return gcnn
 
 def trainGCNN():
@@ -223,8 +228,8 @@ def trainGCNN():
 	trX_forecast_nodeFeatures, # {node name} -> ? these are position of joints using which the input fetures are made. trX_forecasting[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1})
 
 	trX,trX_validation,trX_forecasting, # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
-	preGraphNets # {node name} = {temporal/normal} = {high,low}  
-	] = graph.readCRFgraph(poseDataset)
+	preGraphNets, # {node name} = {temporal/normal} = {high,low}  
+	adjacency] = graph.readCRFgraph(poseDataset)
 
 	print("###########################################################################")
 	print("nodeList")
@@ -264,7 +269,7 @@ def trainGCNN():
 	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
-	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	gcnn.fitModel(trX, trY, adjacency,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,

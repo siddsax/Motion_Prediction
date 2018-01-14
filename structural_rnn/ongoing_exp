@@ -282,3 +282,17 @@ mode=FAST_RUN,device=cpu,floatX=float32
 2018-01-01 22:56:53.532291
 cseproj148
 mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-15 00:54:41.635040
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-15 00:55:09.962552
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 28805
+=====
+2018-01-15 01:10:03.945765
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 30776

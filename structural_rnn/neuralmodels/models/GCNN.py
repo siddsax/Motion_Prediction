@@ -2,7 +2,7 @@ from headers import *
 theano.config.optimizer='None'
 theano.exception_verbosity='high'
 class GCNN(object):
-	def __init__(self,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,graphLayers,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -17,6 +17,7 @@ class GCNN(object):
 		self.nodeRNNs = nodeRNNs
 		self.temporalNodeRNNs = temporalNodeRNNs
 		self.nodeLabels = nodeLabels
+		self.graphLayers = graphLayers
 		self.learning_rate = learning_rate
 		self.clipnorm = clipnorm
 		self.weight_decay = weight_decay
@@ -29,7 +30,7 @@ class GCNN(object):
 		self.Y = {}
 		self.params = {}
 		self.updates = {}
-		self.train_node = {}
+		# self.train_node = {}
 		self.predict_node = {}
 		self.predict_node_last_timestep = {}
 		self.masterlayer = {}
@@ -38,15 +39,15 @@ class GCNN(object):
 		self.grad_norm = {}
 		self.norm = {}
 		self.get_cell = {}
-
+		self.params_all = []
 		self.update_type = update_type
 		self.update_type.lr = self.learning_rate
 		self.update_type.clipnorm = self.clipnorm
-
+		self.node_features = []
 		self.std = T.scalar(dtype=theano.config.floatX)
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-		
-
+		self.Y_all = []		
+		self.adjacency = T.matrix('adjacency_matrix', dtype=theano.config.floatX)
 		for nm in nodeNames:
 			layers = self.nodeRNNs[nm]
 			for i in range(1,len(layers)):
@@ -87,36 +88,55 @@ class GCNN(object):
 			for i in range(1,len(nodeTopLayer)):
 				nodeTopLayer[i].connect(nodeTopLayer[i-1])
 
-			# for l in nodeTopLayer:
-			# 	if hasattr(l,'params'):
-			# 		self.params[nm].extend(l.params)
+			for l in nodeTopLayer:
+				if hasattr(l,'params'):
+					self.params[nm].extend(l.params)
 
 # -------------------------------------------------------------------------------
 			# here will be work of gaph cnns
 #  -------------------------------------------------------------------------
 
 			self.Y_pr[nm] = nodeTopLayer[-1].output()
+			self.node_features.append(self.Y_pr[nm])
 			print(nm)
 			# theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_foul_" + str(nm) + ".png", var_with_name_simple=True)
 			self.Y[nm] = self.nodeLabels[nm]
+			self.Y_all.append(self.Y[nm])
+			size_below = nodeTopLayer[-1].size
+			self.params_all.extend(self.params[nm])
 
-			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *nodeTopLayer[-1].L2_sqr
-			# self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *cv.L2_sqr#nodeTopLayer[-1].L2_sqr
-		
-			# ---------- Will need considerable work here joinging the backprop --------------------------- 
-			[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params[nm],self.cost[nm])
-			# ---------------------------------------------------------------------------------------------
-			
-			self.train_node[nm] = theano.function([self.X[nm],self.Y[nm],self.learning_rate,self.std],self.cost[nm],updates=self.updates[nm],on_unused_input='ignore')
-		
-			self.predict_node[nm] = theano.function([self.X[nm],self.std],self.Y_pr[nm],on_unused_input='ignore')
+
+	  
+		layers[0].connect(self.node_features,size_below) 
+		for i in range(1,len(layers)):
+			layers[i].connect(layers[i-1])
+			if layers[i].__class__.__name__ == 'AddNoiseToInput':
+				layers[i].std = self.std
 	
-			self.predict_node_loss[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.cost[nm],on_unused_input='ignore')
+		for l in layers:
+			if hasattr(l,'params'):
+				self.params_all.extend(l.params)
+
+		self.Y_pr_all = layers[-1].output()
+		self.Y_all = T.as_tensor_variable(self.Y_all)
+
 		
-			self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
+		# self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *cv.L2_sqr#nodeTopLayer[-1].L2_sqr
+		self.cost = cost(self.Y_pr_all,self.Y_all) + self.weight_decay *layers[-1].L2_sqr
+		# ---------- Will need considerable work here joinging the backprop --------------------------- 
+		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
+		# ---------------------------------------------------------------------------------------------
 		
-			self.grad_norm[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.norm[nm],on_unused_input='ignore')
-		
+		self.train_node = theano.function([self.X,self.Y,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates[nm],on_unused_input='ignore')
+	
+		self.predict_node = theano.function([self.X,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
+
+		self.predict_node_loss = theano.function([self.X,self.Y,self.adjacency,self.std],self.cost,on_unused_input='ignore')
+	
+		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+	
+		self.grad_norm = theano.function([self.X,self.Y,self.adjacency,self.std],self.norm,on_unused_input='ignore')
+	
 			# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeTopLayer[0].output(),on_unused_input='ignore')	
 
 
@@ -144,7 +164,7 @@ class GCNN(object):
 
 # --------------------------------------------------------------------------------------------------
 
-	def fitModel(self,trX,trY,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
+	def fitModel(self,trX,trY,adjacency,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
@@ -298,14 +318,14 @@ class GCNN(object):
 				grad_norms = []
 # ---------------------------------------------------------------------------------------------
 # ------------------------------ Model relted tasks -------------------------------------------
-				for nm in nodeNames:
+				# for nm in nodeNames:
 
-					loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
-					g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
-					grad_norms.append(g)
-					skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
-					loss += loss_for_current_node
-					skel_loss += skel_loss_for_current_node
+				loss_for_current_node = self.train_node(tr_X,tr_Y,adjacency,learning_rate,std)
+				g = self.grad_norm(tr_X,tr_Y,adjacency,std)
+				grad_norms.append(g)
+				# skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
+				loss += loss_for_current_node
+				# skel_loss += skel_loss_for_current_node
 
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
@@ -351,12 +371,13 @@ class GCNN(object):
 			if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
 				validation_error = 0.0
 				Tvalidation = 0
-				for nm in trX_validation.keys():
+				# for nm in trX_validation.keys():
 
-					validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
-					Tvalidation = trX_validation[nm].shape[0]
+				validation_error += self.predict_node_loss(trX_validation,trY_validation,adjacency,std)
+				# Tvalidation = trX_validation[nm].shape[0]
+
 				validation_set[-1] = validation_error
-				termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
+				# termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
 				complete_logger += termout + '\n'
 				print termout
 		
