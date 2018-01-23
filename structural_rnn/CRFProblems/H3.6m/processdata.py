@@ -52,7 +52,7 @@ elif soc.gethostname() == "napoli109.stanford.edu":
 	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
 	gpus = 1
 else:
-	base_dir = '/new_data/gpu/siddsax/Graph_CNNs'
+	base_dir = '/home/siddhartha/Graph_CNNs/h3.6m'
 
 nodeFeaturesRanges={}
 nodeFeaturesRanges['torso'] = range(6)

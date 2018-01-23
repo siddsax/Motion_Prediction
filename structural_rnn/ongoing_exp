@@ -296,3 +296,397 @@ mode=FAST_RUN,device=cpu,floatX=float32
 myLearningMachine
 mode=FAST_RUN,device=cpu,floatX=float32
 ./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 30776
+=====
+2018-01-15 02:07:07.118493
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 3888
+=====
+2018-01-15 02:10:17.996251
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 4241
+=====
+2018-01-15 02:11:47.382431
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 4433
+=====
+2018-01-15 02:14:31.594141
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 4704
+=====
+2018-01-16 02:02:24.291577
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 12692
+=====
+2018-01-16 02:04:13.813547
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 12960
+=====
+2018-01-16 02:04:30.553013
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 13007
+=====
+2018-01-16 02:24:15.460700
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 15613
+=====
+2018-01-16 02:35:20.751944
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 16915
+=====
+2018-01-16 02:36:49.914787
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17057
+=====
+2018-01-16 02:38:15.828585
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17285
+=====
+2018-01-16 02:59:25.769157
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19412
+=====
+2018-01-16 02:59:43.756825
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19459
+=====
+2018-01-16 03:02:51.419933
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19773
+=====
+2018-01-16 03:03:54.448607
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19929
+=====
+2018-01-16 03:06:52.617815
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20232
+=====
+2018-01-16 03:08:01.302919
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20386
+=====
+2018-01-16 03:09:37.295347
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20563
+=====
+2018-01-16 03:10:54.956182
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20681
+=====
+2018-01-16 03:11:27.192085
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20792
+=====
+2018-01-16 03:30:33.986845
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 22555
+=====
+2018-01-16 03:30:52.966229
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 22613
+=====
+2018-01-16 03:31:33.319237
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 22739
+=====
+2018-01-16 03:50:20.239853
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 24243
+=====
+2018-01-16 03:51:12.690931
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 24362
+=====
+2018-01-16 03:54:26.563485
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 24672
+=====
+2018-01-16 09:56:25.010466
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7364
+=====
+2018-01-16 09:56:47.421566
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7431
+=====
+2018-01-16 09:57:05.670047
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7559
+=====
+2018-01-16 09:57:25.962608
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7655
+=====
+2018-01-16 09:58:14.383248
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7789
+=====
+2018-01-16 09:58:36.493503
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7848
+=====
+2018-01-16 09:59:13.812361
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 7983
+=====
+2018-01-16 10:00:16.563754
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 8139
+=====
+2018-01-16 10:13:16.709437
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 9867
+=====
+2018-01-16 10:13:29.555003
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 9937
+=====
+2018-01-16 10:14:01.248531
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 10032
+=====
+2018-01-16 16:53:11.533368
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14430
+=====
+2018-01-16 16:54:16.368492
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14566
+=====
+2018-01-16 16:54:27.143846
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14616
+=====
+2018-01-16 16:54:51.588808
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14714
+=====
+2018-01-16 16:55:40.152895
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14856
+=====
+2018-01-16 16:56:45.512817
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 15021
+=====
+2018-01-16 16:57:30.379602
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 15229
+=====
+2018-01-16 16:58:31.295259
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 15380
+=====
+2018-01-16 16:59:07.460937
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 15589
+=====
+2018-01-17 04:48:39.448874
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 11514
+=====
+2018-01-17 05:09:47.169894
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14094
+=====
+2018-01-17 05:10:00.456730
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14157
+=====
+2018-01-17 05:55:55.368766
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 18888
+=====
+2018-01-17 05:56:47.724578
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-01-17 05:56:54.832486
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19112
+=====
+2018-01-17 05:57:28.858308
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19304
+=====
+2018-01-17 06:00:13.656945
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19602
+=====
+2018-01-17 06:14:38.424110
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 21090
+=====
+2018-01-17 06:17:30.964320
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 21443
+=====
+2018-01-17 06:18:40.488199
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 21592
+=====
+2018-01-17 06:18:53.016758
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 21649
+=====
+2018-01-17 06:32:16.100876
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 23849
+=====
+2018-01-19 02:06:15.888979
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 28479
+=====
+2018-01-22 21:53:38.682215
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 1008
+=====
+2018-01-23 10:16:38.037214
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17270
+=====
+2018-01-23 10:18:52.001108
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17530
+=====
+2018-01-23 10:19:53.053943
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17685
+=====
+2018-01-23 10:20:15.431843
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 17773
+=====
+2018-01-23 10:22:16.335022
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 18101
+=====
+2018-01-23 10:28:44.264399
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 18871
+=====
+2018-01-23 10:29:44.106408
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19012
+=====
+2018-01-23 10:30:10.478899
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19120
+=====
+2018-01-23 10:31:14.515415
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19266
+=====
+2018-01-23 10:33:04.636466
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19499
+=====
+2018-01-23 10:34:34.138065
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 19723
+=====
+2018-01-23 10:36:51.276987
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20025
+=====
+2018-01-23 10:37:46.567299
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20168
+=====
+2018-01-23 10:41:10.466061
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20650
+=====
+2018-01-23 10:41:40.261280
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20703
+=====
+2018-01-23 10:42:38.447028
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20928
+=====
+2018-01-23 10:51:03.936726
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 21739
+=====
+2018-01-24 01:30:10.318823
+myLearningMachine
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 28555

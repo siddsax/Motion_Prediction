@@ -1,8 +1,10 @@
 from headers import *
+import numpy as np
+from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 theano.config.optimizer='None'
 theano.exception_verbosity='high'
 class GCNN(object):
-	def __init__(self,graphLayers,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -18,6 +20,7 @@ class GCNN(object):
 		self.temporalNodeRNNs = temporalNodeRNNs
 		self.nodeLabels = nodeLabels
 		self.graphLayers = graphLayers
+		self.finalLayer = finalLayer
 		self.learning_rate = learning_rate
 		self.clipnorm = clipnorm
 		self.weight_decay = weight_decay
@@ -26,8 +29,9 @@ class GCNN(object):
 		self.cost = {}
 		self.X = {}
 		self.Y_pr = {}
+		self.Y_pr_all = []
 		self.Y_pr_last_timestep = {}
-		self.Y = {}
+		self.Y = []
 		self.params = {}
 		self.updates = {}
 		# self.train_node = {}
@@ -46,8 +50,17 @@ class GCNN(object):
 		self.node_features = []
 		self.std = T.scalar(dtype=theano.config.floatX)
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-		self.Y_all = []		
-		self.adjacency = T.matrix('adjacency_matrix', dtype=theano.config.floatX)
+		self.adjacency = T.lmatrix(name="adjacency")
+		self.adjacency.tag.test_value = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+
+		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
+		self.Y_all.tag.test_value = np.random.rand(5,150, 98)
+		self.masterlayer = unConcatenateVectors(preGraphNets)
+		self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
+		# self.masterlayer.X_all = self.X_all
+
+		pit = 0
+		indv_node_layers = []
 		for nm in nodeNames:
 			layers = self.nodeRNNs[nm]
 			for i in range(1,len(layers)):
@@ -62,8 +75,6 @@ class GCNN(object):
 					layers[i].std = self.std
 
 			self.params[nm] = []
-			self.masterlayer[nm] = unConcatenateVectors(preGraphNets[nm])
-			self.X[nm] = self.masterlayer[nm].input
 			
 			layers_below = []
 			for pgnT in self.preGraphNetsTypes: # ADDED BY ME!!!!!!!!!!!!!!!!!!		
@@ -75,7 +86,7 @@ class GCNN(object):
 					print("Error in file GCNN.py, the pgnT is neither temporal or normal")	
 						
 				layers_below.append(nodeLayers)
-				nodeLayers[0].input = self.masterlayer[nm].output(pgnT)
+				nodeLayers[0].input = self.masterlayer.output(pgnT,nm,self.X_all)
 
 				for l in nodeLayers:
 					if hasattr(l,'params'):
@@ -97,48 +108,89 @@ class GCNN(object):
 #  -------------------------------------------------------------------------
 
 			self.Y_pr[nm] = nodeTopLayer[-1].output()
-			self.node_features.append(self.Y_pr[nm])
+			# self.Y_pr[nm] = self.Y_pr[nm].reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))#, 1, x.shape[3], x.shape[4]))
+			indv_node_layers.append(nodeTopLayer[-1])
+
 			print(nm)
 			# theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_foul_" + str(nm) + ".png", var_with_name_simple=True)
-			self.Y[nm] = self.nodeLabels[nm]
-			self.Y_all.append(self.Y[nm])
 			size_below = nodeTopLayer[-1].size
+
+			if(pit==0):
+				x = self.Y_pr[nm]
+				self.Y_pr_all = x#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))	
+				# self.Y = self.nodeLabels[nm]#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))
+				# normalizing = self.weight_decay *nodeTopLayer[-1].L2_sqr
+			else:
+				x = self.Y_pr[nm]
+				self.Y_pr_all = T.concatenate([self.Y_pr_all,x],axis=2)
+				# self.Y = T.concatenate([self.Y,self.nodeLabels[nm]],axis=2)
+				# normalizing+=self.weight_decay *nodeTopLayer[-1].L2_sqr
+
 			self.params_all.extend(self.params[nm])
+			pit = pit + 1
 
-
-	  
-		layers[0].connect(self.node_features,size_below) 
-		for i in range(1,len(layers)):
-			layers[i].connect(layers[i-1])
-			if layers[i].__class__.__name__ == 'AddNoiseToInput':
-				layers[i].std = self.std
+		# cv = Concatenate_Node_Layers()
+		# cv.connect(indv_node_layers)
+		# layers = self.graphLayers
+		# layers[0].connect(cv)#self.node_features,size_below) 
+		# for i in range(1,len(layers)):
+		# 	layers[i].connect(layers[i-1])
+		# 	if layers[i].__class__.__name__ == 'AddNoiseToInput':
+		# 		layers[i].std = self.std
 	
-		for l in layers:
-			if hasattr(l,'params'):
-				self.params_all.extend(l.params)
+		# for l in layers:
+		# 	if hasattr(l,'params'):
+		# 		self.params_all.extend(l.params)
 
-		self.Y_pr_all = layers[-1].output()
-		self.Y_all = T.as_tensor_variable(self.Y_all)
+		# out_all = layers[-1].output()
 
+
+		# ###########################################
 		
-		# self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay *cv.L2_sqr#nodeTopLayer[-1].L2_sqr
-		self.cost = cost(self.Y_pr_all,self.Y_all) + self.weight_decay *layers[-1].L2_sqr
+		# # how data fed to graphsLayers is not correct. see various dims FIXED?
+		# # see how data out of it will be structured and then feed to finalLayer FIXED?
+		# # make a new FCLayer that has new connect and output 
+		# # augment cost so that it can take 2 lists as inputs
+		# # feed to theano.function via a list with all Xs
+
+		# #########################################
+		# it = 0
+		# size_below = layers[-1].size
+
+		# for nm in nodeNames:
+		# 	layers = self.finalLayer[nm]
+		# 	layers[0].connect(out_all[:,:,it,:],size_below)
+		# 	it = it + 1 
+		# 	for i in range(1,len(layers)):
+		# 		layers[i].connect(layers[i-1])
+		# 		if layers[i].__class__.__name__ == 'AddNoiseToInput':
+		# 			layers[i].std = self.std
+			
+		# 	for l in layers:
+		# 		if hasattr(l,'params'):
+		# 			self.params_all.extend(l.params)
+			
+		# 	self.Y_pr_all.append(layers[-1].output())	
+
+		# self.Y_all = T.as_tensor_variable(self.Y_all)
+
+		print(self.params_all)
+		print(self.Y_pr_all.__repr__())
+		print("--------------------")
+		print(self.Y_all.__repr__())
+		print("====================")
+		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
+		theano.printing.pydotprint(self.cost, outfile="pics/booba23" + ".png", var_with_name_simple=True)
+
 		# ---------- Will need considerable work here joinging the backprop --------------------------- 
 		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
-		# ---------------------------------------------------------------------------------------------
-		
-		self.train_node = theano.function([self.X,self.Y,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates[nm],on_unused_input='ignore')
-	
-		self.predict_node = theano.function([self.X,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
-
-		self.predict_node_loss = theano.function([self.X,self.Y,self.adjacency,self.std],self.cost,on_unused_input='ignore')
-	
+			
+		self.train_node = theano.function([self.X_all,self.Y_all,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+		self.predict_node = theano.function([self.X_all,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
+		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.cost,on_unused_input='ignore')
 		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+		self.grad_norm = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.norm,on_unused_input='ignore')
 	
-		self.grad_norm = theano.function([self.X,self.Y,self.adjacency,self.std],self.norm,on_unused_input='ignore')
-	
-			# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeTopLayer[0].output(),on_unused_input='ignore')	
-
 
 		self.num_params = 0
 		for nm in nodeNames:
@@ -320,8 +372,16 @@ class GCNN(object):
 # ------------------------------ Model relted tasks -------------------------------------------
 				# for nm in nodeNames:
 
-				loss_for_current_node = self.train_node(tr_X,tr_Y,adjacency,learning_rate,std)
-				g = self.grad_norm(tr_X,tr_Y,adjacency,std)
+				tr_X_all = tr_X[nodeNames[0]]
+				tr_Y_all = tr_Y[nodeNames[0]]
+
+				for i in range(1,len(nodeNames)):
+					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
+					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
+
+				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,adjacency,learning_rate,std)
+			
+				g = self.grad_norm(tr_X_all,tr_Y_all,adjacency,std)
 				grad_norms.append(g)
 				# skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
 				loss += loss_for_current_node

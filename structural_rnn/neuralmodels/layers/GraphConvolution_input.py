@@ -6,15 +6,15 @@ from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 import theano.sparse.basic as sp
 from theano.tensor.elemwise import CAReduce
-from activations import *
-from inits import *
-from utils import *
-from Dropout import Dropout
+# from activations import *
+# from inits import *
+# from utils import *
+# from Dropout import Dropout
+from headers import *
 
 
 
-class GraphConvolution(object):
-	
+class GraphConvolution_input(object):
 	def __init__(self, size,adjacency, num_features_nonzero=False, drop_value=None,rng=None, init='glorot',bias=False,sparse_inputs=False,dropout=True, activation_str='rectify', weights=False,featureless=False):
 
 		self.settings = locals()

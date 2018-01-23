@@ -18,6 +18,9 @@ from neuralmodels.models import *
 from neuralmodels.predictions import OutputMaxProb, OutputSampleFromDiscrete
 from neuralmodels.layers import * 
 from neuralmodels.updates import Adagrad,RMSprop,Momentum,Adadelta
+from GraphConvolution import GraphConvolution
+from GraphConvolution_input import GraphConvolution_input
+from FCLayer_out import FCLayer_out
 import cPickle
 import pdb
 import socket as soc
@@ -31,7 +34,8 @@ theano.config.optimizer='None'
 #theano.config.optimizer='fast_compile'
 theano.config.exception_verbosity='high' 
 # theano.config.exception_verbosity='high'
-#theano.config.compute_test_value = 'warn'
+theano.config.compute_test_value = 'warn'
+theano.config.print_test_value = True
 
 rng = np.random.RandomState(1234567890)
 
@@ -143,6 +147,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	temporalNodeRNN = {} # --- Node_Feature:(Node_Feature - Node_Feature_-1)
 	nodeRNNs = {} 
 	topLayer = {}
+	finalLayer = {}
 	nodeLabels = {}
 	nodeNames = nodeList.keys()
 	for nm in nodeNames:
@@ -167,7 +172,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
-				#AddNoiseToInput(rng=rng),
+				# AddNoiseToInput(rng=rng),
 				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
@@ -176,6 +181,9 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=100,rng=rng)
+				]
+		finalLayer[nm] = [
+				FCLayer_out('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 
 		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
@@ -202,11 +210,13 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	adjacency = T.matrix('adjacency_matrix', dtype=theano.config.floatX)
 
 	# ----------------------- Add graph CNN related variables -------------------------------
-	graphLayers = [GraphConvolution_input(args.hidden1,adjacency,drop_value=args.drop_value),
-        GraphConvolution(num_classes,adjacency,activation_str='linear',drop_value=args.drop_value)
+				
+	graphLayers = [GraphConvolution(args.hidden1,adjacency,drop_value=args.drop_value),
+        AddNoiseToInput(rng=rng),
+        GraphConvolution(100,adjacency,activation_str='linear',drop_value=args.drop_value)
 	] 
 	#----------------------------------------------------------------------------------------
-	gcnn = GCNN(graphLayers,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return gcnn
 
 def trainGCNN():

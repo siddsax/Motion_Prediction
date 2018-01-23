@@ -4,6 +4,7 @@ import numpy as np
 
 import theano
 import theano.tensor as T
+import math
 
 def uniform(shape, scale=0.05, rng=None):
 	if rng is None:
@@ -30,3 +31,12 @@ def orthogonal(shape, scale=1.1, rng=None):
 	q = u if u.shape == flat_shape else v # pick the one with the correct shape
 	q = q.reshape(shape)
 	return theano.shared(value=(scale * q[:shape[0], :shape[1]]).astype(theano.config.floatX))
+
+def glorot(shape,rng=None):
+	if rng is None:
+		rng = np.random
+	# print(shape)
+	var = 6.0/(shape[0]+shape[1])
+	stddev = math.sqrt(var)
+	# return theano.shared(value=(rng.normal(0.0,stddev,size=shape)).astype(theano.config.floatX))
+	return theano.shared(value=(rng.uniform(size=shape,low=-stddev,high=stddev)).astype(theano.config.floatX))

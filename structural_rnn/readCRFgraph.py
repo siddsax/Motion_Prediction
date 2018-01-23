@@ -152,7 +152,7 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		
 		trX_nodeFeatures[nodeName] = X_forecast # these are position of joints using which the input fetures are made. trX_forecast[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1}) 
 	# print nodeToEdgeConnections
-		adjacency = np.asmatrix([1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1])
+		adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
 	return nodeList,temporalNodeFeatureLength,nodeFeatureLength,nodeConnections,trY,trY_validate,trY_forecast,trX_nodeFeatures,trX,trX_validate,trX_forecast,preGraphNets, adjacency	
 
 
