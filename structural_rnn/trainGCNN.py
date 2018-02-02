@@ -207,16 +207,17 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	adjacency = T.matrix('adjacency_matrix', dtype=theano.config.floatX)
-
+	adjacency = T.lmatrix('adjacency_matrix')
+	adjacency.tag.test_value = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+	learning_rate.tag.test_value = .5
 	# ----------------------- Add graph CNN related variables -------------------------------
-				
-	graphLayers = [GraphConvolution(args.hidden1,adjacency,drop_value=args.drop_value),
+	k = args.hidden1
+	graphLayers = [GraphConvolution(99,adjacency,drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
         GraphConvolution(100,adjacency,activation_str='linear',drop_value=args.drop_value)
 	] 
 	#----------------------------------------------------------------------------------------
-	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,adjacency,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return gcnn
 
 def trainGCNN():

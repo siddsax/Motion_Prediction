@@ -10,9 +10,10 @@ class FCLayer_out(object):
 		self.weights = weights
 		self.rng = rng
 
-	def connect(self,features_below,size_below):
-		self.features_below = features_below
-		self.inputD = size_below
+	def connect(self,layer_below,indx):
+		self.layer_below = layer_below
+		self.indx = indx
+		self.inputD = layer_below.size
 		self.W = self.init((self.inputD,self.size),rng=self.rng)
 		self.b = zero0s((self.size))
 		self.params = [self.W, self.b]
@@ -24,5 +25,5 @@ class FCLayer_out(object):
 		self.L2_sqr = (self.W ** 2).sum() 
 
 	def output(self,seq_output=True):
-		X = self.features_below
+		X = self.layer_below.output(seq_output=seq_output)[:,:,self.indx,:]
 		return self.activation(T.dot(X, self.W) + self.b)

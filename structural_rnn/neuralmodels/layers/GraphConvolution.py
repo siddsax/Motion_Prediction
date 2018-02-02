@@ -73,7 +73,7 @@ class GraphConvolution(object):
 
 		# convolve
 		# theano.shared(value=np.zeros(shape,dtype=theano.config.floatX))
-		output = zero0s((self.inputD,self.size))
+		# output = zero0s((self.inputD,self.size))
 		supports = list()
 		# for i in range(len(self.adjacency)):
 
@@ -85,8 +85,9 @@ class GraphConvolution(object):
 		else:
 			pre_sup = self.W[i]
 		support = T.dot(self.adjacency, pre_sup)
-		supports.append(support)
-		output += support
+		# supports.append(support)
+		# print(support)
+		output = support
 
 		if self.bias:
 			output += self.b

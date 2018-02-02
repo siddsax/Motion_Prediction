@@ -4,7 +4,7 @@ from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 theano.config.optimizer='None'
 theano.exception_verbosity='high'
 class GCNN(object):
-	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,adjacency,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -49,12 +49,12 @@ class GCNN(object):
 		self.update_type.clipnorm = self.clipnorm
 		self.node_features = []
 		self.std = T.scalar(dtype=theano.config.floatX)
+		self.std.tag.test_value = .5
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-		self.adjacency = T.lmatrix(name="adjacency")
-		self.adjacency.tag.test_value = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+		self.adjacency = adjacency
 
 		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
-		self.Y_all.tag.test_value = np.random.rand(5,150, 98)
+		self.Y_all.tag.test_value = np.random.rand(7,150, 54)
 		self.masterlayer = unConcatenateVectors(preGraphNets)
 		self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
 		# self.masterlayer.X_all = self.X_all
@@ -107,7 +107,7 @@ class GCNN(object):
 			# here will be work of gaph cnns
 #  -------------------------------------------------------------------------
 
-			self.Y_pr[nm] = nodeTopLayer[-1].output()
+			# self.Y_pr[nm] = nodeTopLayer[-1].output()
 			# self.Y_pr[nm] = self.Y_pr[nm].reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))#, 1, x.shape[3], x.shape[4]))
 			indv_node_layers.append(nodeTopLayer[-1])
 
@@ -115,70 +115,69 @@ class GCNN(object):
 			# theano.printing.pydotprint(self.Y_pr[nm], outfile="pics/bare_bones_model_foul_" + str(nm) + ".png", var_with_name_simple=True)
 			size_below = nodeTopLayer[-1].size
 
-			if(pit==0):
-				x = self.Y_pr[nm]
-				self.Y_pr_all = x#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))	
-				# self.Y = self.nodeLabels[nm]#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))
-				# normalizing = self.weight_decay *nodeTopLayer[-1].L2_sqr
-			else:
-				x = self.Y_pr[nm]
-				self.Y_pr_all = T.concatenate([self.Y_pr_all,x],axis=2)
-				# self.Y = T.concatenate([self.Y,self.nodeLabels[nm]],axis=2)
-				# normalizing+=self.weight_decay *nodeTopLayer[-1].L2_sqr
 
-			self.params_all.extend(self.params[nm])
-			pit = pit + 1
+			# self.params_all.extend(self.params[nm])
+			# pit = pit + 1
+			# print(pit)
 
-		# cv = Concatenate_Node_Layers()
-		# cv.connect(indv_node_layers)
-		# layers = self.graphLayers
-		# layers[0].connect(cv)#self.node_features,size_below) 
-		# for i in range(1,len(layers)):
-		# 	layers[i].connect(layers[i-1])
-		# 	if layers[i].__class__.__name__ == 'AddNoiseToInput':
-		# 		layers[i].std = self.std
+		cv = Concatenate_Node_Layers()
+		cv.connect(indv_node_layers)
+		layers = self.graphLayers
+		layers[0].connect(cv)#self.node_features,size_below) 
+		for i in range(1,len(layers)):
+			layers[i].connect(layers[i-1])
+			if layers[i].__class__.__name__ == 'AddNoiseToInput':
+				layers[i].std = self.std
 	
-		# for l in layers:
-		# 	if hasattr(l,'params'):
-		# 		self.params_all.extend(l.params)
+		for l in layers:
+			if hasattr(l,'params'):
+				self.params_all.extend(l.params)
 
 		# out_all = layers[-1].output()
 
 
-		# ###########################################
+		###########################################
 		
-		# # how data fed to graphsLayers is not correct. see various dims FIXED?
-		# # see how data out of it will be structured and then feed to finalLayer FIXED?
-		# # make a new FCLayer that has new connect and output 
-		# # augment cost so that it can take 2 lists as inputs
-		# # feed to theano.function via a list with all Xs
+		# how data fed to graphsLayers is not correct. see various dims FIXED?
+		# see how data out of it will be structured and then feed to finalLayer FIXED?
+		# make a new FCLayer that has new connect and output 
+		# augment cost so that it can take 2 lists as inputs
+		# feed to theano.function via a list with all Xs
 
-		# #########################################
-		# it = 0
-		# size_below = layers[-1].size
+		#########################################
+		size_below = layers[-1].size
 
-		# for nm in nodeNames:
-		# 	layers = self.finalLayer[nm]
-		# 	layers[0].connect(out_all[:,:,it,:],size_below)
-		# 	it = it + 1 
-		# 	for i in range(1,len(layers)):
-		# 		layers[i].connect(layers[i-1])
-		# 		if layers[i].__class__.__name__ == 'AddNoiseToInput':
-		# 			layers[i].std = self.std
+		indx = 0
+		for nm in nodeNames:
+			layers = self.finalLayer[nm]
+			layers[0].connect(self.graphLayers[-1],indx)
+			for i in range(1,len(layers)):
+				layers[i].connect(layers[i-1])
+				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+					layers[i].std = self.std
 			
-		# 	for l in layers:
-		# 		if hasattr(l,'params'):
-		# 			self.params_all.extend(l.params)
+			for l in layers:
+				if hasattr(l,'params'):
+					self.params_all.extend(l.params)
+
+			if(indx==0):
+				x = layers[-1].output()#self.Y_pr[nm]
+				print(x.shape.__repr__)
+				self.Y_pr_all = x#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))	
+				# self.Y = self.nodeLabels[nm]#.reshape((x.shape[0], x.shape[1] , 1 , x.shape[2]))
+				# normalizing = self.weight_decay *nodeTopLayer[-1].L2_sqr
+			else:
+				x = layers[-1].output()#self.Y_pr[nm]
+				self.Y_pr_all = T.concatenate([self.Y_pr_all,x],axis=2)
+				# self.Y = T.concatenate([self.Y,self.nodeLabels[nm]],axis=2)
+				# normalizing+=self.weight_decay *nodeTopLayer[-1].L2_sqr
+			indx+=1
 			
-		# 	self.Y_pr_all.append(layers[-1].output())	
 
-		# self.Y_all = T.as_tensor_variable(self.Y_all)
-
-		print(self.params_all)
-		print(self.Y_pr_all.__repr__())
-		print("--------------------")
-		print(self.Y_all.__repr__())
+		# print(self.params_all)
 		print("====================")
+		print(self.Y_all.shape.__repr__)
+		print(self.Y_pr_all.shape.__repr__)
 		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 		theano.printing.pydotprint(self.cost, outfile="pics/booba23" + ".png", var_with_name_simple=True)
 
@@ -379,6 +378,8 @@ class GCNN(object):
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
 
+				print(np.shape(tr_Y_all))
+				print("_____________________")
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,adjacency,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,adjacency,std)
@@ -398,79 +399,79 @@ class GCNN(object):
 # --------------------------- SAVING PERFORMACE CHECKING ET CETRA --------------------------------------------------------
 				
 
-				del tr_X
-				del tr_Y
+			# 	del tr_X
+			# 	del tr_Y
 							
-				tr_X = {}
-				tr_Y = {}
+			# 	tr_X = {}
+			# 	tr_Y = {}
 
-				for nm in nodeNames:
-					tr_X[nm] = []
-					tr_Y[nm] = []
+			# 	for nm in nodeNames:
+			# 		tr_X[nm] = []
+			# 		tr_Y[nm] = []
 
-				if int(iterations) % snapshot_rate == 0:
-					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)))
+			# 	if int(iterations) % snapshot_rate == 0:
+			# 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+			# 		saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)))
 		
-				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
-					forecasted_motion_o = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+			# 	'''Trajectory forecasting on validation set'''
+			# 	if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
+			# 		forecasted_motion_o = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 
-					forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
-					forecasted_motion_2 = self.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
+			# 		forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
+			# 		forecasted_motion_2 = self.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
 
-					fname = 'forecast_iteration_{0}'.format(int(iterations))
-					# self.saveForecastedMotion(forecasted_motion,path,fname)
-					self.saveForecastedMotion(forecasted_motion_2,path,fname)
-					skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
-					err_per_dof = skel_err / trY_forecasting.shape[2]
-					fname = 'forecast_error_iteration_{0}'.format(int(iterations))
-					self.saveForecastError(skel_err,err_per_dof,path,fname)
+			# 		fname = 'forecast_iteration_{0}'.format(int(iterations))
+			# 		# self.saveForecastedMotion(forecasted_motion,path,fname)
+			# 		self.saveForecastedMotion(forecasted_motion_2,path,fname)
+			# 		skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
+			# 		err_per_dof = skel_err / trY_forecasting.shape[2]
+			# 		fname = 'forecast_error_iteration_{0}'.format(int(iterations))
+			# 		self.saveForecastError(skel_err,err_per_dof,path,fname)
 
-			'''Computing error on validation set'''
-			if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
-				validation_error = 0.0
-				Tvalidation = 0
-				# for nm in trX_validation.keys():
+			# '''Computing error on validation set'''
+			# if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
+			# 	validation_error = 0.0
+			# 	Tvalidation = 0
+			# 	# for nm in trX_validation.keys():
 
-				validation_error += self.predict_node_loss(trX_validation,trY_validation,adjacency,std)
-				# Tvalidation = trX_validation[nm].shape[0]
+			# 	validation_error += self.predict_node_loss(trX_validation,trY_validation,adjacency,std)
+			# 	# Tvalidation = trX_validation[nm].shape[0]
 
-				validation_set[-1] = validation_error
-				# termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
-				complete_logger += termout + '\n'
-				print termout
+			# 	validation_set[-1] = validation_error
+			# 	# termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 		
-			if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
-				prediction = self.predict_nextstep(trX_validation)
-				prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
-				prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
-				for i in range(N1):
-					prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
-				predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
-				joint_error = np.linalg.norm(predict - gth)
-				validation_set[-1] = joint_error
-				termout = 'Missing joint error {0}'.format(joint_error )
-				complete_logger += termout + '\n'
-				print termout
+			# if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
+			# 	prediction = self.predict_nextstep(trX_validation)
+			# 	prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
+			# 	prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
+			# 	for i in range(N1):
+			# 		prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
+			# 	predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
+			# 	joint_error = np.linalg.norm(predict - gth)
+			# 	validation_set[-1] = joint_error
+			# 	termout = 'Missing joint error {0}'.format(joint_error )
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 
-			'''Saving the learned model so far'''
-			if path:
+			# '''Saving the learned model so far'''
+			# if path:
 				
-				print 'Dir: ',path				
-				'''Writing training error and validation error in a log file'''
-				f = open('{0}logfile'.format(path),'w')
-				for l,v in zip(skel_loss_after_each_minibatch,validation_set):
-					f.write('{0},{1}\n'.format(l,v))
-				f.close()
-				f = open('{0}complete_log'.format(path),'w')
-				f.write(complete_logger)
-				f.close()
+			# 	print 'Dir: ',path				
+			# 	'''Writing training error and validation error in a log file'''
+			# 	f = open('{0}logfile'.format(path),'w')
+			# 	for l,v in zip(skel_loss_after_each_minibatch,validation_set):
+			# 		f.write('{0},{1}\n'.format(l,v))
+			# 	f.close()
+			# 	f = open('{0}complete_log'.format(path),'w')
+			# 	f.write(complete_logger)
+			# 	f.close()
 			
 
-			t1 = time.time()
-			termout = 'Epoch took {0} seconds'.format(t1-t0)
-			complete_logger += termout + '\n'
+			# t1 = time.time()
+			# termout = 'Epoch took {0} seconds'.format(t1-t0)
+			# complete_logger += termout + '\n'
 			print termout
 			epoch += 1
 

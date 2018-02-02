@@ -73,20 +73,27 @@ class GraphConvolution(object):
 
 		# convolve
 		# theano.shared(value=np.zeros(shape,dtype=theano.config.floatX))
-		output = zero0s((self.inputD,self.size))
+		# output = zero0s((self.inputD,self.size))
 		supports = list()
 		# for i in range(len(self.adjacency)):
 
+		# print("rum------------")
+		# print(x.shape.__repr__)
 		if not self.featureless:
 			if self.sparse_inputs:
 				pre_sup = sp.dot(x, self.W)
 			else:
-				pre_sup = T.dot(x, self.W)
+				pre_sup = T.tensordot(x, self.W,axes=[3,0])
 		else:
 			pre_sup = self.W[i]
-		support = T.dot(self.adjacency, pre_sup)
-		supports.append(support)
-		output += support
+
+		# --------------------------------------------------------------
+		support = T.tensordot(self.adjacency, pre_sup,axes=[0,2])
+		sp = support.shape
+		support = support.reshape((sp[1],sp[2],sp[0],sp[3]))
+		# supports.append(support)
+		output = support
+
 
 		if self.bias:
 			output += self.b

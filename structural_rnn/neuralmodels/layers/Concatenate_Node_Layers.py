@@ -31,5 +31,6 @@ class Concatenate_Node_Layers(object):
 			else:
 				concatenate_output = T.concatenate([concatenate_output,xr],axis=2)
 			it = it + 1
+		print(concatenate_output.shape.__repr__)
 
 		return concatenate_output 

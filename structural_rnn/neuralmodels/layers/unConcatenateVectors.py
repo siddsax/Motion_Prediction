@@ -20,7 +20,7 @@ class unConcatenateVectors(object):
 		self.settings = locals()
 		del self.settings['self']
 		self.input=T.dtensor3(name="Data")#, dtype=theano.config.floatX)
-		self.input.tag.test_value = np.random.rand(5,150, 294)
+		self.input.tag.test_value = np.random.rand(7,150, 162)
 		self.idxValues = idxValues
 		self.params=[]
 		self.weights=weights
