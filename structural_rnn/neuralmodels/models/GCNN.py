@@ -378,15 +378,11 @@ class GCNN(object):
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
 
-				print(np.shape(tr_Y_all))
-				print("_____________________")
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,adjacency,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,adjacency,std)
 				grad_norms.append(g)
-				# skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
 				loss += loss_for_current_node
-				# skel_loss += skel_loss_for_current_node
 
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
@@ -399,48 +395,53 @@ class GCNN(object):
 # --------------------------- SAVING PERFORMACE CHECKING ET CETRA --------------------------------------------------------
 				
 
-			# 	del tr_X
-			# 	del tr_Y
+				del tr_X
+				del tr_Y
 							
-			# 	tr_X = {}
-			# 	tr_Y = {}
+				tr_X = {}
+				tr_Y = {}
 
-			# 	for nm in nodeNames:
-			# 		tr_X[nm] = []
-			# 		tr_Y[nm] = []
+				for nm in nodeNames:
+					tr_X[nm] = []
+					tr_Y[nm] = []
 
-			# 	if int(iterations) % snapshot_rate == 0:
-			# 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-			# 		saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)))
+				if int(iterations) % snapshot_rate == 0:
+					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)))
 		
-			# 	'''Trajectory forecasting on validation set'''
-			# 	if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
-			# 		forecasted_motion_o = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				'''Trajectory forecasting on validation set'''
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and (int(iterations) % snapshot_rate == 0):
+					forecasted_motion_o = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 
-			# 		forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
-			# 		forecasted_motion_2 = self.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
+					forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
+					forecasted_motion_2 = self.convertToSingleLongVec(forecasted_motion_o,poseDataset, new_idx, featureRange)
 
-			# 		fname = 'forecast_iteration_{0}'.format(int(iterations))
-			# 		# self.saveForecastedMotion(forecasted_motion,path,fname)
-			# 		self.saveForecastedMotion(forecasted_motion_2,path,fname)
-			# 		skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
-			# 		err_per_dof = skel_err / trY_forecasting.shape[2]
-			# 		fname = 'forecast_error_iteration_{0}'.format(int(iterations))
-			# 		self.saveForecastError(skel_err,err_per_dof,path,fname)
+					fname = 'forecast_iteration_{0}'.format(int(iterations))
+					# self.saveForecastedMotion(forecasted_motion,path,fname)
+					self.saveForecastedMotion(forecasted_motion_2,path,fname)
 
-			# '''Computing error on validation set'''
-			# if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
-			# 	validation_error = 0.0
-			# 	Tvalidation = 0
-			# 	# for nm in trX_validation.keys():
+			'''Computing error on validation set'''
+			if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
+				validation_error = 0.0
+				Tvalidation = 0
 
-			# 	validation_error += self.predict_node_loss(trX_validation,trY_validation,adjacency,std)
-			# 	# Tvalidation = trX_validation[nm].shape[0]
+				trX_validation_all = trX_validation[nodeNames[0]]
+				trY_validation_all = trY_validation[nodeNames[0]]
 
-			# 	validation_set[-1] = validation_error
-			# 	# termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
-			# 	complete_logger += termout + '\n'
-			# 	print termout
+				for i in range(1,len(nodeNames)):
+					trX_validation_all =  np.concatenate([trX_validation_all,trX_validation[nodeNames[i]]],axis=2)
+					trY_validation_all =  np.concatenate([trY_validation_all,trY_validation[nodeNames[i]]],axis=2)
+
+
+				validation_error = self.predict_node_loss(trX_validation_all,trY_validation_all,adjacency,std)
+				# [self.X_all,self.Y_all,self.adjacency,self.std]
+				Tvalidation = trX_validation[nm].shape[0]
+
+				validation_set[-1] = validation_error
+				termout = 'Validation: loss={0} '.format(validation_error)#,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
+				complete_logger += termout + '\n'
+				print termout
+				print("________________!11111111@@@@@#\\\______//////")
 		
 			# if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
 			# 	prediction = self.predict_nextstep(trX_validation)
@@ -455,18 +456,18 @@ class GCNN(object):
 			# 	complete_logger += termout + '\n'
 			# 	print termout
 
-			# '''Saving the learned model so far'''
-			# if path:
+			'''Saving the learned model so far'''
+			if path:
 				
-			# 	print 'Dir: ',path				
-			# 	'''Writing training error and validation error in a log file'''
-			# 	f = open('{0}logfile'.format(path),'w')
-			# 	for l,v in zip(skel_loss_after_each_minibatch,validation_set):
-			# 		f.write('{0},{1}\n'.format(l,v))
-			# 	f.close()
-			# 	f = open('{0}complete_log'.format(path),'w')
-			# 	f.write(complete_logger)
-			# 	f.close()
+				print 'Dir: ',path				
+				'''Writing training error and validation error in a log file'''
+				f = open('{0}logfile'.format(path),'w')
+				for l,v in zip(skel_loss_after_each_minibatch,validation_set):
+					f.write('{0},{1}\n'.format(l,v))
+				f.close()
+				f = open('{0}complete_log'.format(path),'w')
+				f.write(complete_logger)
+				f.close()
 			
 
 			# t1 = time.time()
@@ -475,11 +476,6 @@ class GCNN(object):
 			print termout
 			epoch += 1
 
-	def saveForecastError(self,skel_err,err_per_dof,path,fname):
-		f = open('{0}{1}'.format(path,fname),'w')
-		for i in range(skel_err.shape[0]):
-			f.write('T={0} {1}, {2}\n'.format(i,skel_err[i],err_per_dof[i]))
-		f.close()
 
 	def saveForecastedMotion(self,forecast,path,fname):
 		T = forecast.shape[0]
@@ -495,34 +491,7 @@ class GCNN(object):
 				st = st[:-1]
 				f.write(st+'\n')
 			f.close()
-	
-	def saveCellState(self,cellstate,path,fname):
-		nodeNames = cellstate.keys()
-		nm = nodeNames[0]
-		print nodeNames
-		T = cellstate[nm].shape[0]
-		N = cellstate[nm].shape[1]
-		D = cellstate[nm].shape[2]
-		for j in range(N):
-			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
-			for nm in nodeNames:
-				motion = cellstate[nm][:,j,:]
-				for i in range(T):
-					st = ''
-					for k in range(D):
-						st += str(motion[i,k]) + ','
-					st = st[:-1]
-					f.write(st+'\n')
-			f.close()
 
-
-	def predict_output(self,teX):
-		nodeNames = teX.keys()
-		predict = {}
-		for nm in nodeNames:
-			nt = nm.split(':')[1]
-			predict[nm] = self.predict_node[nt](teX[nm],1e-5)
-		return predict
 
 # ==============================================================================================
 	def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
@@ -541,19 +510,31 @@ class GCNN(object):
 			teY[nm] = []
 			nodeFeatures_t_1[nm] = teX_original_nodeFeatures[nm][-1:,:,:]
 
+		tr_X_all = tr_X[nodeNames[0]]
+		# tr_Y_all = tr_Y[nodeNames[0]]
 
+		for i in range(1,len(nodeNames)):
+			tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
+			# tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
+
+		limits = []
+		start = 0
 		for i in range(sequence_length):
-			nodeFeatures = {}
 			for nm in nodeNames:
-				# nt = nm.split(':')[1]
-				# nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
+				input_i = T.concatenate((input_i,to_return[nm][:(T+i),:,:]),axis=2)	
+				end = start + to_return[nm].shape[2]
+				limits.append((start,end))
+				start = end
 				#nodeFeatures[nodeName] = np.array([prediction])
-				nodeFeatures[nm] = prediction[-1:,:,:]
-				teY[nm].append(nodeFeatures[nm][0,:,:])
+				
+
+			prediction = self.predict_node(input_i,adjacency,1e-5)
+			nodeFeatures = prediction[-1,:,:]
+
 			for nm in nodeNames:
-				# nt = nm.split(':')[1]
-				# nodeName = nm.split(':')[0]
+				teY[nm].append(nodeFeatures[0,:,limits[i][0]:limits[i][1]])
+
+			for nm in nodeNames:
 				features = graph.getNodeFeature(nm,nodeFeatures,nodeFeatures_t_1,poseDataset) # previously nodeRNNFeatures, they are concatenation of node and temporal features for the current time step made using nodeFeatures and nodeFeatures-1
 				to_return[nm][T+i,:,:] = features[0,:,:]
 			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)

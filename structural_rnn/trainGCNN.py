@@ -36,6 +36,7 @@ theano.config.exception_verbosity='high'
 # theano.config.exception_verbosity='high'
 theano.config.compute_test_value = 'warn'
 theano.config.print_test_value = True
+theano.config.floatX = 'float64'
 
 rng = np.random.RandomState(1234567890)
 
@@ -60,7 +61,7 @@ parser.add_argument('--noise_schedule',nargs='*')
 parser.add_argument('--noise_rate_schedule',nargs='*')
 parser.add_argument('--momentum',type=float,default=0.99)
 parser.add_argument('--g_clip',type=float,default=25.0)
-parser.add_argument('--truncate_gradient',type=int,default=50)
+parser.add_argument('--truncate_gradient',type=float,default=50.0)
 parser.add_argument('--use_pretrained',type=int,default=0)
 parser.add_argument('--iter_to_load',type=int,default=None)
 parser.add_argument('--model_to_train',type=str,default='gcnn')
@@ -166,20 +167,20 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		
 
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				# FCLayer('linear',args.fc_init,size=50,rng=rng),
+				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				FCLayer('linear',args.fc_init,size=50,rng=rng),
 				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				# AddNoiseToInput(rng=rng),
-				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
 				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=100,rng=rng)
 				]
 		finalLayer[nm] = [
@@ -189,7 +190,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 		# 		FCLayer('rectify',args.fc_init,size=100,rng=rng),
 		# 		FCLayer('linear',args.fc_init,size=50,rng=rng),
-		# 		multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+		# 		# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 		# 		]
 
 		# temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),

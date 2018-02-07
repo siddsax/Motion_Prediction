@@ -2,13 +2,15 @@ from headers import *
 
 class LSTM(object):
 	def __init__(self,activation_str='tanh',activation_gate='sigmoid',init='uniform',
-		truncate_gradient=50,size=128,weights=None,seq_output=True,rng=None,
+		truncate_gradient=50.0,size=128,weights=None,seq_output=True,rng=None,
 		skip_input=False,jump_up=False,grad_clip=True,g_low=-10.0,g_high=10.0):
 		
 		self.settings = locals()
 		del self.settings['self']
 		self.activation = getattr(activations,activation_str)
 		self.activation_gate = getattr(activations,activation_gate)
+		print(type(truncate_gradient))
+		print("-------------------")
 		self.truncate_gradient = truncate_gradient
 		self.init = getattr(inits,init)
 		self.uniform = getattr(inits,'uniform')
@@ -60,7 +62,7 @@ class LSTM(object):
 
 		if self.weights is not None:
 			for param, weight in zip(self.params,self.weights):
-				param.set_value(np.asarray(weight, dtype=theano.config.floatX))
+				param.set_value(np.asarray(weight))
 
 		self.L2_sqr = (
 				(self.W_i ** 2).sum() +
