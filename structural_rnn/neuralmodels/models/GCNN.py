@@ -510,18 +510,19 @@ class GCNN(object):
 			teY[nm] = []
 			nodeFeatures_t_1[nm] = teX_original_nodeFeatures[nm][-1:,:,:]
 
-		tr_X_all = tr_X[nodeNames[0]]
+		tr_X_all = teX[nodeNames[0]]
 		# tr_Y_all = tr_Y[nodeNames[0]]
 
 		for i in range(1,len(nodeNames)):
-			tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
+			tr_X_all =  np.concatenate([tr_X_all,teX[nodeNames[i]]],axis=2)
 			# tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
 
 		limits = []
 		start = 0
 		for i in range(sequence_length):
-			for nm in nodeNames:
-				input_i = T.concatenate((input_i,to_return[nm][:(T+i),:,:]),axis=2)	
+			input_i = to_return[nodeNames[0]][:(T+i),:,:]),axis=2)	
+			for nm in range(len(nodeNames)):
+				input_i = T.concatenate((input_i,to_return[nodeNames[nm]][:(T+i),:,:]),axis=2)	
 				end = start + to_return[nm].shape[2]
 				limits.append((start,end))
 				start = end

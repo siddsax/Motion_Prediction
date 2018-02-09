@@ -67,3 +67,22 @@ mode=FAST_RUN,device=cpu,floatX=float32
 2018-02-08 01:27:53.021821
 myLearningMachine
 mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-02-08 01:49:16.101370
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+=====
+2018-02-08 01:49:34.501231
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 12421
+=====
+2018-02-08 01:50:15.853563
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 14018
+=====
+2018-02-08 01:53:26.610057
+cseproj146
+mode=FAST_RUN,device=cpu,floatX=float32
+./saved_models/checkpoints_gcnn_T_150_bs_100_tg_100_/ 20960
