@@ -16,3 +16,5 @@
 */structural_rnn/saved_models
 */structural_rnn/ongoing_exp
 */*.pyc
+*/checkpoint.pik
+GCNN_HMP/structural_rnn/visualize/checkpoint.pik
