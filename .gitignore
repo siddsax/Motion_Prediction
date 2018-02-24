@@ -1,0 +1,3 @@
+Graph_CNNs/checkpoints/*
+DRA/checkpoints/*
+*.pyc
