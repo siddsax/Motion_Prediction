@@ -1,3 +1,14 @@
 Graph_CNNs/checkpoints/*
 DRA/checkpoints/*
 *.pyc
+DRA/H36M.conf
+DRA/gpu_test.py
+DRA/gpu_test2.py
+DRA/neuralmodels/models/H36M.conf
+DRA/nohup.out
+DRA/out
+DRA/pygpu-0.7.5+11.g04c2892-py2.7-linux-x86_64.egg/
+Graph_CNNs/matlab/
+Graph_CNNs/neuralmodels/models/H36M.conf
+Graph_CNNs/nohup.out
+dataset/

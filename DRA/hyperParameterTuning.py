@@ -8,7 +8,7 @@ import sys
 #train_model = sys.argv[1]
 
 base_dir = open('basedir','r').readline().strip()
-gpus = []
+gpus = [0,1,3]
 ## Set gpus = [gpu_id] if you don't have a gpu then set gpus = []
 
 ## Hyper parameters for training S-RNN
@@ -26,14 +26,14 @@ params['noise_schedule'] = [250,0.5e3,1e3,1.3e3,2e3,2.5e3,3.3e3] # Add noise aft
 params['noise_rate_schedule'] = [0.01,0.05,0.1,0.2,0.3,0.5,0.7] # Variance of noise to add
 params['momentum'] = 0.99
 params['g_clip'] = 25.0
-params['truncate_gradient'] = 10 #100
+params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 10 #512
-params['node_lstm_size'] = 10 #512
-params['fc_size'] = 10 #256
-params['snapshot_rate'] = 250 # Save the model after every 250 iterations
+params['lstm_size'] = 512 #10
+params['node_lstm_size'] = 512 #10 
+params['fc_size'] = 256#10 
+params['snapshot_rate'] = 10 # Save the model after every 250 iterations
 params['train_for'] = 'final' 
 
 
@@ -54,15 +54,19 @@ params['subsample_data'] = 1
 
 my_env = os.environ
 my_env['PATH'] += ':/usr/local/cuda/bin'
-use_gpu = 0
-if len(gpus) > 0:
-	if use_gpu >= len(gpus):
-		use_gpu = 0
-	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=gpu{0},floatX=float32'.format(gpus[use_gpu])
+use_gpu = 1 
+if len(sys.argv)==2:
+  if len(gpus) > 0:
+ 	if use_gpu >= len(gpus):
+ 		use_gpu = 0
+ 	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cuda{0},floatX=float32'.format(gpus[use_gpu])
+	print("USING GPU NUMBER " + str(use_gpu) + "=============================")
 	use_gpu += 1
-else:
+  else:
 	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cpu,floatX=float32'.format(use_gpu)
+	print("NOT USING GPU EMERGENCY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+  import theano
 # Setting directory to dump trained models and then executing trainDRA.py
 
 #if params['model_to_train'] == 'dra':

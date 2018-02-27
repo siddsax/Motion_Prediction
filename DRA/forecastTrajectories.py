@@ -33,9 +33,8 @@ global rng
 # from neuralmodels.models.DRA import convertToSingleLongVec
 # from neuralmodels.models.DRA import convertToSingleVec
 rng = np.random.RandomState(1234567890)
-
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--checkpoint',type=str,default='checkpoints/savedModels/srnn_walking')
+parser.add_argument('--checkpoint',type=str,default='checkpoints/savedModels/srnn_walking')#savedModels/srnn_walking')
 parser.add_argument('--forecast',type=str,default='dra')
 parser.add_argument('--iteration',type=int,default=4500)
 parser.add_argument('--motion_prefix',type=int,default=50)
@@ -47,6 +46,78 @@ parser.add_argument('--train_for',type=str,default='final')
 parser.add_argument('--drop_features',type=int,default=0)
 parser.add_argument('--drop_id',type=int,default=9)
 args = parser.parse_args()
+
+
+# parser = argparse.ArgumentParser(description='Process some integers.')
+# parser.add_argument('--decay_type',type=str,default='schedule')
+# parser.add_argument('--decay_after',type=int,default=-1)
+# parser.add_argument('--initial_lr',type=float,default=1e-3)
+# parser.add_argument('--learning_rate_decay',type=float,default=1.0)
+# parser.add_argument('--decay_schedule',nargs='*')
+# parser.add_argument('--decay_rate_schedule',nargs='*')
+# parser.add_argument('--node_lstm_size',type=int,default=10)
+# parser.add_argument('--lstm_size',type=int,default=10)
+# parser.add_argument('--fc_size',type=int,default=10)#500
+# parser.add_argument('--lstm_init',type=str,default='uniform')
+# parser.add_argument('--fc_init',type=str,default='uniform')
+# parser.add_argument('--snapshot_rate',type=int,default=1)
+# parser.add_argument('--epochs',type=int,default=2000)
+# parser.add_argument('--batch_size',type=int,default=3000)
+# parser.add_argument('--clipnorm',type=float,default=25.0)
+# parser.add_argument('--use_noise',type=int,default=1)
+# parser.add_argument('--noise_schedule',nargs='*')
+# parser.add_argument('--noise_rate_schedule',nargs='*')
+# parser.add_argument('--momentum',type=float,default=0.99)
+# parser.add_argument('--g_clip',type=float,default=25.0)
+# parser.add_argument('--truncate_gradient',type=int,default=50)
+# parser.add_argument('--use_pretrained',type=int,default=0)
+# parser.add_argument('--iter_to_load',type=int,default=None)
+# parser.add_argument('--model_to_train',type=str,default='dra')
+# parser.add_argument('--checkpoint_path',type=str,default='checkpoint')
+# parser.add_argument('--sequence_length',type=int,default=150)
+# parser.add_argument('--sequence_overlap',type=int,default=50)
+# parser.add_argument('--maxiter',type=int,default=15000)
+# parser.add_argument('--crf',type=str,default='')
+# parser.add_argument('--copy_state',type=int,default=0)
+# parser.add_argument('--full_skeleton',type=int,default=1)
+# parser.add_argument('--weight_decay',type=float,default=0.0)
+# parser.add_argument('--train_for',type=str,default='final')
+# parser.add_argument('--dra_type',type=str,default='simple')
+# parser.add_argument('--temporal_features',type=int,default=0)
+# parser.add_argument('--dataset_prefix',type=str,default='')
+# parser.add_argument('--drop_features',type=int,default=0)
+# parser.add_argument('--subsample_data',type=int,default=1)
+# parser.add_argument('--drop_id',type=str,default='9')
+
+# parser.add_argument('--checkpoint',type=str,default='checkpoints/savedModels/srnn_walking')
+# parser.add_argument('--forecast',type=str,default='dra')
+# parser.add_argument('--iteration',type=int,default=4500)
+# parser.add_argument('--motion_prefix',type=int,default=50)
+# parser.add_argument('--motion_suffix',type=int,default=100)
+# args = parser.parse_args()
+
+rng = np.random.RandomState(1234567890)
+
+args = parser.parse_args()
+
+# convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
+# for k in convert_list_to_float:
+#     if getattr(args,k) is not None:
+#         temp_list = []
+#         for v in getattr(args,k):
+#             temp_list.append(float(v))
+#         setattr(args,k,temp_list)
+
+# print args
+# if args.use_pretrained:
+#     print 'Loading pre-trained model with iter={0}'.format(args.iter_to_load)
+# gradient_method = Momentum(momentum=args.momentum)
+
+# drop_ids = args.drop_id.split(',')
+# drop_id = []
+# for dids in drop_ids:
+#     drop_id.append(int(dids))
+
 
 '''Loads H3.6m dataset'''
 print 'Loading H3.6m'
@@ -67,7 +138,6 @@ poseDataset.drop_id = [args.drop_id]
 poseDataset.runall()
 print '**** H3.6m Loaded ****'
 
-iteration = args.iteration
 new_idx = poseDataset.new_idx
 featureRange = poseDataset.nodeFeaturesRanges
 base_dir = '.'
@@ -129,44 +199,98 @@ def saveForecastedMotion(forecast,path,fname):
             f.write(st+'\n')
         f.close()
 
-
 path_to_checkpoint = '{0}checkpoint.pik'.format(path)#'{0}checkpoint.{1}'.format(path,iteration)
 print(path_to_checkpoint)
 if os.path.exists(path_to_checkpoint):
     [nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,X_test,Y_test,beginning_motion] = graph.readCRFgraph(poseDataset,noise=0.7,forecast_on_noisy_features=True)
 
     print beginning_motion.keys()
+
+gt = convertToSingleVec(Y_test,new_idx,featureRange)
+beginning_motion_dropped_ = convertToSingleVec(beginning_motion,new_idx,featureRange)
+
+gt_full = np.zeros((np.shape(gt)[0],np.shape(gt)[1],len(new_idx)))
+beginning_motion_full_ = np.zeros((np.shape(beginning_motion_dropped_)[0],np.shape(beginning_motion_dropped_)[1],len(new_idx)))
+
+print(np.shape(gt)[1])
+
+
+if os.path.exists(path_to_checkpoint):
     print 'Loading the model'
     print(path_to_checkpoint)
     model = loadDRA(path_to_checkpoint)
     print 'Loaded DRA: ',path_to_checkpoint
 
+# edgeRNNs = {}
+# edgeNames = edgeList
+
+# for em in edgeNames:
+#     inputJointFeatures = edgeFeatures[em]
+#     LSTMs = [
+#         LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
+#         ]
+#     print(inputJointFeatures)
+#     print(args.fc_size)
+#     print("~~~~~~~~~~~")
+#     edgeRNNs[em] = [TemporalInputFeatures(inputJointFeatures),
+#             FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+#             FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
+#             multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
+#             ]
+
+# nodeRNNs = {}
+# nodeTypes = nodeList.keys()
+# nodeLabels = {}
+# for nm in nodeTypes:
+#     num_classes = nodeList[nm]
+#     LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
+#         ]
+#     nodeRNNs[nm] = [multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+#             FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+#             FCLayer('rectify',args.fc_init,size=100,rng=rng),
+#             FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+#             ]
+#     em = nm+'_input'
+#     edgeRNNs[em] = [TemporalInputFeatures(nodeFeatureLength[nm]),
+#             FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+#             FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+#             ]
+#     nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
+# learning_rate = T.scalar(dtype=theano.config.floatX)
+# model = DRA(edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+
+
+
 # ------------------------------------------------------------------------------------------------------------
 
-
-gt = convertToSingleVec(Y_test,new_idx,featureRange)
-beginning_motion_dropped_ = convertToSingleVec(beginning_motion,new_idx,featureRange)
 predicted_test = model.predict_sequence(X_test,beginning_motion,sequence_length=gt.shape[0],poseDataset=poseDataset,graph=graph)
 predicted_test_dropped = convertToSingleVec(predicted_test,new_idx,featureRange)
+predicted_test_full = np.zeros((np.shape(predicted_test_dropped)[0],np.shape(predicted_test_dropped)[1],len(new_idx)))
 
-gt_full = np.zeros((np.shape(Y_test)[0],np.shape(Y_test)[1],len(new_idx)))
-beginning_motion_full_ = np.zeros((np.shape(Y_test)[0],np.shape(Y_test)[1],len(new_idx)))
-predicted_test_full = np.zeros((np.shape(Y_test)[0],np.shape(Y_test)[1],len(new_idx)))
 
 for i in range(24):
     
-    gt_full = unNormalizeData(gt, processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
-    beginning_motion_full_ = unNormalizeData(beginning_motion_dropped, processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
-    predicted_test_full = unNormalizeData(predicted_test_dropped, processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
+    gt_full[:,i,:] = unNormalizeData(gt[:,i,:], processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
+    beginning_motion_full_[:,i,:] = unNormalizeData(beginning_motion_dropped_[:,i,:], processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
+    predicted_test_full[:,i,:] = unNormalizeData(predicted_test_dropped[:,i,:], processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
 
 # # ----------------------------------------------------------- ERRORS -------------------------------------
-    
-val_error = euler_error(predicted_test_full, gt)
+
+fname = 'test_ground_truth_unnorm'
+saveForecastedMotion(gt_full,path,fname)
+
+fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+saveForecastedMotion(predicted_test_full,path,fname)
+
+fname = 'motion_prefix_unnorm'#_{0}'.format(int(iterations))
+saveForecastedMotion(beginning_motion_full_,path,fname)
+
+val_error = euler_error(predicted_test_full, gt_full)
 seq_length_out = len(val_error)
 for ms in [1,3,7,9,13,24]:
     if seq_length_out >= ms+1:
         print(" {0:.3f} |".format( val_error[ms] ))
     else:
         print("   n/a |")
-skel_err = np.mean(np.sqrt(np.sum(np.square((predicted_test_dropped - gt)),axis=2)),axis=1)
-err_per_dof = skel_err / gt.shape[2]
+# skel_err = np.mean(np.sqrt(np.sum(np.square((predicted_test_dropped - gt)),axis=2)),axis=1)
+# err_per_dof = skel_err / gt.shape[2]

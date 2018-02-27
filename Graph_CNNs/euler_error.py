@@ -165,13 +165,14 @@ def euler_error(prediction, gt):
   return mean_mean_errors
 
 
-# gt = np.genfromtxt('ground_truth_unnorm_' + str(0), delimiter=' ')
+# gt = np.genfromtxt('checkpoints/checkpoints_gcnn_T_150_bs_100_tg_10_/test_ground_truth_unnorm_N_' + str(0), delimiter=',')
 # k = np.shape(gt)
-# gt = np.zeros((k[0],24,k[1]))
-# pred = np.zeros((k[0],24,k[1]))
-# for i in range(24):
-#   gt[:,i,:] = np.genfromtxt('ground_truth_unnorm_' + str(i), delimiter=' ')
-#   pred[:,i,:] = np.genfromtxt('predicted_test_full_unnorm_' + str(i), delimiter=' ')
+# num = 8
+# gt = np.zeros((k[0],num,k[1]))
+# pred = np.zeros((k[0],num,k[1]))
+# for i in range(num):
+#   gt[:,i,:] = np.genfromtxt('checkpoints/checkpoints_gcnn_T_150_bs_100_tg_10_/test_ground_truth_unnorm_N_' + str(i), delimiter=',')
+#   pred[:,i,:] = np.genfromtxt('checkpoints/checkpoints_gcnn_T_150_bs_100_tg_10_/forecast_iteration_unnorm_1_N_' + str(i), delimiter=',')
 
 
 # print(euler_error(pred,gt))

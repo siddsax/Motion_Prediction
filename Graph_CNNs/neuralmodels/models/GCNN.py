@@ -1,8 +1,7 @@
 from headers import *
 import numpy as np
+# import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
-theano.config.optimizer='None'
-theano.exception_verbosity='high'
 class GCNN(object):
 	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
@@ -87,7 +86,7 @@ class GCNN(object):
 
 				for l in nodeLayers:
 					if hasattr(l,'params'):
-						self.params_all.extend(l.params)
+						# self.params_all.extend(l.params)
 						self.num_params += l.numparams
 
 
@@ -113,17 +112,17 @@ class GCNN(object):
 		print("Boooze~~~~")
 
 # -------------------------- Graph --------------------------------------
-		layers = self.graphLayers
-		layers[0].connect(cv)#self.node_features,size_below) 
-		for i in range(1,len(layers)):
-			layers[i].connect(layers[i-1])
-			if layers[i].__class__.__name__ == 'AddNoiseToInput':
-				layers[i].std = self.std
+		# layers = self.graphLayers
+		# layers[0].connect(cv)
+		# for i in range(1,len(layers)):
+		# 	layers[i].connect(layers[i-1])
+		# 	if layers[i].__class__.__name__ == 'AddNoiseToInput':
+		# 		layers[i].std = self.std
 	
-		for l in layers:
-			if hasattr(l,'params'):
-				self.params_all.extend(l.params)
-				self.num_params += l.numparams
+		# for l in layers:
+		# 	if hasattr(l,'params'):
+		# 		self.params_all.extend(l.params)
+		# 		self.num_params += l.numparams
 
 # -------------------------- --- --------------------------------------
 
@@ -156,21 +155,21 @@ class GCNN(object):
 			out[nm] =  layers[-1].output()
 			print("ROOOOOZE~~~~")
 			
-		# self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
-		# # print(self.params_all)
-		# # print("====================")
-		# # print(self.Y_all.shape.__repr__)
-		# # print(self.Y_pr_all.shape.__repr__)
-		# self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
+		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
+		# print(self.params_all)
+		# print("====================")
+		# print(self.Y_all.shape.__repr__)
+		# print(self.Y_pr_all.shape.__repr__)
+		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-		# # ---------- Will need considerable work here joinging the backprop --------------------------- 
-		# [self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
+		# ---------- Will need considerable work here joinging the backprop --------------------------- 
+		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
 			
-		# self.train_node = theano.function([self.X_all,self.Y_all,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
-		# self.predict_node = theano.function([self.X_all,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
-		# self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.cost,on_unused_input='ignore')
-		# self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
-		# self.grad_norm = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.norm,on_unused_input='ignore')
+		self.train_node = theano.function([self.X_all,self.Y_all,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+		self.predict_node = theano.function([self.X_all,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
+		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.cost,on_unused_input='ignore')
+		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+		self.grad_norm = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.norm,on_unused_input='ignore')
 	
 
 		
@@ -192,6 +191,8 @@ class GCNN(object):
 		for i in range(np.shape(test_ground_truth)[1]):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
+		fname = 'test_ground_truth_unnorm'
+		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
 		iterations = 0
@@ -386,20 +387,25 @@ class GCNN(object):
 					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 					# test_ground_truth
-					validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
-					seq_length_out = len(validation_euler_error)
-					for ms in [1,3,7,9,13,24]:
-						if seq_length_out >= ms+1:
-							print(" {0:.3f} |".format( validation_euler_error[ms] ))
-						else:
-							print("   n/a |")
+					# validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
+					# seq_length_out = len(validation_euler_error)
+					# for ms in [1,3,7,9,13,24]:
+					# 	if seq_length_out >= ms+1:
+					# 		print(" {0:.3f} |".format( validation_euler_error[ms] ))
+					# 	else:
+					# 		print("   n/a |")
 					# print("Reported Error = " + str(validation_euler_error))
 					print("-------------------------")
 
-					fname = 'forecast_iteration_{0}'.format(int(iterations))
-					# self.saveForecastedMotion(forecasted_motion,path,fname)
-					if (int(iterations) % snapshot_rate == 0):
-						self.saveForecastedMotion(forecasted_motion,path,fname)
+					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+					
+					# if (int(iterations) % snapshot_rate == 0):
+					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					# eng = matlab.engine.start_matlab()
+					# t = eng.gcd(path,int(iterations))
+					# print(t[0])
+					# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
 
 			if path:
 				

@@ -1,5 +1,6 @@
 from headers import *
-
+# import theano.sandbox.cuda
+# theano.sandbox.cuda.use("gpu0")
 class DRA(object):
 	def __init__(self,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
@@ -93,24 +94,24 @@ class DRA(object):
 			print("======---------=======")
 			print 'Number of parameters in DRA: ',self.num_params
 			
-			# self.Y_pr[nt] = nodeLayers[-1].output()
-			# self.Y[nt] = self.nodeLabels[nt]
+			self.Y_pr[nt] = nodeLayers[-1].output()
+			self.Y[nt] = self.nodeLabels[nt]
 			
-			# self.cost[nt] = cost(self.Y_pr[nt],self.Y[nt]) + self.weight_decay * nodeLayers[-1].L2_sqr
+			self.cost[nt] = cost(self.Y_pr[nt],self.Y[nt]) + self.weight_decay * nodeLayers[-1].L2_sqr
 		
-			# [self.updates[nt],self.grads[nt]] = self.update_type.get_updates(self.params[nt],self.cost[nt])
+			[self.updates[nt],self.grads[nt]] = self.update_type.get_updates(self.params[nt],self.cost[nt])
 		
-			# self.train_node[nt] = theano.function([self.X[nt],self.Y[nt],self.learning_rate,self.std],self.cost[nt],updates=self.updates[nt],on_unused_input='ignore')
+			self.train_node[nt] = theano.function([self.X[nt],self.Y[nt],self.learning_rate,self.std],self.cost[nt],updates=self.updates[nt],on_unused_input='ignore')
 		
-			# self.predict_node[nt] = theano.function([self.X[nt],self.std],self.Y_pr[nt],on_unused_input='ignore')
+			self.predict_node[nt] = theano.function([self.X[nt],self.std],self.Y_pr[nt],on_unused_input='ignore')
 	
-			# self.predict_node_loss[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.cost[nt],on_unused_input='ignore')
+			self.predict_node_loss[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.cost[nt],on_unused_input='ignore')
 		
-			# self.norm[nt] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nt]]))
+			self.norm[nt] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nt]]))
 		
-			# self.grad_norm[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.norm[nt],on_unused_input='ignore')
+			self.grad_norm[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.norm[nt],on_unused_input='ignore')
 		
-			# self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
+			self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
 		
 
 		print("=============")
@@ -147,7 +148,10 @@ class DRA(object):
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
 		test_ground_truth_unnorm = np.zeros((np.shape(test_ground_truth)[0],np.shape(test_ground_truth)[1],len(new_idx)))
 		for i in range(np.shape(test_ground_truth)[1]):
-			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
+
+		fname = 'test_ground_truth_unnorm'
+		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -337,20 +341,25 @@ class DRA(object):
 					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 					# test_ground_truth
-					validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
+					#validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
 					# print("{0: <16} |".format(action), end="")
-					seq_length_out = len(validation_euler_error)
-					for ms in [1,3,7,9,13,24]:
-						if seq_length_out >= ms+1:
-							print(" {0:.3f} |".format( validation_euler_error[ms] ))
-						else:
-							print("   n/a |")
+					#seq_length_out = len(validation_euler_error)
+					#for ms in [1,3,7,9,13,24]:
+					#	if seq_length_out >= ms+1:
+					#		print(" {0:.3f} |".format( validation_euler_error[ms] ))
+					#	else:
+					#		print("   n/a |")
 					# print("Reported Error = " + str(validation_euler_error))
 					print("-------------------------")
 
+					
+					# if (int(iterations) % snapshot_rate == 0):
+					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+
 					if( int(iterations) % snapshot_rate == 0):
-						fname = 'forecast_iteration_{0}'.format(int(iterations))
-						self.saveForecastedMotion(forecasted_motion,path,fname)
+						# fname = 'forecast_iteration_{0}'.format(int(iterations))
+						# self.saveForecastedMotion(forecasted_motion,path,fname)
 						skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
 						err_per_dof = skel_err / trY_forecasting.shape[2]
 						fname = 'forecast_error_iteration_{0}'.format(int(iterations))

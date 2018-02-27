@@ -1,9 +1,3 @@
-
-try:
-	sys.path.remove('/usr/local/lib/python2.7/dist-packages/Theano-0.6.0-py2.7.egg')
-except:
-	print 'Theano 0.6.0 version not found'
-# 
 import os
 os.environ['PATH'] += ':/usr/local/cuda/bin'
 import argparse
@@ -24,7 +18,13 @@ import copy
 import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
 global rng
+# import theano.sandbox.cuda
+# theano.sandbox.cuda.use("gpu0")
+
+
 rng = np.random.RandomState(1234567890)
+
+
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--decay_type',type=str,default='schedule')

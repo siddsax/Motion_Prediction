@@ -38,6 +38,10 @@ class LSTM(object):
 		self.W_o = self.init((self.inputD,self.size),rng=self.rng)
 		self.W_c = self.init((self.inputD,self.size),rng=self.rng)
 		self.numparams += 4*self.inputD*self.size
+		print("====LSTM========")
+		print(self.inputD)
+		print(self.size)
+		print("====LSTM========")
 
 		self.U_i = self.init((self.size,self.size),rng=self.rng)
 		self.U_f = self.init((self.size,self.size),rng=self.rng)

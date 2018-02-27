@@ -28,9 +28,9 @@ from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
 
-theano.config.optimizer='None'
+theano.config.optimizer='fast_run'
 #theano.config.optimizer='fast_compile'
-theano.config.exception_verbosity='high' 
+# theano.config.exception_verbosity='high' 
 # theano.config.exception_verbosity='high'
 theano.config.compute_test_value = 'warn'
 theano.config.print_test_value = True
@@ -152,20 +152,8 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
-			] # ------------------- NEED TO CHECK THE ARGUMENTS ARE IN LINE
+			]
 
-		# ---------------------Original---------------------------------------------------------	 
-		# nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm])
-		# 		multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-		# 		FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-		# 		FCLayer('rectify',args.fc_init,size=100,rng=rng),
-		# 		FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
-		# 		]
-		# -------------------------------------------------------------------------------------
-		
-		# print(nodeFeatureLength[nm])
-		# print(args.fc_size)
-		# print("~~~~~~~~~~~")
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
@@ -178,9 +166,9 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
-				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				## multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				FCLayer('linear',args.fc_init,size=num_classes*args.fc_size,rng=rng)
 				]
 		finalLayer[nm] = [
 				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng),
@@ -196,9 +184,10 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	learning_rate.tag.test_value = .5
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
-	graphLayers = [GraphConvolution(99,adjacency,drop_value=args.drop_value),
+	graphLayers = [
+				GraphConvolution(num_classes*args.fc_size,adjacency,drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
-        GraphConvolution(100,adjacency,activation_str='linear',drop_value=args.drop_value)
+        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
 	] 
 	#----------------------------------------------------------------------------------------
 	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
