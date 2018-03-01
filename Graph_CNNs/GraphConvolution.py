@@ -78,8 +78,6 @@ class GraphConvolution(object):
 		supports = list()
 		# for i in range(len(self.adjacency)):
 
-		# print("rum------------")
-		# print(x.shape.__repr__)
 		if not self.featureless:
 			if self.sparse_inputs:
 				pre_sup = sp.dot(x, self.W)

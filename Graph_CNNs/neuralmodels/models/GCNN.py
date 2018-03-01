@@ -86,7 +86,7 @@ class GCNN(object):
 
 				for l in nodeLayers:
 					if hasattr(l,'params'):
-						# self.params_all.extend(l.params)
+						self.params_all.extend(l.params)
 						self.num_params += l.numparams
 
 
@@ -105,24 +105,23 @@ class GCNN(object):
 					
 			indv_node_layers.append(nodeTopLayer[-1])
 			size_below = nodeTopLayer[-1].size
-			print 'Number of parameters in DRA: ',self.num_params
 
 		cv = Concatenate_Node_Layers()
 		cv.connect(indv_node_layers)
-		print("Boooze~~~~")
 
 # -------------------------- Graph --------------------------------------
-		# layers = self.graphLayers
-		# layers[0].connect(cv)
-		# for i in range(1,len(layers)):
-		# 	layers[i].connect(layers[i-1])
-		# 	if layers[i].__class__.__name__ == 'AddNoiseToInput':
-		# 		layers[i].std = self.std
-	
-		# for l in layers:
-		# 	if hasattr(l,'params'):
-		# 		self.params_all.extend(l.params)
-		# 		self.num_params += l.numparams
+		if(len(self.graphLayers)):
+			layers = self.graphLayers
+			layers[0].connect(cv)
+			for i in range(1,len(layers)):
+				layers[i].connect(layers[i-1])
+				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+					layers[i].std = self.std
+		
+			for l in layers:
+				if hasattr(l,'params'):
+					self.params_all.extend(l.params)
+					self.num_params += l.numparams
 
 # -------------------------- --- --------------------------------------
 
@@ -140,7 +139,10 @@ class GCNN(object):
 		out = {}
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
-			layers[0].connect(cv,indx)#self.graphLayers[-1],indx)
+			if(len(self.graphLayers)):
+				layers[0].connect(self.graphLayers[-1],indx)
+			else:
+				layers[0].connect(cv,indx)#self.graphLayers[-1],indx)
 			for i in range(1,len(layers)):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
@@ -153,16 +155,12 @@ class GCNN(object):
 					self.num_params += l.numparams
 
 			out[nm] =  layers[-1].output()
-			print("ROOOOOZE~~~~")
+
+		print 'Number of parameters in GCNN: ',self.num_params
 			
 		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
-		# print(self.params_all)
-		# print("====================")
-		# print(self.Y_all.shape.__repr__)
-		# print(self.Y_pr_all.shape.__repr__)
 		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-		# ---------- Will need considerable work here joinging the backprop --------------------------- 
 		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
 			
 		self.train_node = theano.function([self.X_all,self.Y_all,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
@@ -174,7 +172,6 @@ class GCNN(object):
 
 		
 
-		print 'Number of parameters in DRA: ',self.num_params
 
 # --------------------------------------------------------------------------------------------------
 
@@ -382,7 +379,6 @@ class GCNN(object):
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
 
 					test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-					# print(np.shape(trX_forecasting))
 					print("____________________")
 					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
