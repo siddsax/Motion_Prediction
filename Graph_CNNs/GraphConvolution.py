@@ -41,42 +41,57 @@ class GraphConvolution(object):
 	def connect(self,layer_below):
 		self.layer_below = layer_below
 		self.inputD = layer_below.size
-		self.W = self.init((self.inputD,self.size),rng=self.rng)
-		self.init((self.inputD,self.size),rng=self.rng)
-		self.numparams += self.inputD*self.size
-		if self.bias:
-			self.b = zero0s((self.size))
-			self.params = [self.W, self.b]
-			self.numparams += self.size
-		else:
-			self.params = [self.W]	
 
+		self.W = list()
+		if self.bias:
+			self.b = list()
+		self.nonzeros = {}
+		for i in range(np.shape(self.adjacency)[0]):
+			count = 0
+			self.nonzeros[i] = []
+			for j in range(np.shape(self.adjacency)[1]):
+				if(self.adjacency[i,j]):
+					self.nonzeros[i].append(j)
+					count+=1
+			self.W.append(self.init((count,self.inputD,self.size),rng=self.rng))
+			self.numparams += count*self.inputD*self.size
+			if self.bias:
+				self.b = zero0s((count,self.size))
+				self.numparams += count*self.size
+
+		self.params = []
+		self.params += self.W
+		if self.bias:
+			self.params += self.b
+		
 		if (self.weights):
 			for param, weight in zip(self.params,self.weights):
 				param.set_value(np.asarray(weight, dtype=theano.config.floatX))
 
-		self.L2_sqr = (self.W ** 2).sum()
+		self.L2_sqr = 0
+		for W in self.W:
+			self.L2_sqr += (W ** 2).sum()
 
 
 	def output(self,seq_output=True):
 		x = self.layer_below.output(seq_output=seq_output)
+		supports = list()
 
-		if not self.featureless:
-			if self.sparse_inputs:
-				pre_sup = sp.dot(x, self.W)
+		# if not self.featureless:
+		# 	if self.sparse_inputs:
+		# 		pre_sup = sp.dot(x, self.W)
+		# 	else:
+		for i in range(np.shape(self.adjacency)[0]):
+			out_d = T.tensordot(x[:,:,self.nonzeros[i][0],:], self.W[i][0,:,:],axes=[2,0])
+			if self.bias:
+				out_d += self.b[i][0,:]
+			for j in range(1,len(self.nonzeros[i])):
+				out_d += T.tensordot(x[:,:,self.nonzeros[i][j],:], self.W[i][j,:,:],axes=[2,0])
+				if self.bias:
+					out_d += self.b[i][j,:]
+			if(i==0):
+				out = out_d.reshape((out_d.shape[0],out_d.shape[1],1,out_d.shape[2]))
 			else:
-				pre_sup = T.tensordot(x, self.W,axes=[3,0])
-		else:
-			pre_sup = self.W[i]
+				out = T.concatenate((out,out_d.reshape((out_d.shape[0],out_d.shape[1],1,out_d.shape[2]))),axis=2)
 
-		# --------------------------------------------------------------
-		support = T.tensordot(self.adjacency, pre_sup,axes=[0,2])
-		sp = support.shape
-		support = support.reshape((sp[1],sp[2],sp[0],sp[3]))
-		# supports.append(support)
-		output = support
-
-
-		if self.bias:
-			output += self.b
-		return self.activation(output) 
+		return self.activation(out) 

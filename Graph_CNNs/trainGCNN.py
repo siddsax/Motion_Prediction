@@ -137,7 +137,7 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 			f.write(st+'\n')
 		f.close()
 
-def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFeatureLength,new_idx,featureRange):
+def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFeatureLength,new_idx,featureRange,adjacency):
 
 	temporalNodeRNN = {} # --- Node_Feature:(Node_Feature - Node_Feature_-1)
 	nodeRNNs = {} 
@@ -151,56 +151,56 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 			]
 
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				## AddNoiseToInput(rng=rng),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng)
+				# FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng)
 				]
 		finalLayer[nm] = [
 				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 				]
 
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	adjacency = T.lmatrix('adjacency_matrix')
-	adjacency.tag.test_value = poseDataset.adjacency
+	# adjacency = T.lmatrix('adjacency_matrix')
+	# adjacency.tag.test_value = poseDataset.adjacency
 	learning_rate.tag.test_value = .5
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
 	graphLayers = [
 				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
+				# GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+    #     GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+				# GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+    #     GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+				# GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+				# GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+    #     GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+				# GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
+    #     AddNoiseToInput(rng=rng),
+    #     GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
 	] 
 	#----------------------------------------------------------------------------------------
-	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 
 	return gcnn
 
@@ -249,13 +249,13 @@ def trainGCNN():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength,new_idx,featureRange)
+		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength,new_idx,featureRange,adjacency)
 	# ----------------------- To be used finally commented as work in this part is not done --------------------
 	saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint, "Ground_Truth")
 	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
-	gcnn.fitModel(trX, trY, adjacency,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	gcnn.fitModel(trX, trY,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
