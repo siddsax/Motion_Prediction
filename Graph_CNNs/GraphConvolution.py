@@ -41,10 +41,8 @@ class GraphConvolution(object):
 	def connect(self,layer_below):
 		self.layer_below = layer_below
 		self.inputD = layer_below.size
-		# self.W = list()
-		# for i in range(len(self.adjacency)):
-		# 	self.W.append(self.init((self.inputD,self.size),rng=self.rng))
 		self.W = self.init((self.inputD,self.size),rng=self.rng)
+		self.init((self.inputD,self.size),rng=self.rng)
 		self.numparams += self.inputD*self.size
 		if self.bias:
 			self.b = zero0s((self.size))
@@ -57,26 +55,11 @@ class GraphConvolution(object):
 			for param, weight in zip(self.params,self.weights):
 				param.set_value(np.asarray(weight, dtype=theano.config.floatX))
 
-		# for i in range(len(self.W)):
-		# 	self.L2_sqr = (self.W[i] ** 2).sum()
 		self.L2_sqr = (self.W ** 2).sum()
 
 
 	def output(self,seq_output=True):
 		x = self.layer_below.output(seq_output=seq_output)
-		# return self.activation(T.dot(X, self.W) + self.b)		
-
- 	# 	dropout = Dropout()
-		# if self.sparse_inputs:
-		# 	x = dropout.sparse_dropout(x, self.drop_value, self.num_features_nonzero) # Not written completely
-		# else:
-		# 	x = dropout.dropout_layer(x, self.drop_value)#, train)
-
-		# convolve
-		# theano.shared(value=np.zeros(shape,dtype=theano.config.floatX))
-		# output = zero0s((self.inputD,self.size))
-		supports = list()
-		# for i in range(len(self.adjacency)):
 
 		if not self.featureless:
 			if self.sparse_inputs:

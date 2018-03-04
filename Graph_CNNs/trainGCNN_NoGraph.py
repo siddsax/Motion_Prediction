@@ -1,4 +1,4 @@
-1import sys
+import sys
 
 try:
 	sys.path.remove('/usr/local/lib/python2.7/dist-packages/Theano-0.6.0-py2.7.egg')
@@ -29,7 +29,7 @@ global rng
 from euler_error import *
 
 theano.config.optimizer='fast_run'
-#theano.config.optimizer='fast_compile'
+theano.config.optimizer='None'
 # theano.config.exception_verbosity='high' 
 # theano.config.exception_verbosity='high'
 theano.config.compute_test_value = 'warn'
@@ -157,7 +157,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
@@ -185,17 +185,6 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
 	graphLayers = []
-	# 			GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
- #        AddNoiseToInput(rng=rng),
- #        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
- #        AddNoiseToInput(rng=rng),
- #        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
- #        AddNoiseToInput(rng=rng),
- #        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
- #        AddNoiseToInput(rng=rng),
- #        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
-	# ] 
-	#----------------------------------------------------------------------------------------
 	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 
 	return gcnn

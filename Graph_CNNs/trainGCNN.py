@@ -28,9 +28,9 @@ from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
 
-theano.config.optimizer='fast_run'
-#theano.config.optimizer='fast_compile'
-# theano.config.exception_verbosity='high' 
+# theano.config.optimizer='fast_run'
+theano.config.optimizer='None'
+theano.config.exception_verbosity='high' 
 # theano.config.exception_verbosity='high'
 theano.config.compute_test_value = 'warn'
 theano.config.print_test_value = True
@@ -137,10 +137,6 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 			f.write(st+'\n')
 		f.close()
 
-
-
-
-
 def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFeatureLength,new_idx,featureRange):
 
 	temporalNodeRNN = {} # --- Node_Feature:(Node_Feature - Node_Feature_-1)
@@ -157,7 +153,6 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
@@ -166,7 +161,6 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
-				## multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng)
 				]
