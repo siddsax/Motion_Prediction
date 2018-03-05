@@ -28,12 +28,11 @@ from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
 
-# theano.config.optimizer='fast_run'
-theano.config.optimizer='None'
-theano.config.exception_verbosity='high' 
+theano.config.optimizer='fast_run'
+# theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
-theano.config.compute_test_value = 'warn'
-theano.config.print_test_value = True
+# theano.config.compute_test_value = 'warn'
+# theano.config.print_test_value = True
 theano.config.floatX = 'float64'
 
 rng = np.random.RandomState(1234567890)
