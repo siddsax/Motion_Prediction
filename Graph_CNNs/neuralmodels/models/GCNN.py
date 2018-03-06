@@ -1,9 +1,10 @@
 from headers import *
+import pdb
 import numpy as np
 # import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 class GCNN(object):
-	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNNs,nodeRNNs,topLayer,cost,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -46,7 +47,7 @@ class GCNN(object):
 		self.std = T.scalar(dtype=theano.config.floatX)
 		self.std.tag.test_value = .5
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-		self.adjacency = adjacency
+
 
 		self.num_params = 0
 		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
@@ -86,7 +87,7 @@ class GCNN(object):
 
 				for l in nodeLayers:
 					if hasattr(l,'params'):
-						# self.params_all.extend(l.params)
+						self.params_all.extend(l.params)
 						self.num_params += l.numparams
 
 
@@ -105,24 +106,24 @@ class GCNN(object):
 					
 			indv_node_layers.append(nodeTopLayer[-1])
 			size_below = nodeTopLayer[-1].size
-			print 'Number of parameters in DRA: ',self.num_params
+			#print 'Number of parameters in DRA: ',self.num_params
 
 		cv = Concatenate_Node_Layers()
 		cv.connect(indv_node_layers)
 		print("Boooze~~~~")
 
 # -------------------------- Graph --------------------------------------
-		# layers = self.graphLayers
-		# layers[0].connect(cv)
-		# for i in range(1,len(layers)):
-		# 	layers[i].connect(layers[i-1])
-		# 	if layers[i].__class__.__name__ == 'AddNoiseToInput':
-		# 		layers[i].std = self.std
+		layers = self.graphLayers
+		layers[0].connect(cv)
+		for i in range(1,len(layers)):
+			layers[i].connect(layers[i-1])
+			if layers[i].__class__.__name__ == 'AddNoiseToInput':
+				layers[i].std = self.std
 	
-		# for l in layers:
-		# 	if hasattr(l,'params'):
-		# 		self.params_all.extend(l.params)
-		# 		self.num_params += l.numparams
+		for l in layers:
+			if hasattr(l,'params'):
+				self.params_all.extend(l.params)
+				self.num_params += l.numparams
 
 # -------------------------- --- --------------------------------------
 
@@ -140,7 +141,7 @@ class GCNN(object):
 		out = {}
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
-			layers[0].connect(cv,indx)#self.graphLayers[-1],indx)
+			layers[0].connect(self.graphLayers[-1],indx)#cv,indx)#
 			for i in range(1,len(layers)):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
@@ -153,32 +154,31 @@ class GCNN(object):
 					self.num_params += l.numparams
 
 			out[nm] =  layers[-1].output()
-			print("ROOOOOZE~~~~")
 			
 		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 		# print(self.params_all)
-		# print("====================")
 		# print(self.Y_all.shape.__repr__)
 		# print(self.Y_pr_all.shape.__repr__)
 		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-		# ---------- Will need considerable work here joinging the backprop --------------------------- 
+		print 'Number of parameters in GCNN: ',self.num_params
+		# ---------- Will need considerable work here joinging the backprop ---------------------------
 		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
 			
-		self.train_node = theano.function([self.X_all,self.Y_all,self.adjacency,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
-		self.predict_node = theano.function([self.X_all,self.adjacency,self.std],self.Y_pr_all,on_unused_input='ignore')
-		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.cost,on_unused_input='ignore')
+		self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+		self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
+		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
 		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
-		self.grad_norm = theano.function([self.X_all,self.Y_all,self.adjacency,self.std],self.norm,on_unused_input='ignore')
+		self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
 	
 
 		
 
-		print 'Number of parameters in DRA: ',self.num_params
-
+		print("====================================================")
+		
 # --------------------------------------------------------------------------------------------------
 
-	def fitModel(self,trX,trY,adjacency,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
+	def fitModel(self,trX,trY,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
@@ -344,9 +344,10 @@ class GCNN(object):
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
 
-				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,adjacency,learning_rate,std)
+				print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 			
-				g = self.grad_norm(tr_X_all,tr_Y_all,adjacency,std)
+				g = self.grad_norm(tr_X_all,tr_Y_all,std)
 				grad_norms.append(g)
 				loss += loss_for_current_node
 
@@ -377,7 +378,7 @@ class GCNN(object):
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path:
-					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,adjacency,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
 
@@ -395,12 +396,12 @@ class GCNN(object):
 					# 	else:
 					# 		print("   n/a |")
 					# print("Reported Error = " + str(validation_euler_error))
-					print("-------------------------")
+
 
 					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 					
-					# if (int(iterations) % snapshot_rate == 0):
-					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					if (int(iterations) % snapshot_rate == 0):
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
 					# eng = matlab.engine.start_matlab()
 					# t = eng.gcd(path,int(iterations))
 					# print(t[0])
@@ -443,7 +444,7 @@ class GCNN(object):
 
 
 # ==============================================================================================
-	def predict_sequence(self,teX_original_nodeFeatures,teX_original,adjacency,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
+	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
@@ -470,7 +471,7 @@ class GCNN(object):
 
 		for i in range(sequence_length):
 			body_positions = {}
-			prediction = self.predict_node(teX_original_nodeFeatures_all,adjacency,1e-5)
+			prediction = self.predict_node(teX_original_nodeFeatures_all,1e-5)
 			prediction_next = prediction[-1,:,:]
 			teY[i,:,:] = prediction_next
 			for nm in range(len(nodeNames)):

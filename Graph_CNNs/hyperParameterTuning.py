@@ -7,7 +7,7 @@ import copy
 import socket as soc
 from datetime import datetime
 import sys
-
+import pdb
 
 base_dir = '.'
 gpus = [0,1,3]
