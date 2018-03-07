@@ -1,4 +1,4 @@
-# import sys
+
 
 # try:
 # 	sys.path.remove('/usr/local/lib/python2.7/dist-packages/Theano-0.6.0-py2.7.egg')
@@ -317,7 +317,11 @@ from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
 
-# theano.config.optimizer='fast_run'
+
+
+
+theano.config.optimizer='fast_run'
+
 # theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
 # theano.config.compute_test_value = 'warn'
@@ -441,7 +445,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				]
+		]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				## AddNoiseToInput(rng=rng),
@@ -452,6 +456,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng),
 				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
+				# FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng)
 				]
 		finalLayer[nm] = [
 				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng),
@@ -468,6 +473,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
 	graphLayers = [
+
 				GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
 				GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
@@ -484,9 +490,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
         AddNoiseToInput(rng=rng),
         GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
-				GraphConvolution(len(nodeNames)*args.fc_size,adjacency,drop_value=args.drop_value),
-        AddNoiseToInput(rng=rng),
-        GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value)
+
 	] 
 	#----------------------------------------------------------------------------------------
 	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)

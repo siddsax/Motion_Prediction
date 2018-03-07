@@ -47,8 +47,6 @@ class GCNN(object):
 		self.std = T.scalar(dtype=theano.config.floatX)
 		self.std.tag.test_value = .5
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-
-
 		self.num_params = 0
 		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
 		self.Y_all.tag.test_value = np.random.rand(7,150, 54)
@@ -106,11 +104,9 @@ class GCNN(object):
 					
 			indv_node_layers.append(nodeTopLayer[-1])
 			size_below = nodeTopLayer[-1].size
-			#print 'Number of parameters in DRA: ',self.num_params
 
 		cv = Concatenate_Node_Layers()
 		cv.connect(indv_node_layers)
-		print("Boooze~~~~")
 
 # -------------------------- Graph --------------------------------------
 		layers = self.graphLayers
@@ -142,6 +138,10 @@ class GCNN(object):
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
 			layers[0].connect(self.graphLayers[-1],indx)#cv,indx)#
+			if(len(self.graphLayers)):
+				layers[0].connect(self.graphLayers[-1],indx)
+			else:
+				layers[0].connect(cv,indx)#self.graphLayers[-1],indx)
 			for i in range(1,len(layers)):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
@@ -156,13 +156,11 @@ class GCNN(object):
 			out[nm] =  layers[-1].output()
 			
 		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
-		# print(self.params_all)
-		# print(self.Y_all.shape.__repr__)
-		# print(self.Y_pr_all.shape.__repr__)
 		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
 		print 'Number of parameters in GCNN: ',self.num_params
-		# ---------- Will need considerable work here joinging the backprop ---------------------------
+		# ---------- Will need considerable work here joinging the backprop ---------------------------	
+		
 		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
 			
 		self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
@@ -170,12 +168,8 @@ class GCNN(object):
 		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
 		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
 		self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-	
-
-		
-
 		print("====================================================")
-		
+
 # --------------------------------------------------------------------------------------------------
 
 	def fitModel(self,trX,trY,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
@@ -345,6 +339,7 @@ class GCNN(object):
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
 
 				print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,std)
@@ -383,7 +378,6 @@ class GCNN(object):
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
 
 					test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-					# print(np.shape(trX_forecasting))
 					print("____________________")
 					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	

@@ -9,7 +9,7 @@ from datetime import datetime
 import sys
 import pdb
 
-base_dir = '.'
+base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
 gpus = [0,1,3]
 
 params = {}
@@ -139,10 +139,10 @@ use_gpu = 0
 
 # -----------------------------------------
 
-if(len(sys.argv)==2):
-	params['checkpoint_path'] = 'checkpoints/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient']) + '___' + sys.argv[1]
+if(len(sys.argv)==3):
+	params['checkpoint_path'] = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient']) + '___' + sys.argv[2]
 else:
-	params['checkpoint_path'] = 'checkpoints/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
+	params['checkpoint_path'] =  'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
 
 if params['weight_decay'] > 1e-6:
 	params['checkpoint_path'] += '_wd_{0}'.format(params['weight_decay'])
@@ -164,7 +164,11 @@ if params['use_pretrained'] == 1:
 		os.system('cp {0}/complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
 
 print 'Dir: {0}'.format(path_to_checkpoint)
-args = ['python','trainGCNN.py']
+
+if(int(sys.argv[1])==0):
+	args = ['python','trainGCNN_NoGraph.py']
+else:
+	args = ['python','trainGCNN.py']
 for k in params.keys():
 	args.append('--{0}'.format(k))
 	if not isinstance(params[k],list):
