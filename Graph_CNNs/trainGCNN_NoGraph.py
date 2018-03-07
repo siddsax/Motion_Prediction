@@ -29,11 +29,6 @@ global rng
 from euler_error import *
 
 theano.config.optimizer='fast_run'
-theano.config.optimizer='None'
-# theano.config.exception_verbosity='high' 
-# theano.config.exception_verbosity='high'
-theano.config.compute_test_value = 'warn'
-theano.config.print_test_value = True
 theano.config.floatX = 'float64'
 
 rng = np.random.RandomState(1234567890)
@@ -121,7 +116,7 @@ if poseDataset.copy_state:
 	args.batch_size = poseDataset.minibatch_size
 
 print '**** H3.6m Loaded ****'
-
+print '-------------------- no graphs being used -----------------'
 def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 	T = forecast.shape[0]
 	N = forecast.shape[1]
@@ -179,13 +174,13 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	adjacency = T.lmatrix('adjacency_matrix')
-	adjacency.tag.test_value = poseDataset.adjacency
+	#adjacency = T.lmatrix('adjacency_matrix')
+	#adjacency.tag.test_value = poseDataset.adjacency
 	learning_rate.tag.test_value = .5
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
 	graphLayers = []
-	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,adjacency,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 
 	return gcnn
 
@@ -240,7 +235,7 @@ def trainGCNN():
 	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
-	gcnn.fitModel(trX, trY, adjacency,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,

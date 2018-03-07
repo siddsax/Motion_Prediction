@@ -7,7 +7,7 @@ import sys
 
 #train_model = sys.argv[1]
 
-base_dir = open('basedir','r').readline().strip()
+base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'#open('basedir','r').readline().strip()
 gpus = [0,1,3]
 ## Set gpus = [gpu_id] if you don't have a gpu then set gpus = []
 
@@ -55,18 +55,18 @@ params['subsample_data'] = 1
 my_env = os.environ
 my_env['PATH'] += ':/usr/local/cuda/bin'
 use_gpu = 1 
-if len(sys.argv)==2:
-  if len(gpus) > 0:
- 	if use_gpu >= len(gpus):
- 		use_gpu = 0
- 	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cuda{0},floatX=float32'.format(gpus[use_gpu])
-	print("USING GPU NUMBER " + str(use_gpu) + "=============================")
-	use_gpu += 1
-  else:
-	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cpu,floatX=float32'.format(use_gpu)
-	print("NOT USING GPU EMERGENCY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-  import theano
+
+
+
+
+
+
+
+
+
+
+
 # Setting directory to dump trained models and then executing trainDRA.py
 
 #if params['model_to_train'] == 'dra':

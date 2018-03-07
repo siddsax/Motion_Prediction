@@ -32,7 +32,7 @@ from euler_error import *
 
 
 
-#theano.config.optimizer='fast_run'
+theano.config.optimizer='fast_run'
 #theano.config.optimizer_including=local_remove_all_assert
 # theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
@@ -161,8 +161,8 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				## AddNoiseToInput(rng=rng),
-				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),

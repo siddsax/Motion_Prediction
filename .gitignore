@@ -1,5 +1,5 @@
-Graph_CNNs/checkpoints/*
-DRA/checkpoints/*
+Graph_CNNs/checkpoint*
+DRA/checkpoint*
 *.pyc
 DRA/H36M.conf
 DRA/gpu_test.py

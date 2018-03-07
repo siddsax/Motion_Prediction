@@ -18,8 +18,8 @@ allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 actions = ['walking','eating','smoking']
 subactions=['1','2']
 
-base_dir = '.'
-base_dir = open('basedir','r').readline().strip()
+base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
+#base_dir = open('basedir','r').readline().strip()
 
 nodeFeaturesRanges={}
 nodeFeaturesRanges['torso'] = range(6)
