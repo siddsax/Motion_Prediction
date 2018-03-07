@@ -33,10 +33,6 @@ from euler_error import *
 
 
 theano.config.optimizer='fast_run'
-<<<<<<< HEAD
-=======
-
->>>>>>> temp
 # theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
 # theano.config.compute_test_value = 'warn'
