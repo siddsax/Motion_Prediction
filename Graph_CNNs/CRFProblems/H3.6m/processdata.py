@@ -18,42 +18,7 @@ allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 actions = ['walking','eating','smoking']
 subactions=['1','2']
 
-base_dir = ''
-if soc.gethostname() == "napoli110.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 1
-elif soc.gethostname() == "napoli105.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 1
-elif soc.gethostname() == "napoli106.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 2
-elif soc.gethostname() == "napoli107.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 2
-elif soc.gethostname() == "napoli108.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 2
-elif soc.gethostname() == "napoli101.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 2
-elif soc.gethostname() == "napoli104.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 2
-elif soc.gethostname() == "napoli109.stanford.edu":
-	#base_dir = '/scr/ashesh/h3.6m'
-	base_dir = '/scail/scratch/group/cvgl/ashesh/h3.6m'
-	gpus = 1
-else:
-	base_dir = 'checkpoints'
-
+base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
 nodeFeaturesRanges={}
 # -----------------------------------
 # nodeFeaturesRanges['torso'] = range(6)

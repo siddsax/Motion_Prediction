@@ -7,9 +7,9 @@ import copy
 import socket as soc
 from datetime import datetime
 import sys
+import pdb
 
-
-base_dir = '.'
+base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
 gpus = [0,1,3]
 
 params = {}
@@ -50,43 +50,6 @@ params['drop_features'] = 0
 params['drop_id'] = '9'
 params['subsample_data'] = 1
 
-# params['decay_type'] = 'schedule'
-# params['decay_after'] =  -1
-# params['initial_lr'] = 1e-3
-# params['learning_rate_decay'] = 1.0
-# params['decay_schedule'] = []
-# params['decay_rate_schedule'] = [] 
-# params['lstm_init'] = 'uniform'
-# params['fc_init'] = 'uniform'
-# params['epochs'] = 2000
-# params['clipnorm'] = 0.0
-# params['use_noise'] = 1
-# params['noise_schedule'] = []
-# params['noise_rate_schedule'] = []
-# params['momentum'] = 0.99
-# params['g_clip'] = 25.0
-
-# params['truncate_gradient'] = 100
-# params['use_pretrained'] = 0
-# params['iter_to_load'] = 2500
-# params['sequence_length'] = 150
-# params['sequence_overlap'] = 50
-# params['batch_size'] = 100
-# params['lstm_size'] = 10#512
-# params['node_lstm_size'] = 10#512
-# params['fc_size'] = 10#256
-# params['snapshot_rate'] = 25
-# params['crf'] = ''
-# params['copy_state'] = 0
-# params['full_skeleton'] = 1
-# params['weight_decay'] = 0.0
-# params['train_for'] = 'eating'
-# params['temporal_features'] = 0
-# params['dra_type'] = 'NoEdge'
-# params['dataset_prefix'] = ''
-# params['drop_features'] = 0
-# params['drop_id'] = '9'
-# params['subsample_data'] = 1
 
 def listToString(ll):
 	st = '['
@@ -103,46 +66,11 @@ my_env['PATH'] += ':/usr/local/cuda/bin'
 
 use_gpu = 0
 
-# if len(sys.argv)==3:
-#   if len(gpus) > 0:
-#  	if use_gpu >= len(gpus):
-#  		use_gpu = 0
-#  	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cuda{0},floatX=float32'.format(gpus[use_gpu])
-# 	print("USING GPU NUMBER " + str(use_gpu) + "=============================")
-# 	use_gpu += 1
-#   else:
-# 	my_env['THEANO_FLAGS']='mode=FAST_RUN,device=cpu,floatX=float32'.format(use_gpu)
-# 	print("NOT USING GPU EMERGENCY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-#   import theano
-# -----------------------------------------------
-
-# vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
-# iters = 1000
-
-# rng = numpy.random.RandomState(22)
-# x = shared(numpy.asarray(rng.rand(vlen), config.floatX))
-# f = function([], tensor.exp(x))
-# print(f.maker.fgraph.toposort())
-# t0 = time.time()
-# for i in range(iters):
-#     r = f()
-# t1 = time.time()
-# print("Looping %d times took %f seconds" % (iters, t1 - t0))
-# print("Result is %s" % (r,))
-# if numpy.any([isinstance(x.op, tensor.Elemwise) and
-#               ('Gpu' not in type(x.op).__name__)
-#               for x in f.maker.fgraph.toposort()]):
-#     print('Used the cpu')
-# else:
-#     print('Used the gpu')
-
-# -----------------------------------------
 
 if(len(sys.argv)==3):
 	params['checkpoint_path'] = 'checkpoints/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient']) + '___' + sys.argv[2]
 else:
-	params['checkpoint_path'] = 'checkpoints/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
+	params['checkpoint_path'] =  'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
 
 if params['weight_decay'] > 1e-6:
 	params['checkpoint_path'] += '_wd_{0}'.format(params['weight_decay'])

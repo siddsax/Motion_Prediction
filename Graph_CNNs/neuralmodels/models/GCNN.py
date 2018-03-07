@@ -1,4 +1,5 @@
 from headers import *
+import pdb
 import numpy as np
 # import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
@@ -46,7 +47,6 @@ class GCNN(object):
 		self.std = T.scalar(dtype=theano.config.floatX)
 		self.std.tag.test_value = .5
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
-
 		self.num_params = 0
 		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
 		self.Y_all.tag.test_value = np.random.rand(7,150, 54)
@@ -154,23 +154,17 @@ class GCNN(object):
 					self.num_params += l.numparams
 
 			out[nm] =  layers[-1].output()
-
-		print 'Number of parameters in GCNN: ',self.num_params
-			
 		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)
-			
+		print 'Number of parameters in GCNN: ',self.num_params
+		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
 		self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
 		self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
 		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
 		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
 		self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-	
-
-		
-
+		print("====================================================")
 
 # --------------------------------------------------------------------------------------------------
 
@@ -339,7 +333,7 @@ class GCNN(object):
 				for i in range(1,len(nodeNames)):
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
-
+				print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,std)
@@ -390,12 +384,12 @@ class GCNN(object):
 					# 	else:
 					# 		print("   n/a |")
 					# print("Reported Error = " + str(validation_euler_error))
-					print("-------------------------")
+
 
 					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 					
-					# if (int(iterations) % snapshot_rate == 0):
-					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					if (int(iterations) % snapshot_rate == 0):
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
 					# eng = matlab.engine.start_matlab()
 					# t = eng.gcd(path,int(iterations))
 					# print(t[0])
