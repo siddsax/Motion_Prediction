@@ -8,8 +8,8 @@ import socket as soc
 from datetime import datetime
 import sys
 import pdb
-
-base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
+from py_server import ssh
+base_dir = '..'
 gpus = [0,1,3]
 
 params = {}
@@ -29,10 +29,10 @@ params['truncate_gradient'] = 100#10 #
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 512 #10
-params['node_lstm_size'] = 512 #10 #
-params['fc_size'] = 256 #10 #
-params['snapshot_rate'] = 10#250 # Save the model after every 250 iterations
+params['lstm_size'] = 512 #2 #
+params['node_lstm_size'] = 512 #2 #
+params['fc_size'] = 256 #2 #
+params['snapshot_rate'] = 250 #10# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 
 
@@ -68,28 +68,33 @@ use_gpu = 0
 
 
 if(len(sys.argv)==3):
-	params['checkpoint_path'] = 'checkpoints/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient']) + '___' + sys.argv[2]
+	params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/GCNN/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient']) + '___' + sys.argv[2]
 else:
-	params['checkpoint_path'] =  'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
+	params['checkpoint_path'] =  '/new_data/gpu/siddsax/motion_pred_checkpoints/GCNN/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_'.format('gcnn',params['batch_size'],params['sequence_length'],params['truncate_gradient'])
+params['dump_path'] = '../dump'
 
 if params['weight_decay'] > 1e-6:
 	params['checkpoint_path'] += '_wd_{0}'.format(params['weight_decay'])
 if params['drop_features']:
 	params['checkpoint_path'] += '_df_' + params['drop_id']
-path_to_checkpoint = base_dir + '/{0}/'.format(params['checkpoint_path'])
+path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 print(path_to_checkpoint)
-if not os.path.exists(path_to_checkpoint):
-	os.mkdir(path_to_checkpoint)
 
-if params['use_pretrained'] == 1:
-	if load_pretrained_model_from[-1] == '/':
-		os.system('cp {0}checkpoint.{1} {2}.'.format(load_pretrained_model_from,params['iter_to_load'],path_to_checkpoint))
-		os.system('cp {0}logfile {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
-		os.system('cp {0}complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
-	else:
-		os.system('cp {0}/checkpoint.{1} {2}.'.format(load_pretrained_model_from,params['iter_to_load'],path_to_checkpoint))
-		os.system('cp {0}/logfile {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
-		os.system('cp {0}/complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
+script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+ssh( "echo " + script + " > file.sh")
+ssh("bash file.sh")
+# if not os.path.exists(path_to_checkpoint):
+# 	os.mkdir(path_to_checkpoint)
+
+# if params['use_pretrained'] == 1:
+# 	if load_pretrained_model_from[-1] == '/':
+# 		os.system('cp {0}checkpoint.{1} {2}.'.format(load_pretrained_model_from,params['iter_to_load'],path_to_checkpoint))
+# 		os.system('cp {0}logfile {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
+# 		os.system('cp {0}complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
+# 	else:
+# 		os.system('cp {0}/checkpoint.{1} {2}.'.format(load_pretrained_model_from,params['iter_to_load'],path_to_checkpoint))
+# 		os.system('cp {0}/logfile {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
+# 		os.system('cp {0}/complete_log {1}.'.format(load_pretrained_model_from,path_to_checkpoint))
 
 print 'Dir: {0}'.format(path_to_checkpoint)
 
@@ -105,7 +110,7 @@ for k in params.keys():
 		for x in params[k]:
 			args.append(str(x))
 
-FNULL = open('{0}stdout.txt'.format(path_to_checkpoint),'w')
+# FNULL = open('{0}stdout.txt'.format(path_to_checkpoint),'w')
 p=sbp.Popen(args,env=my_env)
 pd = p.pid
 p.wait()

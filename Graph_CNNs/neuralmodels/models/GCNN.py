@@ -1,6 +1,7 @@
 from headers import *
 import pdb
 import numpy as np
+from py_server import ssh
 # import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 class GCNN(object):
@@ -168,7 +169,7 @@ class GCNN(object):
 
 # --------------------------------------------------------------------------------------------------
 
-	def fitModel(self,trX,trY,snapshot_rate=10,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
+	def fitModel(self,trX,trY,snapshot_rate=10,path=None,pathD=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
@@ -181,8 +182,11 @@ class GCNN(object):
 		for i in range(np.shape(test_ground_truth)[1]):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
+		# saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
+		
 		fname = 'test_ground_truth_unnorm'
 		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
+		print("---------- Saved Ground Truth -----------------------")
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
 		iterations = 0
@@ -361,9 +365,9 @@ class GCNN(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if int(iterations) % snapshot_rate == 0:
-					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)))
+				# if int(iterations) % snapshot_rate == 0:
+					# print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+					# saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path:
@@ -388,8 +392,9 @@ class GCNN(object):
 
 					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 					
-					if (int(iterations) % snapshot_rate == 0):
-						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					# if (int(iterations) % snapshot_rate == 0):
+					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					print("---------- Saved Outputs Truth -----------------------")
 					# eng = matlab.engine.start_matlab()
 					# t = eng.gcd(path,int(iterations))
 					# print(t[0])
@@ -399,13 +404,15 @@ class GCNN(object):
 			if path:
 				
 				'''Writing training error and validation error in a log file'''
-				f = open('{0}logfile'.format(path),'w')
-				for l,v in zip(skel_loss_after_each_minibatch,validation_set):
-					f.write('{0},{1}\n'.format(l,v))
-				f.close()
-				f = open('{0}complete_log'.format(path),'w')
-				f.write(complete_logger)
-				f.close()
+				######################## Restore this ################################33
+				# f = open('{0}logfile'.format(path),'w')
+				# for l,v in zip(skel_loss_after_each_minibatch,validation_set):
+				# 	f.write('{0},{1}\n'.format(l,v))
+				# f.close()
+				# f = open('{0}complete_log'.format(path),'w')
+				# f.write(complete_logger)
+				# f.close()
+				####################################################################
 			
 
 			# t1 = time.time()
@@ -421,14 +428,19 @@ class GCNN(object):
 		D = forecast.shape[2]
 		for j in range(N):
 			motion = forecast[:,j,:]
-			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
+			file = '{0}{2}_N_{1}'.format(path,j,fname)
+			string = ''
 			for i in range(T):
 				st = ''
 				for k in range(D):
 					st += str(motion[i,k]) + ','
 				st = st[:-1]
-				f.write(st+'\n')
-			f.close()
+				string += st+'\n'
+			# print(string)
+			# if(j==0):
+			ssh( "echo " + "'" + string + "'" + " > " + file)
+			# else:
+				# ssh( "echo " + '"' + string + '"' + " >> " + file)
 
 
 # ==============================================================================================

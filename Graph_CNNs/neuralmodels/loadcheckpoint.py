@@ -9,7 +9,7 @@ import pdb
 import sys 
 from neuralmodels.layers import *
 from neuralmodels.models import *
-
+from py_server import ssh
 '''
 def loadLayers(model,layers_to_load):
 	for layer_name in layers_to_load:
@@ -283,7 +283,7 @@ def saveDRA(model,path):
 	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
 	cPickle.dump(serializable_model, open(path, 'wb'))
 
-def saveGCNN(model,path):
+def saveGCNN(model,path,pathD):
 	sys.setrecursionlimit(10000) #################### ------ ##################
 
 	nodeRNNs = getattr(model,'nodeRNNs')
@@ -319,7 +319,10 @@ def saveGCNN(model,path):
 	model.settings['temporalNodeRNNs'] = temporalNodeRNN_saver
 	
 	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
-	cPickle.dump(serializable_model, open(path, 'wb'))
+	# serializable_model = "1232132132113123123"
+	cPickle.dump(serializable_model, open(pathD, 'wb'))
+	ssh(pathD,dst=path,copy=1)
+	os.remove(pathD)
 
 def saveSharedRNNOutput(model, path):
 	sys.setrecursionlimit(10000)

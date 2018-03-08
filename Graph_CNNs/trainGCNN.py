@@ -28,17 +28,23 @@ import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
+from py_server import ssh
 
 
-
-
-theano.config.optimizer='fast_run'
+#theano.config.scan.allow_gc =True
+#theano.config.scan.allow_output_prealloc =False
+#theano.optimizer_excluding=scanOp_pushout_seqs_ops
+#theano.optimizer_excluding=scan_pushout_dot1
+#theano.optimizer_excluding=scanOp_pushout_output
+#theano.optimizer_excluding="more_mem"
+#theano.config.optimizer.excluding = "scan" 
+#theano.config.optimizer='fast_run'
 #theano.config.optimizer_including=local_remove_all_assert
 # theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
 # theano.config.compute_test_value = 'warn'
 # theano.config.print_test_value = True
-theano.config.floatX = 'float64'
+#theano.config.floatX = 'float64'
 
 rng = np.random.RandomState(1234567890)
 
@@ -68,6 +74,7 @@ parser.add_argument('--use_pretrained',type=int,default=0)
 parser.add_argument('--iter_to_load',type=int,default=None)
 parser.add_argument('--model_to_train',type=str,default='gcnn')
 parser.add_argument('--checkpoint_path',type=str,default='checkpoint')
+parser.add_argument('--dump_path',type=str,default='checkpoint')
 parser.add_argument('--sequence_length',type=int,default=150)
 parser.add_argument('--sequence_overlap',type=int,default=50)
 parser.add_argument('--maxiter',type=int,default=15000)
@@ -201,6 +208,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
         GraphConvolution(args.fc_size,adjacency,activation_str='linear',drop_value=args.drop_value),
         AddNoiseToInput(rng=rng),
 	] 
+
 	#----------------------------------------------------------------------------------------
 	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 
@@ -209,12 +217,18 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 def trainGCNN():
 	crf_file = './CRFProblems/H3.6m/crf' + args.crf
 
-	path_to_checkpoint = './{0}/'.format(args.checkpoint_path)
+	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
+	path_to_dump = './{0}/'.format(args.dump_path)
 	print path_to_checkpoint
-	if not os.path.exists(path_to_checkpoint):
-		os.mkdir(path_to_checkpoint)
-	saveNormalizationStats(path_to_checkpoint)
-	
+	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	ssh( "echo " + script + " > file.sh")
+	ssh("bash file.sh")
+	# if not os.path.exists(path_to_checkpoint):
+	# 	os.mkdir(path_to_checkpoint)
+	#######################################################################################
+	############################ SHOULD BE SAVED ##########################################
+	# saveNormalizationStats(path_to_checkpoint)
+	#########################################################################################
 	# --------- Read the graph from here ------------------
 	# Things that we need are nodeNames, the feature length of temoral nodes*, 
 	[nodeList, # {node name} = output dimension
@@ -253,11 +267,11 @@ def trainGCNN():
 		args.iter_to_load = 0
 		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength,new_idx,featureRange,adjacency)
 	# ----------------------- To be used finally commented as work in this part is not done --------------------
-	saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint, "Ground_Truth")
-	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+	# saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint, "Ground_Truth")
+	# saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
-	gcnn.fitModel(trX, trY,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	gcnn.fitModel(trX, trY,snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, pathD = path_to_dump,epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
