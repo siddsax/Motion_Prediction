@@ -28,9 +28,6 @@ from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
 
-theano.config.optimizer='fast_run'
-theano.config.floatX = 'float64'
-
 rng = np.random.RandomState(1234567890)
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -59,6 +56,7 @@ parser.add_argument('--use_pretrained',type=int,default=0)
 parser.add_argument('--iter_to_load',type=int,default=None)
 parser.add_argument('--model_to_train',type=str,default='gcnn')
 parser.add_argument('--checkpoint_path',type=str,default='checkpoint')
+parser.add_argument('--dump_path',type=str,default='checkpoint')
 parser.add_argument('--sequence_length',type=int,default=150)
 parser.add_argument('--sequence_overlap',type=int,default=50)
 parser.add_argument('--maxiter',type=int,default=15000)
@@ -146,14 +144,13 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	nodeNames = nodeList.keys()
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
-		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
+		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=int(args.truncate_gradient),size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
 			]
 
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				]
+		]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				## AddNoiseToInput(rng=rng),
@@ -161,9 +158,9 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
-				## multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng)
+				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng),
+				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
 				]
 		finalLayer[nm] = [
 				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng),
@@ -187,11 +184,15 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 def trainGCNN():
 	crf_file = './CRFProblems/H3.6m/crf' + args.crf
 
-	path_to_checkpoint = './{0}/'.format(args.checkpoint_path)
+	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
+	path_to_dump = './{0}/'.format(args.dump_path)
 	print path_to_checkpoint
-	if not os.path.exists(path_to_checkpoint):
-		os.mkdir(path_to_checkpoint)
-	saveNormalizationStats(path_to_checkpoint)
+	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	ssh( "echo " + script + " > file.sh")
+	ssh("bash file.sh")
+	# if not os.path.exists(path_to_checkpoint):
+	# 	os.mkdir(path_to_checkpoint)
+	# saveNormalizationStats(path_to_checkpoint)
 	
 	# --------- Read the graph from here ------------------
 	# Things that we need are nodeNames, the feature length of temoral nodes*, 
@@ -231,11 +232,11 @@ def trainGCNN():
 		args.iter_to_load = 0
 		gcnn = GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength,temporalNodeFeatureLength,new_idx,featureRange)
 	# ----------------------- To be used finally commented as work in this part is not done --------------------
-	saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint, "Ground_Truth")
-	saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+	# saveForecastedMotion(gcnn.convertToSingleLongVec(trY_forecasting,poseDataset, new_idx, featureRange),path_to_checkpoint, "Ground_Truth")
+	# saveForecastedMotion(gcnn.convertToSingleLongVec(trX_forecast_nodeFeatures,poseDataset,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 	#-------------------------------------------------------------------------------------------------------------
 
-	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint,pathD = path_to_dump, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,

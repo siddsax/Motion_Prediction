@@ -17,12 +17,15 @@ import socket as soc
 import copy
 import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
+from py_server import ssh
 global rng
+
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
 
 
 rng = np.random.RandomState(1234567890)
+# theano.config.optimizer='None'
 
 
 
@@ -167,12 +170,15 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 
 def trainDRA():
 	crf_file = './CRFProblems/H3.6m/crf' + args.crf
-
-	path_to_checkpoint = poseDataset.base_dir + '/{0}/'.format(args.checkpoint_path)
+	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
+	path_to_dump = '../dump/'
 	print path_to_checkpoint
-	if not os.path.exists(path_to_checkpoint):
-		os.mkdir(path_to_checkpoint)
-	saveNormalizationStats(path_to_checkpoint)
+	# if not os.path.exists(path_to_checkpoint):
+	# 	os.mkdir(path_to_checkpoint)
+	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	ssh( "echo " + script + " > file.sh")
+	ssh("bash file.sh")
+	# saveNormalizationStats(path_to_checkpoint)
 	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures] = graph.readCRFgraph(poseDataset)
 
 	new_idx = poseDataset.new_idx
@@ -183,18 +189,12 @@ def trainDRA():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		if args.dra_type == 'simple':
-			dra = DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
-		if args.dra_type == 'RNNatEachNode':
-			dra = DRAmodelRegression_RNNatEachNode(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
-		if args.dra_type == 'NoEdge':
-			dra = DRAmodelRegressionNoEdge(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
+		dra = DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
 
+	# saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
+	# saveForecastedMotion(dra.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 
-	saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
-	saveForecastedMotion(dra.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
-
-	dra.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, epochs=args.epochs, batch_size=args.batch_size,
+	dra.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, pathD=path_to_dump, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,

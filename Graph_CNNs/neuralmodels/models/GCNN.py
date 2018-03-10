@@ -148,7 +148,7 @@ class GCNN(object):
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
 			print("======---------=======")
-			
+			indx+=1
 			for l in layers:
 				if hasattr(l,'params'):
 					self.params_all.extend(l.params)
@@ -195,17 +195,17 @@ class GCNN(object):
 		loss_after_each_minibatch = []
 		complete_logger = ''
 		if iter_start > 0:
-			if path:
-				lines = open('{0}logfile'.format(path)).readlines()
-				for i in range(iter_start):
-					line = lines[i]
-					values = line.strip().split(',')
-					if len(values) == 1:
-						skel_loss_after_each_minibatch.append(float(values[0]))
-						validation_set.append(-1)
-					elif len(values) == 2:
-						skel_loss_after_each_minibatch.append(float(values[0]))
-						validation_set.append(float(values[1]))
+			# if path:
+			# 	lines = open('{0}logfile'.format(path)).readlines()
+			# 	for i in range(iter_start):
+			# 		line = lines[i]
+			# 		values = line.strip().split(',')
+			# 		if len(values) == 1:
+			# 			skel_loss_after_each_minibatch.append(float(values[0]))
+			# 			validation_set.append(-1)
+			# 		elif len(values) == 2:
+			# 			skel_loss_after_each_minibatch.append(float(values[0]))
+			# 			validation_set.append(float(values[1]))
 				#if os.path.exists('{0}complete_log'.format(path)):
 				#	complete_logger = open('{0}complete_log'.format(path)).read()
 				#	complete_logger = complete_logger[:epoch_count]
@@ -333,11 +333,19 @@ class GCNN(object):
 
 				tr_X_all = tr_X[nodeNames[0]]
 				tr_Y_all = tr_Y[nodeNames[0]]
-
+				# a = 0
+				# print(nodeNames[0])
+				# print(a)
+				# a += np.shape(tr_X[nodeNames[0]])[2]
+				# print(a)
 				for i in range(1,len(nodeNames)):
+					# print(nodeNames[i])
+					# print(a)
+					# a += np.shape(tr_X[nodeNames[i]]	)[2]
+					# print(a)
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
-				print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+				# print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,std)
@@ -365,9 +373,10 @@ class GCNN(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				# if int(iterations) % snapshot_rate == 0:
-					# print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					# saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
+				if int(iterations) % snapshot_rate == 0:
+					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+					print("{0}checkpoint.{1}".format(pathD,int(iterations)))
+					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path:
@@ -392,9 +401,9 @@ class GCNN(object):
 
 					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 					
-					# if (int(iterations) % snapshot_rate == 0):
-					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
-					print("---------- Saved Outputs Truth -----------------------")
+					if (int(iterations) % snapshot_rate == 0):
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+						print("---------- Saved Outputs Truth -----------------------")
 					# eng = matlab.engine.start_matlab()
 					# t = eng.gcd(path,int(iterations))
 					# print(t[0])

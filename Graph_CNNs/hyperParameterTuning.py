@@ -29,16 +29,16 @@ params['truncate_gradient'] = 100#10 #
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 512 #2 #
-params['node_lstm_size'] = 512 #2 #
-params['fc_size'] = 256 #2 #
-params['snapshot_rate'] = 250 #10# Save the model after every 250 iterations
+params['lstm_size'] = 512 #1 #
+params['node_lstm_size'] = 512 #1 #
+params['fc_size'] = 256 #
+params['snapshot_rate'] = 25 #10# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 
 
 ## Tweak these hyperparameters only if you want to try out new models etc. This is only for 'Advanced' users
 params['use_pretrained'] = 0
-params['iter_to_load'] = 2500
+params['iter_to_load'] = 25
 params['crf'] = ''
 params['copy_state'] = 0
 params['full_skeleton'] = 1

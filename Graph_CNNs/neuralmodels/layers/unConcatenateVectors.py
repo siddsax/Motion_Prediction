@@ -38,6 +38,10 @@ class unConcatenateVectors(object):
 			self.norm = 1
 		low = self.idxValues[nm][idx][0] + self.base
 		high = self.idxValues[nm][idx][1] + self.base
+		print(nm)
+		print(idx)
+		print(low)
+		print(high)
 
 		if((self.norm) and (self.temp)):
 			self.temp = 0

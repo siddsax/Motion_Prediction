@@ -261,7 +261,7 @@ def trainGCNN():
 	gcnn = []
 	# ------------- Here we load the model using the function ------------------------------
 	if args.use_pretrained == 1:
-		gcnn = loadDRA(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
+		gcnn = loadGCNN('../dump/checkpoint.'+str(args.iter_to_load))
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0

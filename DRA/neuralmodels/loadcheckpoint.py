@@ -7,8 +7,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import math
 import pdb
 import sys 
+import os
 from neuralmodels.layers import *
 from neuralmodels.models import *
+from py_server import ssh
 
 '''
 def loadLayers(model,layers_to_load):
@@ -216,7 +218,7 @@ def saveSharedRNN(model, path):
 	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
 	cPickle.dump(serializable_model, open(path, 'wb'))
 
-def saveDRA(model,path):
+def saveDRA(model,path,pathD):
 	sys.setrecursionlimit(10000)
 
 	edgeRNNs = getattr(model,'edgeRNNs')
@@ -251,7 +253,9 @@ def saveDRA(model,path):
 		nodeRNN_saver[k] = layer_configs
 	model.settings['nodeRNNs'] = nodeRNN_saver
 	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
-	cPickle.dump(serializable_model, open(path, 'wb'))
+	cPickle.dump(serializable_model, open(pathD, 'wb'))
+	ssh(pathD,dst=path,copy=1)
+	os.remove(pathD)
 
 def saveSharedRNNOutput(model, path):
 	sys.setrecursionlimit(10000)

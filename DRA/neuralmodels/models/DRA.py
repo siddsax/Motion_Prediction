@@ -1,4 +1,5 @@
 from headers import *
+from py_server import ssh
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
 class DRA(object):
@@ -137,7 +138,7 @@ class DRA(object):
 						self.num_params += temp
 		print 'Number of parameters in DRA: ',self.num_params
 
-	def fitModel(self,trX,trY,snapshot_rate=1,path=None,epochs=30,batch_size=50,learning_rate=1e-3,
+	def fitModel(self,trX,trY,snapshot_rate=1,path=None,pathD=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
@@ -328,7 +329,7 @@ class DRA(object):
 
 				if int(iterations) % snapshot_rate == 0:
 					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)))
+					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path :
@@ -353,17 +354,9 @@ class DRA(object):
 					print("-------------------------")
 
 					
-					# if (int(iterations) % snapshot_rate == 0):
-					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
-
-					if( int(iterations) % snapshot_rate == 0):
-						# fname = 'forecast_iteration_{0}'.format(int(iterations))
-						# self.saveForecastedMotion(forecasted_motion,path,fname)
-						skel_err = np.mean(np.sqrt(np.sum(np.square((forecasted_motion - trY_forecasting)),axis=2)),axis=1)
-						err_per_dof = skel_err / trY_forecasting.shape[2]
-						fname = 'forecast_error_iteration_{0}'.format(int(iterations))
-						self.saveForecastError(skel_err,err_per_dof,path,fname)
+					if (int(iterations) % snapshot_rate == 0):
+						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
 
 
 			'''Computing error on validation set'''
@@ -393,22 +386,22 @@ class DRA(object):
 				print termout
 
 			'''Saving the learned model so far'''
-			if path:
-				
-				print 'Dir: ',path				
-				'''Writing training error and validation error in a log file'''
-				f = open('{0}logfile'.format(path),'w')
-				for l,v in zip(skel_loss_after_each_minibatch,validation_set):
-					f.write('{0},{1}\n'.format(l,v))
-				f.close()
-				f = open('{0}complete_log'.format(path),'w')
-				f.write(complete_logger)
-				f.close()
+			#if path:
+			#	
+			#	print 'Dir: ',path				
+			#	'''Writing training error and validation error in a log file'''
+			#	f = open('{0}logfile'.format(path),'w')
+			#	for l,v in zip(skel_loss_after_each_minibatch,validation_set):
+			#		f.write('{0},{1}\n'.format(l,v))
+			#	f.close()
+			#	f = open('{0}complete_log'.format(path),'w')
+			#	f.write(complete_logger)
+			#	f.close()
 			
 
 			t1 = time.time()
 			termout = 'Epoch took {0} seconds'.format(t1-t0)
-			complete_logger += termout + '\n'
+			#complete_logger += termout + '\n'
 			print termout
 			epoch += 1
 
@@ -424,14 +417,20 @@ class DRA(object):
 		D = forecast.shape[2]
 		for j in range(N):
 			motion = forecast[:,j,:]
-			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
+			file = '{0}{2}_N_{1}'.format(path,j,fname)
+			string = ''
 			for i in range(T):
 				st = ''
 				for k in range(D):
 					st += str(motion[i,k]) + ','
 				st = st[:-1]
-				f.write(st+'\n')
-			f.close()
+				string += st+'\n'
+			# print(string)
+			# if(j==0):
+			ssh( "echo " + "'" + string + "'" + " > " + file)
+			# else:
+				# ssh( "echo " + '"' + string + '"' + " >> " + file)
+
 	
 	def saveCellState(self,cellstate,path,fname):
 		nodeNames = cellstate.keys()
