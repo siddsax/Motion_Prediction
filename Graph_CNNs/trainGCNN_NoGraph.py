@@ -163,7 +163,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
 				]
 		finalLayer[nm] = [
-				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng),
+				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=0),
 				FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 				]

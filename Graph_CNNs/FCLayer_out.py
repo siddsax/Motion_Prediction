@@ -1,7 +1,7 @@
 from headers import *
 
 class FCLayer_out(object):
-	def __init__(self,activation_str='tanh',init='orthogonal',size=128,weights=None,rng=None):
+	def __init__(self,activation_str='tanh',init='orthogonal',size=128,weights=None,rng=None,flag=1):
 		self.settings = locals()
 		del self.settings['self']
 		self.activation = getattr(activations,activation_str)
@@ -10,10 +10,12 @@ class FCLayer_out(object):
 		self.weights = weights
 		self.rng = rng
 		self.numparams = 0
+		self.flag = flag
 
-	def connect(self,layer_below,indx):
+	def connect(self,layer_below,indx=None):
 		self.layer_below = layer_below
-		self.indx = indx
+		if(self.flag):
+			self.indx = indx
 		self.inputD = layer_below.size
 		self.W = self.init((self.inputD,self.size),rng=self.rng)
 		self.b = zero0s((self.size))
@@ -30,5 +32,8 @@ class FCLayer_out(object):
 		self.L2_sqr = (self.W ** 2).sum() 
 
 	def output(self,seq_output=True):
-		X = self.layer_below.output(seq_output=seq_output)[:,:,self.indx,:]
+		if(self.flag):
+			X = self.layer_below.output(seq_output=seq_output)[:,:,self.indx,:]
+		else:
+			X = self.layer_below.output(seq_output=seq_output)			
 		return self.activation(T.dot(X, self.W) + self.b)

@@ -53,9 +53,7 @@ class GCNN(object):
 		self.Y_all.tag.test_value = np.random.rand(7,150, 54)
 		self.masterlayer = unConcatenateVectors(preGraphNets)
 		self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
-		# self.masterlayer.X_all = self.X_all
 
-		pit = 0
 		indv_node_layers = []
 		for nm in nodeNames:
 			layers = self.nodeRNNs[nm]
@@ -106,8 +104,9 @@ class GCNN(object):
 			indv_node_layers.append(nodeTopLayer[-1])
 			size_below = nodeTopLayer[-1].size
 
-		cv = Concatenate_Node_Layers()
-		cv.connect(indv_node_layers)
+		if(len(self.graphLayers)):
+			cv = Concatenate_Node_Layers()
+			cv.connect(indv_node_layers)
 
 # -------------------------- Graph --------------------------------------
 		if(len(self.graphLayers)):
@@ -142,7 +141,7 @@ class GCNN(object):
 			if(len(self.graphLayers)):
 				layers[0].connect(self.graphLayers[-1],indx)
 			else:
-				layers[0].connect(cv,indx)#self.graphLayers[-1],indx)
+				layers[0].connect(indv_node_layers[indx])#self.graphLayers[-1],indx)
 			for i in range(1,len(layers)):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
@@ -314,7 +313,6 @@ class GCNN(object):
 
 			for j in range(batches_in_one_epoch):
 
-				examples_taken_from_node = 0	
 				for nm in nodeNames:
 					# nt = nm.split(':')[1]
 					examples_taken_from_node = min((j+1)*batch_size,numExamples[nm]) - j*batch_size
@@ -331,21 +329,12 @@ class GCNN(object):
 # ------------------------------ Model relted tasks -------------------------------------------
 				# for nm in nodeNames:
 
+				tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
+
 				tr_X_all = tr_X[nodeNames[0]]
-				tr_Y_all = tr_Y[nodeNames[0]]
-				# a = 0
-				# print(nodeNames[0])
-				# print(a)
-				# a += np.shape(tr_X[nodeNames[0]])[2]
-				# print(a)
 				for i in range(1,len(nodeNames)):
-					# print(nodeNames[i])
-					# print(a)
-					# a += np.shape(tr_X[nodeNames[i]]	)[2]
-					# print(a)
 					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
-					tr_Y_all =  np.concatenate([tr_Y_all,tr_Y[nodeNames[i]]],axis=2)
-				# print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+
 				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 			
 				g = self.grad_norm(tr_X_all,tr_Y_all,std)
@@ -379,7 +368,7 @@ class GCNN(object):
 					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path:
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
 					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
@@ -401,9 +390,8 @@ class GCNN(object):
 
 					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 					
-					if (int(iterations) % snapshot_rate == 0):
-						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
-						print("---------- Saved Outputs Truth -----------------------")
+					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					print("---------- Saved Outputs Truth -----------------------")
 					# eng = matlab.engine.start_matlab()
 					# t = eng.gcd(path,int(iterations))
 					# print(t[0])
