@@ -9,13 +9,13 @@ rng = np.random.RandomState(1234567890)
 
 global trainSubjects,validateSubject,testSubject,actions
 
-trainSubjects = ['S1','S6','S7','S8','S9']
-validateSubject = ['S11']
-testSubject = ['S5']
+trainSubjects = ['S8']#['S1','S6','S7','S8','S9']
+validateSubject = ['S8']#['S11']
+testSubject = ['S8']#['S5']
 allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 
 #actions =['directions','discussion','eating','greeting','phoning','posing','purchases','sitting','sittingdown','smoking','takingphoto','waiting','walking','walkingdog','walkingtogether']
-actions = ['walking','eating','smoking']
+actions = ['walking']#,'eating','smoking']
 subactions=['1','2']
 
 base_dir = '..'
@@ -375,8 +375,8 @@ def runall():
 	path_to_dataset = '{0}/dataset{1}'.format(base_dir,dataset_prefix)
 
 	if train_for == 'final':
-		trainSubjects = ['S1','S6','S7','S8','S9','S11']
-		validateSubject = ['S5']
+		trainSubjects = ['S8']#['S1','S6','S7','S8','S9','S11']
+		validateSubject = ['S8']#['S5']
 	if train_for == 'final2':
 		trainSubjects = ['S1','S6','S7','S8','S9','S5']
 		validateSubject = ['S11']

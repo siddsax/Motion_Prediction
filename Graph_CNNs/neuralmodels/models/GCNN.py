@@ -1,7 +1,7 @@
 from headers import *
 import pdb
 import numpy as np
-from py_server import ssh
+# from py_server import ssh
 # import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 class GCNN(object):
@@ -40,7 +40,6 @@ class GCNN(object):
 		self.grad_norm = {}
 		self.norm = {}
 		self.get_cell = {}
-		self.params_all = []
 		self.update_type = update_type
 		self.update_type.lr = self.learning_rate
 		self.update_type.clipnorm = self.clipnorm
@@ -49,11 +48,24 @@ class GCNN(object):
 		self.std.tag.test_value = .5
 		self.preGraphNetsTypes = ['temporal', 'normal' ]
 		self.num_params = 0
-		self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
-		self.Y_all.tag.test_value = np.random.rand(7,150, 54)
-		self.masterlayer = unConcatenateVectors(preGraphNets)
-		self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
-
+		if(len(self.graphLayers)):
+			self.params_all = []
+			self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
+			self.Y_all.tag.test_value = np.random.rand(7,150, 54)
+			self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
+			self.masterlayer = unConcatenateVectors(preGraphNets)
+		else:
+			self.params_all = {}
+			self.Y_all = {}
+			self.X_all = {}
+			self.masterlayer = {}
+			for nm in nodeNames:
+				self.params_all[nm] = []
+				self.Y_all[nm] = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
+				self.Y_all[nm].tag.test_value = np.random.rand(7,150, 54)
+				self.masterlayer[nm] = unConcatenateVectors(preGraphNets[nm],flag=0)
+				self.X_all[nm]=self.masterlayer[nm].input#T.tensor3(name="Data", dtype=theano.config.floatX)
+		
 		indv_node_layers = []
 		for nm in nodeNames:
 			layers = self.nodeRNNs[nm]
@@ -80,11 +92,17 @@ class GCNN(object):
 					print("Error in file GCNN.py, the pgnT is neither temporal or normal")	
 						
 				layers_below.append(nodeLayers)
-				nodeLayers[0].input = self.masterlayer.output(pgnT,nm,self.X_all)
-
+				if(len(self.graphLayers)):
+					nodeLayers[0].input = self.masterlayer.output(pgnT,nm)
+				else:
+					nodeLayers[0].input = self.masterlayer[nm].output(pgnT)
+					
 				for l in nodeLayers:
 					if hasattr(l,'params'):
-						self.params_all.extend(l.params)
+						if(len(self.graphLayers)):
+							self.params_all.extend(l.params)
+						else:
+							self.params_all[nm].extend(l.params)
 						self.num_params += l.numparams
 
 
@@ -98,18 +116,19 @@ class GCNN(object):
 
 			for l in nodeTopLayer:
 				if hasattr(l,'params'):
-					self.params_all.extend(l.params)
+					if(len(self.graphLayers)):
+						self.params_all.extend(l.params)
+					else:
+						self.params_all[nm].extend(l.params)
 					self.num_params += l.numparams
 					
 			indv_node_layers.append(nodeTopLayer[-1])
-			size_below = nodeTopLayer[-1].size
 
 		if(len(self.graphLayers)):
 			cv = Concatenate_Node_Layers()
 			cv.connect(indv_node_layers)
 
 # -------------------------- Graph --------------------------------------
-		if(len(self.graphLayers)):
 			layers = self.graphLayers
 			layers[0].connect(cv)
 			for i in range(1,len(layers)):
@@ -150,21 +169,48 @@ class GCNN(object):
 			indx+=1
 			for l in layers:
 				if hasattr(l,'params'):
-					self.params_all.extend(l.params)
+					if(len(self.graphLayers)):
+						self.params_all.extend(l.params)
+					else:
+						self.params_all[nm].extend(l.params)
 					self.num_params += l.numparams
 
 			out[nm] =  layers[-1].output()
-		self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
-		self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
+		
+		if(len(self.graphLayers)):
+			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
+			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-		print 'Number of parameters in GCNN: ',self.num_params
-		[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
-		self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
-		self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
-		self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
-		self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
-		self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-		print("====================================================")
+			print 'Number of parameters in GCNN: ',self.num_params
+			[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
+			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+			self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
+			self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
+			self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
+			print("====================================================")
+		else:
+			self.updates = {}
+			self.grads = {}
+			self.train_node = {}
+			self.predict_node = {}
+			self.predict_node_loss = {}
+			self.norm = {}
+			self.grad_norm = {}
+			self.cost = {}
+			print 'Number of parameters in GCNN: ',self.num_params
+			nmG = ""
+			for nm in nodeNames:
+				self.cost[nm] = cost(out[nm],self.Y_all[nm])# + normalizing
+				nmG = nm
+				[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params_all[nm],self.cost[nm])			
+				self.train_node[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.learning_rate,self.std],self.cost[nm],updates=self.updates[nm],on_unused_input='ignore')
+				self.predict_node[nm] = theano.function([self.X_all[nm],self.std],out[nm],on_unused_input='ignore')
+				self.predict_node_loss[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.std],self.cost[nm],on_unused_input='ignore')
+				self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
+				self.grad_norm[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.std],self.norm[nm],on_unused_input='ignore')
+				
+			theano.printing.pydotprint(out[nmG], outfile="out" + nmG + ".png", var_with_name_simple=True)
 
 # --------------------------------------------------------------------------------------------------
 
@@ -184,7 +230,7 @@ class GCNN(object):
 		# saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 		fname = 'test_ground_truth_unnorm'
-		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
+		# self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
 		print("---------- Saved Ground Truth -----------------------")
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -329,18 +375,27 @@ class GCNN(object):
 # ------------------------------ Model relted tasks -------------------------------------------
 				# for nm in nodeNames:
 
-				tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
+				if(len(self.graphLayers)):
+					tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
+					tr_X_all = tr_X[nodeNames[0]]
 
-				tr_X_all = tr_X[nodeNames[0]]
-				for i in range(1,len(nodeNames)):
-					tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
+					for i in range(1,len(nodeNames)):
+						tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 
-				loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
-			
-				g = self.grad_norm(tr_X_all,tr_Y_all,std)
-				grad_norms.append(g)
-				loss += loss_for_current_node
-
+					loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
+				
+					g = self.grad_norm(tr_X_all,tr_Y_all,std)
+					grad_norms.append(g)
+					loss += loss_for_current_node
+				
+				else:
+					loss_for_current_node = 0
+					g = 0
+					for nm in nodeNames:
+						loss += self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
+						g += self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
+					grad_norms.append(g)
+					
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
@@ -362,40 +417,41 @@ class GCNN(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if int(iterations) % snapshot_rate == 0:
-					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					print("{0}checkpoint.{1}".format(pathD,int(iterations)))
-					saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
-		
-				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				if(len(self.graphLayers)): 
+					if int(iterations) % snapshot_rate == 0:
+						print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+						print("{0}checkpoint.{1}".format(pathD,int(iterations)))
+						saveGCNN(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
+			
+					'''Trajectory forecasting on validation set'''
+					if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+						forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 
-					# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
+						# forecasted_motion = self.convertToSingleVec(forecasted_motion_o,new_idx,featureRange)
 
-					test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-					print("____________________")
-					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
-					# test_ground_truth
-					# validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
-					# seq_length_out = len(validation_euler_error)
-					# for ms in [1,3,7,9,13,24]:
-					# 	if seq_length_out >= ms+1:
-					# 		print(" {0:.3f} |".format( validation_euler_error[ms] ))
-					# 	else:
-					# 		print("   n/a |")
-					# print("Reported Error = " + str(validation_euler_error))
+						test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+						print("____________________")
+						for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+							test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+						# test_ground_truth
+						# validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
+						# seq_length_out = len(validation_euler_error)
+						# for ms in [1,3,7,9,13,24]:
+						# 	if seq_length_out >= ms+1:
+						# 		print(" {0:.3f} |".format( validation_euler_error[ms] ))
+						# 	else:
+						# 		print("   n/a |")
+						# print("Reported Error = " + str(validation_euler_error))
 
 
-					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-					
-					self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
-					print("---------- Saved Outputs Truth -----------------------")
-					# eng = matlab.engine.start_matlab()
-					# t = eng.gcd(path,int(iterations))
-					# print(t[0])
-					# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+						
+						# self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+						print("---------- Saved Outputs Truth -----------------------")
+						# eng = matlab.engine.start_matlab()
+						# t = eng.gcd(path,int(iterations))
+						# print(t[0])
+						# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
 			if path:

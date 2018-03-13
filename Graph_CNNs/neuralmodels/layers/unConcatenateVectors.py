@@ -16,7 +16,7 @@ class unConcatenateVectors(object):
 	# 	high = self.idxValues[idx][1]
 	# 	return self.input[:,:,low:high]
 
-	def __init__(self,idxValues,weights=None):
+	def __init__(self,idxValues,weights=None,flag=1):
 		self.settings = locals()
 		del self.settings['self']
 		self.input=T.tensor3(name="Data", dtype=theano.config.floatX)
@@ -29,23 +29,29 @@ class unConcatenateVectors(object):
 		self.base = 0
 		self.temp = 0
 		self.norm = 0
+		self.flag = flag
 
-	def output(self,idx,nm,inputM):
+	def output(self,idx,nm=None):
 
-		if(idx=='temporal'):
-			self.temp = 1
-		if(idx=='normal'):
-			self.norm = 1
-		low = self.idxValues[nm][idx][0] + self.base
-		high = self.idxValues[nm][idx][1] + self.base
-		print(nm)
-		print(idx)
-		print(low)
-		print(high)
+		if(self.flag):
+			if(idx=='temporal'):
+				self.temp = 1
+			if(idx=='normal'):
+				self.norm = 1
+			low = self.idxValues[nm][idx][0] + self.base
+			high = self.idxValues[nm][idx][1] + self.base
+			print(nm)
+			print(idx)
+			print(low)
+			print(high)
 
-		if((self.norm) and (self.temp)):
-			self.temp = 0
-			self.norm = 0
-			self.base = self.idxValues[nm]['temporal'][1] + self.base
+			if((self.norm) and (self.temp)):
+				self.temp = 0
+				self.norm = 0
+				self.base = self.idxValues[nm]['temporal'][1] + self.base
 
-		return self.input[:,:,low:high]
+			return self.input[:,:,low:high]
+		else:
+			low = self.idxValues[idx][0]
+			high = self.idxValues[idx][1]
+			return self.input[:,:,low:high]

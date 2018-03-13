@@ -9,8 +9,6 @@ class LSTM(object):
 		del self.settings['self']
 		self.activation = getattr(activations,activation_str)
 		self.activation_gate = getattr(activations,activation_gate)
-		print(type(truncate_gradient))
-		print("-------------------")
 		self.truncate_gradient = truncate_gradient
 		self.init = getattr(inits,init)
 		self.uniform = getattr(inits,'uniform')
@@ -65,6 +63,9 @@ class LSTM(object):
 			self.b_i, self.b_f, self.b_o, self.b_c,
 			self.V_i, self.V_f, self.V_o
 			]
+		print("----------LSTM------------------")
+		print("lots and lots of {0}x{1} + {2}".format(self.inputD,self.size,self.size))
+		print("----------LSTM------------------")
 
 
 		if self.weights is not None:

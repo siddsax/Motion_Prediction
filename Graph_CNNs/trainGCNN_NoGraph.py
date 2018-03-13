@@ -29,6 +29,7 @@ global rng
 from euler_error import *
 
 rng = np.random.RandomState(1234567890)
+theano.config.optimizer='None'
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--decay_type',type=str,default='schedule')
@@ -159,7 +160,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 				]
 		topLayer[nm] = [
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=len(nodeNames)*args.fc_size,rng=rng),
+				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
 				]
 		finalLayer[nm] = [
@@ -187,9 +188,9 @@ def trainGCNN():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = './{0}/'.format(args.dump_path)
 	print path_to_checkpoint
-	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-	ssh( "echo " + script + " > file.sh")
-	ssh("bash file.sh")
+	# script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	# ssh("bash( "echo " + script + " > file.sh")
+	# ssh("bash file.sh")
 	# if not os.path.exists(path_to_checkpoint):
 	# 	os.mkdir(path_to_checkpoint)
 	# saveNormalizationStats(path_to_checkpoint)

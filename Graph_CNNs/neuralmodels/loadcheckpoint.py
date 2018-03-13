@@ -12,7 +12,7 @@ from neuralmodels.layers import *
 from neuralmodels.models import *
 from GraphConvolution import GraphConvolution
 from FCLayer_out import FCLayer_out
-from py_server import ssh
+# from py_server import ssh
 '''
 def loadLayers(model,layers_to_load):
 	for layer_name in layers_to_load:

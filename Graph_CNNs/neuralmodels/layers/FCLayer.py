@@ -18,9 +18,9 @@ class FCLayer(object):
 		self.b = zero0s((self.size))
 		self.params = [self.W, self.b]
 		self.numparams = self.inputD*self.size + self.size
-		print("------------------")
-		print(self.numparams)
-		print("------------------")
+		print("---FCLayer---------------")
+		print("{0}x{1} + {2}".format(self.inputD,self.size,self.size))
+		print("---FCLayer---------------")
 
 		if self.weights is not None:
 			for param, weight in zip(self.params,self.weights):

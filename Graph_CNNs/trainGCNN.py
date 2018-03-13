@@ -28,7 +28,7 @@ import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
 global rng
 from euler_error import *
-from py_server import ssh
+# from py_server import ssh
 
 
 #theano.config.scan.allow_gc =True
@@ -220,9 +220,9 @@ def trainGCNN():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = './{0}/'.format(args.dump_path)
 	print path_to_checkpoint
-	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-	ssh( "echo " + script + " > file.sh")
-	ssh("bash file.sh")
+	# script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	# ssh( "echo " + script + " > file.sh")
+	# ssh("bash file.sh")
 	# if not os.path.exists(path_to_checkpoint):
 	# 	os.mkdir(path_to_checkpoint)
 	#######################################################################################

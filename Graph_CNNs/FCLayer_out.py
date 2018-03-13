@@ -21,9 +21,10 @@ class FCLayer_out(object):
 		self.b = zero0s((self.size))
 		self.params = [self.W, self.b]
 		self.numparams += self.inputD*self.size + self.size 
-		print("------------------")
+		print("----FCLayer_out--------------")
 		print(self.numparams)
-		print("------------------")
+		print("{0}x{1} + {2}".format(self.inputD,self.size,self.size))
+		print("----FCLayer_out--------------")
 		
 		if self.weights is not None:
 			for param, weight in zip(self.params,self.weights):

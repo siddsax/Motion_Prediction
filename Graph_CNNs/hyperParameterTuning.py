@@ -8,7 +8,7 @@ import socket as soc
 from datetime import datetime
 import sys
 import pdb
-from py_server import ssh
+# from py_server import ssh
 base_dir = '..'
 gpus = [0,1,3]
 
@@ -29,9 +29,9 @@ params['truncate_gradient'] = 100#10 #
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 512 #1 #
-params['node_lstm_size'] = 512 #1 #
-params['fc_size'] = 256 #
+params['lstm_size'] = 1 #512 #
+params['node_lstm_size'] = 1 #512 #
+params['fc_size'] = 1 #256 #
 params['snapshot_rate'] = 25 #10# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 
@@ -80,9 +80,9 @@ if params['drop_features']:
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 print(path_to_checkpoint)
 
-script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-ssh( "echo " + script + " > file.sh")
-ssh("bash file.sh")
+# script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+# ssh( "echo " + script + " > file.sh")
+# ssh("bash file.sh")
 # if not os.path.exists(path_to_checkpoint):
 # 	os.mkdir(path_to_checkpoint)
 
