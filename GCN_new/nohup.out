@@ -1,0 +1,9 @@
+ERROR (theano.gpuarray): pygpu was configured but could not be imported or is too old (version 0.6 or higher required)
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/theano/gpuarray/__init__.py", line 21, in <module>
+    import pygpu
+  File "/users/gpu/siddsax/.local/lib/python2.7/site-packages/pygpu-0.7.5+11.g04c2892-py2.7-linux-x86_64.egg/pygpu/__init__.py", line 7, in <module>
+    from . import gpuarray, elemwise, reduction
+  File "pygpu/gpuarray.pyx", line 27, in init pygpu.gpuarray
+  File "__init__.pxd", line 1013, in numpy.import_array
+ImportError: numpy.core.multiarray failed to import
