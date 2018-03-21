@@ -16,3 +16,7 @@ py_server.py
 checkpoints
 checkpoints_gcnn_T_150_bs_100_tg_100_
 dump
+Graph_CNNs/*.html
+Graph_CNNs/*.css
+Graph_CNNs/*.js
+

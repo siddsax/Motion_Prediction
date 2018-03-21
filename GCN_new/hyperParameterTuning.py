@@ -4,8 +4,8 @@ import copy
 import socket as soc
 from datetime import datetime
 import sys
-# from py_server import ssh
-#train_model = sys.argv[1]
+if(int(sys.argv[1])):
+	from py_server import ssh
 
 base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'#open('basedir','r').readline().strip()
 gpus = [0,1,3]
@@ -51,7 +51,7 @@ params['dataset_prefix'] = ''
 params['drop_features'] = 0
 params['drop_id'] = '9'
 params['subsample_data'] = 1
-
+params['ssh'] = int(sys.argv[1])
 my_env = os.environ
 my_env['PATH'] += ':/usr/local/cuda/bin'
 use_gpu = 1 
@@ -64,11 +64,15 @@ use_gpu = 1
 
 params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/DRA/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
-# if not os.path.exists(path_to_checkpoint):
-# 	os.mkdir(path_to_checkpoint)
-# script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-# ssh( "echo " + script + " > file.sh")
-# ssh("bash file.sh")
+
+if(int(sys.argv[1])):
+	script = "'if [ ! -d \"" + path_to_checkpoint + \
+		"\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	ssh("echo " + script + " > file.sh")
+	ssh("bash file.sh")
+else:
+	if not os.path.exists(path_to_checkpoint):
+		os.mkdir(path_to_checkpoint)
 
 print 'Dir: {0}'.format(path_to_checkpoint)
 args = ['python','trainDRA.py']

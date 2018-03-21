@@ -215,45 +215,15 @@ def getfeatures(nodeName,forecast_on_noisy_features=False):
 		
 def getGCNNfeatures(nodeName,features_to_use,features_to_use_t_1):
 	# if edgeType.split('_')[1] == 'input':
-		# if temporal_features:
-	temporal_features = np.concatenate((features_to_use[nodeName],features_to_use[nodeName] - features_to_use_t_1[nodeName]),axis=2)
-		# else:
-			# return features_to_use[nodeName]
+	if temporal_features:
+		x = np.concatenate((features_to_use[nodeName],features_to_use[nodeName] - features_to_use_t_1[nodeName]),axis=2)
+		features = features_to_use[nodeName]
+		return features,x	
+	else:
+		features = features_to_use[nodeName]
+		return features,features_to_use[nodeName]
 	
-	features = features_to_use[nodeName]
-	# nodesConnectedTo = nodeConnections[nodeName]
-	# for nm in nodesConnectedTo:
-	# 	et1 = nodeNames[nm] + '_' + nodeNames[nodeName]
-	# 	et2 = nodeNames[nodeName] + '_' + nodeNames[nm]
-		
-	# 	f1 = 0
-	# 	f2 = 0
-
-	# 	x = 0
-	# 	y = 0
-	# 	if nm == 'torso':
-	# 		x = 0
-	# 	if nodeName == 'torso':
-	# 		y = 0
-
-	# 	if et1 == et2 and et1 == edgeType:
-	# 		f1 = features_to_use[nodeName][:,:,y:] 
-	# 		f2 = features_to_use[nm][:,:,x:]
-	# 	elif et1 == edgeType:
-	# 		f1 = features_to_use[nm][:,:,x:] 
-	# 		f2 = features_to_use[nodeName][:,:,y:]
-	# 	elif et2 == edgeType:
-	# 		f1 = features_to_use[nodeName][:,:,y:] 
-	# 		f2 = features_to_use[nm][:,:,x:]
-	# 	else:
-	# 		continue
-
-	# 	if len(features) == 0:
-	# 		features = np.concatenate((f1,f2),axis=2)
-	# 	else:
-	# 		features += np.concatenate((f1,f2),axis=2)
-
-	return features,temporal_features	
+	
 
 
 def cherryPickNodeFeatures(data3DTensor):

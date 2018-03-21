@@ -9,7 +9,7 @@ import pdb
 import sys 
 
 def zero0s(shape):
-	return theano.shared(value=np.zeros(shape,dtype=theano.config.floatX))
+	return theano.shared(value=np.zeros(shape,dtype=theano.config.floatX),name="bias")
 
 def permute(samples):
 	x = np.random.permutation(samples)

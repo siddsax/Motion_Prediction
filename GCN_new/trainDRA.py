@@ -18,7 +18,7 @@ import copy
 import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
 import sys
-# from py_server import ssh
+from py_server import ssh
 global rng
 
 # import theano.sandbox.cuda
@@ -70,6 +70,7 @@ parser.add_argument('--dataset_prefix',type=str,default='')
 parser.add_argument('--drop_features',type=int,default=0)
 parser.add_argument('--subsample_data',type=int,default=1)
 parser.add_argument('--drop_id',type=str,default='')
+parser.add_argument('--ssh',type=str,default=0)
 args = parser.parse_args()
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
@@ -127,15 +128,13 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 			f.write(st+'\n')
 		f.close()
 
-def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections):
+def DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections):
 
 	print("KronenbergKronenbergKronenbergKronenbergKronenbergKronenberg")
 	edgeRNNs = {}
-	edgeNames = edgeList
-
 	nodeRNNs = {}
-	nodeTypes = nodeList.keys()
 	nodeLabels = {}
+	edgeListComplete = []
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
@@ -146,14 +145,21 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
-		em = nm+'_input'
-		edgeRNNs[em] = [TemporalInputFeatures(nodeFeatureLength[nm]),
+		et = nm+'_temporal'
+		edgeListComplete.append(et)
+		edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
 				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
+		et = nm+'_normal'
+		edgeListComplete.append(et)
+		edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+                  # FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+                  # FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+                  ]
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	dra = DRA(edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	dra = DRA(nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return dra
 
 def trainDRA():
@@ -161,13 +167,17 @@ def trainDRA():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
-	# if not os.path.exists(path_to_checkpoint):
-	# 	os.mkdir(path_to_checkpoint)
-	# script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-	# ssh( "echo " + script + " > file.sh")
-	# ssh("bash file.sh")
+	if(args.ssh):
+		script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+		ssh( "echo " + script + " > file.sh")
+		ssh("bash file.sh")
+	else:
+		if not os.path.exists(path_to_checkpoint):
+			os.mkdir(path_to_checkpoint)
 	# saveNormalizationStats(path_to_checkpoint)
 	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures] = graph.readCRFgraph(poseDataset)
+	nodeNames = nodeNames.keys()
+	# print(nodeNames)
 	new_idx = poseDataset.new_idx
 	featureRange = poseDataset.nodeFeaturesRanges
 	dra = []
@@ -176,8 +186,9 @@ def trainDRA():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		dra = DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
+		dra = DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
 
+	# sys.exit()
 	# saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
 	# saveForecastedMotion(dra.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
 
@@ -186,7 +197,7 @@ def trainDRA():
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
 		use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-		new_idx=new_idx,featureRange=featureRange,poseDataset=poseDataset,graph=graph,maxiter=args.maxiter,unNormalizeData=unNormalizeData)
+              new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, unNormalizeData=unNormalizeData, ssh_f=args.ssh)
 
 def saveNormalizationStats(path):
 	activities = {}

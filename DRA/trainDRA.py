@@ -17,7 +17,9 @@ import socket as soc
 import copy
 import readCRFgraph as graph
 from unNormalizeData import unNormalizeData
-from py_server import ssh
+import sys
+if(int(sys.argv[1])):
+	from py_server import ssh
 global rng
 
 # import theano.sandbox.cuda
@@ -141,9 +143,9 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 		print(args.fc_size)
 		print("~~~~~~~~~~~")
 		edgeRNNs[em] = [TemporalInputFeatures(inputJointFeatures),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
 				]
 
 	nodeRNNs = {}
@@ -153,15 +155,16 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 		num_classes = nodeList[nm]
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
 			]
-		nodeRNNs[nm] = [multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+		nodeRNNs[nm] = [
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
 				]
 		em = nm+'_input'
 		edgeRNNs[em] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 	learning_rate = T.scalar(dtype=theano.config.floatX)
@@ -173,15 +176,17 @@ def trainDRA():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
-	# if not os.path.exists(path_to_checkpoint):
-	# 	os.mkdir(path_to_checkpoint)
-	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-	ssh( "echo " + script + " > file.sh")
-	ssh("bash file.sh")
+	if(int(sys.argv[1])):
+		script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+		ssh( "echo " + script + " > file.sh")
+		ssh("bash file.sh")
+	else:
+		if not os.path.exists(path_to_checkpoint):
+			os.mkdir(path_to_checkpoint)
 	# saveNormalizationStats(path_to_checkpoint)
 	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures] = graph.readCRFgraph(poseDataset)
-
 	new_idx = poseDataset.new_idx
+
 	featureRange = poseDataset.nodeFeaturesRanges
 	dra = []
 	if args.use_pretrained == 1:

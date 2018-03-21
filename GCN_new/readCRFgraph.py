@@ -24,15 +24,22 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	nodeList = {}
 	nodeToEdgeConnections = {}
 	nodeFeatureLength = {}
+	edgeList = []
 	for node_name, node_type in zip(lines[0].strip().split(','),lines[1].strip().split(',')):
 		nodeOrder.append(node_name)
 		nodeNames[node_name] = node_type
-		nodeList[node_type] = 0
-		nodeToEdgeConnections[node_type] = {}
-		nodeToEdgeConnections[node_type][node_type+'_input'] = [0,0]
-		nodeFeatureLength[node_type] = 0
+		nodeList[node_name] = 0
+		# nodeToEdgeConnections[node_type] = {}
+
+		nodeToEdgeConnections[node_name] = {}
+		nodeToEdgeConnections[node_name][node_name+'_normal'] = [0, 0]
+		nodeToEdgeConnections[node_name][node_name+'_temporal'] = [0, 0]
+		edgeList.append(node_name+'_temporal')
+		edgeList.append(node_name+'_normal')
+
+		# nodeToEdgeConnections[node_type][node_type+'_input'] = [0,0]
+		nodeFeatureLength[node_name] = 0
 	
-	edgeList = []
 	edgeFeatures = {}
 	nodeConnections = {}
 	edgeListComplete = []
@@ -40,35 +47,36 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		first_nodeName = nodeOrder[i-2]
 		first_nodeType = nodeNames[first_nodeName]
 		nodeConnections[first_nodeName] = []
-		connections = lines[i].strip().split(',')
-		for j in range(len(connections)):
-			if connections[j] == '1':
-				second_nodeName = nodeOrder[j]
-				second_nodeType = nodeNames[second_nodeName]
-				nodeConnections[first_nodeName].append(second_nodeName)
+		# connections = lines[i].strip().split(',')
+		# for j in range(len(connections)):
+			# if connections[j] == '1':
+		# 		second_nodeName = nodeOrder[j]
+		# 		second_nodeType = nodeNames[second_nodeName]
+		# 		nodeConnections[first_nodeName].append(second_nodeName)
 		
-				edgeType_1 = first_nodeType + '_' + second_nodeType
-				edgeType_2 = second_nodeType + '_' + first_nodeType
-				edgeType = ''
-				if edgeType_1 in edgeList:
-					edgeType = edgeType_1
-					continue
-				elif edgeType_2 in edgeList:
-					edgeType = edgeType_2
-					continue
-				else:
-					edgeType = edgeType_1
-				edgeList.append(edgeType)
-				edgeListComplete.append(edgeType)
+		# 		edgeType_1 = first_nodeType + '_' + second_nodeType
+		# 		edgeType_2 = second_nodeType + '_' + first_nodeType
+		# 		edgeType = ''
+		# 		if edgeType_1 in edgeList:
+		# 			edgeType = edgeType_1
+		# 			continue
+		# 		elif edgeType_2 in edgeList:
+		# 			edgeType = edgeType_2
+		# 			continue
+		# 		else:
+		# 			edgeType = edgeType_1
+		# 		edgeListComplete.append(edgeType)
 
-				if (first_nodeType + '_input') not in edgeListComplete:
-					edgeListComplete.append(first_nodeType + '_input')
-				if (second_nodeType + '_input') not in edgeListComplete:
-					edgeListComplete.append(second_nodeType + '_input')
+		# 		if (first_nodeType + '_input') not in edgeListComplete:
+		# 			edgeListComplete.append(first_nodeType + '_input')
+		# 		if (second_nodeType + '_input') not in edgeListComplete:
+		# 			edgeListComplete.append(second_nodeType + '_input')
 
-				edgeFeatures[edgeType] = 0
-				nodeToEdgeConnections[first_nodeType][edgeType] = [0,0]
-				nodeToEdgeConnections[second_nodeType][edgeType] = [0,0]
+		# 		edgeFeatures[edgeType] = 0
+		# edgeType = first_nodeType + '_normal'
+		# nodeToEdgeConnections[first_nodeType][edgeType] = [0,0]
+		# edgeType = first_nodeType + '_temporal'
+		# nodeToEdgeConnections[first_nodeType][edgeType] = [0,0]
 
 	trX = {}
 	trY = {}
@@ -78,54 +86,48 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	trY_forecast = {}
 	trX_nodeFeatures = {}
 	poseDataset.addNoiseToFeatures(noise=noise)
-	for nodeName in nodeNames.keys():
+	for nm in nodeNames:
 		edge_features = {}
 		validate_edge_features = {}
 		forecast_edge_features = {}
 
-		nodeType = nodeNames[nodeName]
-		edgeTypesConnectedTo = nodeToEdgeConnections[nodeType].keys()
+		edgeTypesConnectedTo = nodeToEdgeConnections[nm].keys()
 		low = 0
 		high = 0
 
 		for edgeType in edgeTypesConnectedTo:
-			[edge_features[edgeType],validate_edge_features[edgeType],forecast_edge_features[edgeType]] = poseDataset.getfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_on_noisy_features=forecast_on_noisy_features)
-
-		edgeType = nodeType + '_input'
-		D = edge_features[edgeType].shape[2]
-		nodeFeatureLength[nodeType] = D
-		high += D
-		nodeToEdgeConnections[nodeType][edgeType][0] = low
-		nodeToEdgeConnections[nodeType][edgeType][1] = high
-		low = high
-		nodeRNNFeatures = copy.deepcopy(edge_features[edgeType])
-		validate_nodeRNNFeatures = copy.deepcopy(validate_edge_features[edgeType])
-		forecast_nodeRNNFeatures = copy.deepcopy(forecast_edge_features[edgeType])
-
+			[edge_features[edgeType],validate_edge_features[edgeType],forecast_edge_features[edgeType]] = poseDataset.getfeatures(nm,edgeType,nodeConnections,nodeNames,forecast_on_noisy_features=forecast_on_noisy_features)
+		flag = 0
 		for edgeType in edgeList:
 			if edgeType not in edgeTypesConnectedTo:
 				continue
+			# print(edge_features)
 			D = edge_features[edgeType].shape[2]
 			edgeFeatures[edgeType] = D
 			high += D
-			nodeToEdgeConnections[nodeType][edgeType][0] = low
-			nodeToEdgeConnections[nodeType][edgeType][1] = high
+			nodeToEdgeConnections[nm][edgeType][0] = low
+			nodeToEdgeConnections[nm][edgeType][1] = high
 			low = high
-			nodeRNNFeatures = np.concatenate((nodeRNNFeatures,edge_features[edgeType]),axis=2)	
-			validate_nodeRNNFeatures = np.concatenate((validate_nodeRNNFeatures,validate_edge_features[edgeType]),axis=2)	
-			forecast_nodeRNNFeatures = np.concatenate((forecast_nodeRNNFeatures,forecast_edge_features[edgeType]),axis=2)	
+			if(flag):
+				nodeRNNFeatures = np.concatenate((nodeRNNFeatures,edge_features[edgeType]),axis=2)	
+				validate_nodeRNNFeatures = np.concatenate((validate_nodeRNNFeatures,validate_edge_features[edgeType]),axis=2)	
+				forecast_nodeRNNFeatures = np.concatenate((forecast_nodeRNNFeatures,forecast_edge_features[edgeType]),axis=2)	
+			else:
+				nodeRNNFeatures = edge_features[edgeType]
+				validate_nodeRNNFeatures = validate_edge_features[edgeType]
+				forecast_nodeRNNFeatures = forecast_edge_features[edgeType]
+				flag = 1
 
-		[Y,Y_validate,Y_forecast,X_forecast,num_classes] = poseDataset.getlabels(nodeName)
-		nodeList[nodeType] = num_classes
+		[Y,Y_validate,Y_forecast,X_forecast,num_classes] = poseDataset.getlabels(nm)
+		nodeList[nm] = num_classes
 		
-		idx = nodeName + ':' + nodeType
-		trX[idx] = nodeRNNFeatures
-		trX_validate[idx] = validate_nodeRNNFeatures
-		trX_forecast[idx] = forecast_nodeRNNFeatures
-		trY[idx] = Y
-		trY_validate[idx] = Y_validate
-		trY_forecast[idx] = Y_forecast
-		trX_nodeFeatures[idx] = X_forecast
+		trX[nm] = nodeRNNFeatures
+		trX_validate[nm] = validate_nodeRNNFeatures
+		trX_forecast[nm] = forecast_nodeRNNFeatures
+		trY[nm] = Y
+		trY_validate[nm] = Y_validate
+		trY_forecast[nm] = Y_forecast
+		trX_nodeFeatures[nm] = X_forecast
 	print nodeToEdgeConnections
 	print edgeListComplete
 	return nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validate,trY_validate,trX_forecast,trY_forecast,trX_nodeFeatures	

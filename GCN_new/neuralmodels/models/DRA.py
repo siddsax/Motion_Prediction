@@ -1,9 +1,9 @@
 from headers import *
-# from py_server import ssh
+from py_server import ssh
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
 class DRA(object):
-	def __init__(self,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self,nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -23,7 +23,7 @@ class DRA(object):
 		self.clipnorm = clipnorm
 		self.weight_decay = weight_decay
 		
-		nodeTypes = nodeRNNs.keys()
+		nodeNames = nodeRNNs.keys()
 		edgeTypes = edgeRNNs.keys()
 
 		self.cost = {}
@@ -57,24 +57,24 @@ class DRA(object):
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
 		
-		for nt in nodeTypes:
-			self.params[nt] = []
-			self.masterlayer[nt] = unConcatenateVectors(nodeToEdgeConnections[nt])
-			self.X[nt] = self.masterlayer[nt].input
+		for nm in nodeNames:
+			self.params[nm] = []
+			self.masterlayer[nm] = unConcatenateVectors(nodeToEdgeConnections[nm])
+			self.X[nm] = self.masterlayer[nm].input
 
 			'''We first connect all the edgeRNNs (building the network bottom-up)'''
-			nodeLayers = self.nodeRNNs[nt]
-			edgesConnectedTo = nodeToEdgeConnections[nt].keys()
+			nodeLayers = self.nodeRNNs[nm]
+			edgesConnectedTo = nodeToEdgeConnections[nm].keys()
 			layers_below = []
 			for et in edgeListComplete:
 				if et not in edgesConnectedTo:
 					continue
 				edgeLayers = self.edgeRNNs[et]
 				layers_below.append(edgeLayers)
-				edgeLayers[0].input = self.masterlayer[nt].output(et)
+				edgeLayers[0].input = self.masterlayer[nm].output(et)
 				for l in edgeLayers:
 					if hasattr(l,'params'):
-						self.params[nt].extend(l.params)
+						self.params[nm].extend(l.params)
 						self.num_params += l.numparams
 				print("======---------=======")
 
@@ -90,34 +90,34 @@ class DRA(object):
 
 			for l in nodeLayers:
 				if hasattr(l,'params'):
-					self.params[nt].extend(l.params)
+					self.params[nm].extend(l.params)
 					self.num_params += l.numparams
 			print("======---------=======")
 			print 'Number of parameters in DRA: ',self.num_params
 			
-			self.Y_pr[nt] = nodeLayers[-1].output()
-			self.Y[nt] = self.nodeLabels[nt]
+			self.Y_pr[nm] = nodeLayers[-1].output()
+			self.Y[nm] = self.nodeLabels[nm]
 			
-			self.cost[nt] = cost(self.Y_pr[nt],self.Y[nt]) + self.weight_decay * nodeLayers[-1].L2_sqr
+			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay * nodeLayers[-1].L2_sqr
 		
-			[self.updates[nt],self.grads[nt]] = self.update_type.get_updates(self.params[nt],self.cost[nt])
+			[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params[nm],self.cost[nm])
 		
-			self.train_node[nt] = theano.function([self.X[nt],self.Y[nt],self.learning_rate,self.std],self.cost[nt],updates=self.updates[nt],on_unused_input='ignore')
+			self.train_node[nm] = theano.function([self.X[nm],self.Y[nm],self.learning_rate,self.std],self.cost[nm],updates=self.updates[nm],on_unused_input='ignore')
 		
-			self.predict_node[nt] = theano.function([self.X[nt],self.std],self.Y_pr[nt],on_unused_input='ignore')
+			self.predict_node[nm] = theano.function([self.X[nm],self.std],self.Y_pr[nm],on_unused_input='ignore')
 	
-			self.predict_node_loss[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.cost[nt],on_unused_input='ignore')
+			self.predict_node_loss[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.cost[nm],on_unused_input='ignore')
 		
-			self.norm[nt] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nt]]))
+			self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
 		
-			self.grad_norm[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.norm[nt],on_unused_input='ignore')
+			self.grad_norm[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.norm[nm],on_unused_input='ignore')
 		
-			self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
+			# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
 		
 
 		print("=============")
-		for nt in nodeTypes:
-			nodeLayers = self.nodeRNNs[nt]
+		for nm in nodeNames:
+			nodeLayers = self.nodeRNNs[nm]
 			for layer in nodeLayers:
 				if hasattr(layer,'params'):
 					for par in layer.params:
@@ -143,7 +143,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,unNormalizeData=None):
+		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,unNormalizeData=None,ssh_f=0):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -151,8 +151,8 @@ class DRA(object):
 		for i in range(np.shape(test_ground_truth)[1]):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
-		fname = 'test_ground_truth_unnorm'
-		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
+		# fname = 'test_ground_truth_unnorm'
+		# self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=ssh_f)
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -189,11 +189,10 @@ class DRA(object):
 		skel_dim = 0
 		
 
-		nodeTypes = self.nodeRNNs.keys()
-		print "nodeTypes: ",nodeTypes
-		for nt in nodeTypes:
-			tr_X[nt] = []
-			tr_Y[nt] = []
+		nodeNames = self.nodeRNNs.keys()
+		for nm in nodeNames:
+			tr_X[nm] = []
+			tr_Y[nm] = []
 
 		nodeNames = trX.keys()
 		for nm in nodeNames:
@@ -285,29 +284,30 @@ class DRA(object):
 
 				examples_taken_from_node = 0	
 				for nm in nodeNames:
-					nt = nm.split(':')[1]
-					if(len(tr_X[nt])) == 0:
+					print("------------")
+					print(tr_X.keys())
+					if(len(tr_X[nm])) == 0:
 						examples_taken_from_node = min((j+1)*batch_size,numExamples[nm]) - j*batch_size
-						tr_X[nt] = copy.deepcopy(trX[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:])
+						tr_X[nm] = copy.deepcopy(trX[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:])
 						if outputDim == 2:
-							tr_Y[nt] = copy.deepcopy(trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm])])
+							tr_Y[nm] = copy.deepcopy(trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm])])
 						elif outputDim == 3:
-							tr_Y[nt] = copy.deepcopy(trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:])
+							tr_Y[nm] = copy.deepcopy(trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:])
 					else:
-						tr_X[nt] = np.concatenate((tr_X[nt],trX[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
+						tr_X[nm] = np.concatenate((tr_X[nm],trX[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
 						if outputDim == 2:
-							tr_Y[nt] = np.concatenate((tr_Y[nt],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm])]),axis=1)
+							tr_Y[nm] = np.concatenate((tr_Y[nm],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm])]),axis=1)
 						elif outputDim == 3:
-							tr_Y[nt] = np.concatenate((tr_Y[nt],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
+							tr_Y[nm] = np.concatenate((tr_Y[nm],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
 
 				loss = 0.0
 				skel_loss = 0.0
 				grad_norms = []
-				for nt in nodeTypes:
-					loss_for_current_node = self.train_node[nt](tr_X[nt],tr_Y[nt],learning_rate,std)
-					g = self.grad_norm[nt](tr_X[nt],tr_Y[nt],std)
+				for nm in nodeNames:
+					loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
+					g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
 					grad_norms.append(g)
-					skel_loss_for_current_node = loss_for_current_node*tr_X[nt].shape[1]*1.0 / examples_taken_from_node
+					skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
 					loss += loss_for_current_node
 					skel_loss += skel_loss_for_current_node
 				iterations += 1
@@ -323,16 +323,16 @@ class DRA(object):
 							
 				tr_X = {}
 				tr_Y = {}
-				for nt in nodeTypes:
-					tr_X[nt] = []
-					tr_Y[nt] = []
+				for nm in nodeNames:
+					tr_X[nm] = []
+					tr_Y[nm] = []
 
 				if int(iterations) % snapshot_rate == 0:
 					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
 					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path :
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
 					# print(trX_forecasting.keys())
 					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
@@ -354,9 +354,9 @@ class DRA(object):
 					print("-------------------------")
 
 					
-					if (int(iterations) % snapshot_rate == 0):
-						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					# if (int(iterations) % snapshot_rate == 0):
+						# fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+						# self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
 
 
 			'''Computing error on validation set'''
@@ -364,8 +364,8 @@ class DRA(object):
 				validation_error = 0.0
 				Tvalidation = 0
 				for nm in trX_validation.keys():
-					nt = nm.split(':')[1]
-					validation_error += self.predict_node_loss[nt](trX_validation[nm],trY_validation[nm],std)
+					# nt = nm.split(':')[1]
+					validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
 					Tvalidation = trX_validation[nm].shape[0]
 				validation_set[-1] = validation_error
 				termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
@@ -411,7 +411,7 @@ class DRA(object):
 			f.write('T={0} {1}, {2}\n'.format(i,skel_err[i],err_per_dof[i]))
 		f.close()
 
-	def saveForecastedMotion(self,forecast,path,fname):
+	def saveForecastedMotion(self,forecast,path,fname,ssh_flag=0):
 		T = forecast.shape[0]
 		N = forecast.shape[1]
 		D = forecast.shape[2]
@@ -427,9 +427,8 @@ class DRA(object):
 				string += st+'\n'
 			# print(string)
 			# if(j==0):
-			ssh( "echo " + "'" + string + "'" + " > " + file)
-			# else:
-				# ssh( "echo " + '"' + string + '"' + " >> " + file)
+			if(ssh_flag):
+				ssh( "echo " + "'" + string + "'" + " > " + file)
 
 	
 	def saveCellState(self,cellstate,path,fname):
@@ -457,7 +456,7 @@ class DRA(object):
 		predict = {}
 		for nm in nodeNames:
 			nt = nm.split(':')[1]
-			predict[nm] = self.predict_node[nt](teX[nm],1e-5)
+			predict[nm] = self.predict_node[nm](teX[nm],1e-5)
 		return predict
 
 
@@ -483,7 +482,7 @@ class DRA(object):
 			for nm in nodeNames:
 				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nt](to_return[nm][:(T+i),:,:],1e-5)
+				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
 				#nodeFeatures[nodeName] = np.array([prediction])
 				nodeFeatures[nodeName] = prediction[-1:,:,:]
 				teY[nm].append(nodeFeatures[nodeName][0,:,:])
@@ -503,7 +502,7 @@ class DRA(object):
 		prediction = {}
 		for nm in nodeNames:
 			nt = nm.split(':')[1]
-			prediction[nm] = self.predict_node[nt](teX[nm],1e-5)
+			prediction[nm] = self.predict_node[nm](teX[nm],1e-5)
 		return prediction
 		
 	def predict_cell(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
@@ -526,7 +525,7 @@ class DRA(object):
 			for nm in nodeNames:
 				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nt](to_return[nm][:(T+i),:,:],1e-5)
+				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
 				#nodeFeatures[nodeName] = np.array([prediction])
 				nodeFeatures[nodeName] = prediction[-1:,:,:]
 				teY[nm].append(nodeFeatures[nodeName][0,:,:])
@@ -540,7 +539,7 @@ class DRA(object):
 		for nm in nodeNames:
 			nt = nm.split(':')[1]
 			nodeName = nm.split(':')[0]
-			cellstates[nm] = self.get_cell[nt](to_return[nm],1e-5)
+			cellstates[nm] = self.get_cell[nm](to_return[nm],1e-5)
 		return cellstates
 
 	def concatenateDimensions(self,dictToconcatenate,axis=2):
@@ -580,7 +579,7 @@ class DRA(object):
 			for nm in nodeNames:
 				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nt](teX[nm],1e-5)
+				prediction = self.predict_node[nm](teX[nm],1e-5)
 				nodeFeatures[nodeName] = prediction[-1:,:,:]
 				if len(teY[nm]) == 0:
 					teY[nm] = copy.deepcopy(nodeFeatures[nodeName])
@@ -599,7 +598,7 @@ losses = []
 loss = 0.0
 for nm in nodeNames:
 	nt = nm.split(':')[1]
-	losses.append(self.predict_node_loss[nt](trX[nm],trY[nm],1e-5))
+	losses.append(self.predict_node_loss[nm](trX[nm],trY[nm],1e-5))
 	loss += losses[-1]
 w_1 = self.nodeRNNs['torso'][0].params[0].get_value()
 o_1 = self.predict_node['torso'](trX['torso:torso'],1e-5)
@@ -617,7 +616,7 @@ losses = []
 loss = 0.0
 for nm in nodeNames:
 	nt = nm.split(':')[1]
-	losses.append(model.predict_node_loss[nt](trX[nm],trY[nm],1e-5))
+	losses.append(model.predict_node_loss[nm](trX[nm],trY[nm],1e-5))
 	loss += losses[-1]
 w_2 = model.nodeRNNs['torso'][0].params[0].get_value()
 o_2 = model.predict_node['torso'](trX['torso:torso'],1e-5)

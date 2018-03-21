@@ -4,7 +4,8 @@ import copy
 import socket as soc
 from datetime import datetime
 import sys
-from py_server import ssh
+if(int(sys.argv[1])):
+	from py_server import ssh
 #train_model = sys.argv[1]
 
 base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'#open('basedir','r').readline().strip()
@@ -30,9 +31,9 @@ params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 512 #1#
-params['node_lstm_size'] = 512 #1# 
-params['fc_size'] = 256#1# 
+params['lstm_size'] = 1#512 #1#
+params['node_lstm_size'] = 1#512 #1# 
+params['fc_size'] = 1#256#1# 
 params['snapshot_rate'] = 25 #1# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 
@@ -64,12 +65,14 @@ use_gpu = 1
 
 params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/DRA/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
-# if not os.path.exists(path_to_checkpoint):
-# 	os.mkdir(path_to_checkpoint)
-script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
-ssh( "echo " + script + " > file.sh")
-ssh("bash file.sh")
 
+if(int(sys.argv[1])):
+	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	ssh( "echo " + script + " > file.sh")
+	ssh("bash file.sh")
+else:
+	if not os.path.exists(path_to_checkpoint):
+		os.mkdir(path_to_checkpoint)
 print 'Dir: {0}'.format(path_to_checkpoint)
 args = ['python','trainDRA.py']
 for k in params.keys():

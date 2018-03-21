@@ -149,23 +149,23 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 			]
 
 		nodeRNNs[nm] = [TemporalInputFeatures(nodeFeatureLength[nm]),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 		]
 
 		temporalNodeRNN[nm] = [TemporalInputFeatures(temporalNodeFeatureLength[nm]),
 				## AddNoiseToInput(rng=rng),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
 				]
 		topLayer[nm] = [
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+				# FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True)
 				]
 		finalLayer[nm] = [
-				FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=0),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
+				# FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=0),
+				# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 				]
 
@@ -178,7 +178,7 @@ def GCNNmodelRegression(preGraphNets,nodeList,nodeFeatureLength, temporalNodeFea
 	# ----------------------- Add graph CNN related variables -------------------------------
 	k = args.hidden1
 	graphLayers = []
-	gcnn = GCNN(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	gcnn = GCNN_new(graphLayers,finalLayer,preGraphNets,nodeNames,temporalNodeRNN,nodeRNNs,topLayer,euclidean_loss,nodeLabels,learning_rate,new_idx,featureRange,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 
 	return gcnn
 
@@ -208,26 +208,12 @@ def trainGCNN():
 	preGraphNets, # {node name} = {temporal/normal} = {high,low}  
 	adjacency] = graph.readCRFgraph(poseDataset)
 
-	print("###########################################################################")
-	print("nodeList")
-	print(nodeList)
-	print("###########################################################################")
-	print("temporalNodeFeatureLength")
-	print(temporalNodeFeatureLength)
-	print("###########################################################################")
-        print("nodeFeatureLength")
-        print(nodeFeatureLength)
-	print("###########################################################################")
-        print("nodeConnections")
-        print(nodeConnections)
-	print("###########################################################################")
-
 	new_idx = poseDataset.new_idx # all the dimensions which are not used ( the dimensions that have very little varianc ) are -1 and other have their respective index number like 0 1 2 3 -1 4 5 ......
 	featureRange = poseDataset.nodeFeaturesRanges # range of torso, right hand, left hand ...
 	gcnn = []
 	# ------------- Here we load the model using the function ------------------------------
 	if args.use_pretrained == 1:
-		gcnn = loadDRA(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
+		gcnn = loadGCNN(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
@@ -269,14 +255,4 @@ def saveNormalizationStats(path):
 
 if __name__ == '__main__':
 
-
-	if args.model_to_train == 'malik':
-		trainMaliks()
-	elif args.model_to_train == 'dra':
-		trainDRA()
-	elif args.model_to_train == 'lstm':
-		trainLSTM()
-	elif args.model_to_train == 'gcnn':
-		trainGCNN()	
-	else:
-		print "Unknown model type ... existing"
+	trainGCNN()	

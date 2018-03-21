@@ -1,6 +1,8 @@
 from headers import *
 import pdb
 import numpy as np
+import theano.d3viz as d3v
+
 # from py_server import ssh
 # import matlab.engine
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
@@ -97,6 +99,8 @@ class GCNN(object):
 				else:
 					nodeLayers[0].input = self.masterlayer[nm].output(pgnT)
 					
+				d3v.d3viz(nodeLayers[-1].output(), pgnT + "RNN" + ".html")
+				
 				for l in nodeLayers:
 					if hasattr(l,'params'):
 						if(len(self.graphLayers)):
@@ -210,8 +214,12 @@ class GCNN(object):
 				self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
 				self.grad_norm[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.std],self.norm[nm],on_unused_input='ignore')
 				
-			theano.printing.pydotprint(out[nmG], outfile="out" + nmG + ".png", var_with_name_simple=True)
-
+			# theano.printing.pydotprint(out[nmG], ou	tfile="out" + nmG + ".png", var_with_name_simple=True)
+			d3v.d3viz(out[nmG], "out" + nmG + ".html")
+			# theano.printing.pydotprint(self.nodeRNNs[nmG][0].output(), outfile="after_temporal_nodeinput" + nmG + ".png", var_with_name_simple=True)
+			d3v.d3viz(self.nodeRNNs[nmG][0].output(), "after_temporal_nodeinput" + nmG + ".html")
+			# theano.printing.pydotprint(indv_node_layers[-1].output(), outfile="after_nodetoplayer" + nmG + ".png", var_with_name_simple=True)
+			d3v.d3viz(indv_node_layers[-1].output(), "after_nodetoplayer" + nmG + ".html")
 # --------------------------------------------------------------------------------------------------
 
 	def fitModel(self,trX,trY,snapshot_rate=10,path=None,pathD=None,epochs=30,batch_size=50,learning_rate=1e-3,
