@@ -10,7 +10,7 @@ import sys
 import os
 from neuralmodels.layers import *
 from neuralmodels.models import *
-# from py_server import ssh
+from py_server import ssh
 
 '''
 def loadLayers(model,layers_to_load):

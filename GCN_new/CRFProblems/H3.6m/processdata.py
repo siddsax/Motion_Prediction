@@ -205,7 +205,6 @@ def getfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_on_noisy_fe
 	return train_features, validate_features, forecast_features
 		
 def getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,features_to_use,features_to_use_t_1):
-	print(edgeType)
 	if edgeType.split('_')[-1] == 'temporal':
 		if temporal_features:
 			return np.concatenate((features_to_use[nodeName],features_to_use[nodeName] - features_to_use_t_1[nodeName]),axis=2)

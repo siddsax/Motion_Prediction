@@ -31,12 +31,12 @@ params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 1#512 #1#
-params['node_lstm_size'] = 1#512 #1# 
-params['fc_size'] = 1#256#1# 
-params['snapshot_rate'] = 25 #1# Save the model after every 250 iterations
+params['lstm_size'] = 512 #1#
+params['node_lstm_size'] = 512 #1# 
+params['fc_size'] = 256#1# 
+params['snapshot_rate'] = 100 #1# Save the model after every 250 iterations
 params['train_for'] = 'final' 
-
+params['ssh'] = int(sys.argv[1])
 
 ## Tweak these hyperparameters only if you want to try out new models etc. This is only for 'Advanced' users
 params['use_pretrained'] = 0
@@ -62,8 +62,12 @@ use_gpu = 1
 # Setting directory to dump trained models and then executing trainDRA.py
 
 #if params['model_to_train'] == 'dra':
+if(len(sys.argv) == 3):
+	name = sys.argv[2]
+else:
+	name = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
+params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/DRA/' + name
 
-params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/DRA/checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 
 if(int(sys.argv[1])):

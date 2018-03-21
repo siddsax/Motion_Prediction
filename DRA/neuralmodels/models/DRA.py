@@ -143,7 +143,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,unNormalizeData=None):
+		new_idx=None,featureRange=None,poseDataset=None,f_ssh=0,graph=None,maxiter=10000,unNormalizeData=None):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -152,7 +152,7 @@ class DRA(object):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
 		fname = 'test_ground_truth_unnorm'
-		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname)
+		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,flag_ssh=f_ssh)
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -356,7 +356,7 @@ class DRA(object):
 					
 					if (int(iterations) % snapshot_rate == 0):
 						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,flag_ssh=f_ssh)
 
 
 			'''Computing error on validation set'''
@@ -411,7 +411,7 @@ class DRA(object):
 			f.write('T={0} {1}, {2}\n'.format(i,skel_err[i],err_per_dof[i]))
 		f.close()
 
-	def saveForecastedMotion(self,forecast,path,fname):
+	def saveForecastedMotion(self,forecast,path,fname,flag_ssh=0):
 		T = forecast.shape[0]
 		N = forecast.shape[1]
 		D = forecast.shape[2]
@@ -427,7 +427,8 @@ class DRA(object):
 				string += st+'\n'
 			# print(string)
 			# if(j==0):
-			ssh( "echo " + "'" + string + "'" + " > " + file)
+			if(flag_ssh):
+				ssh( "echo " + "'" + string + "'" + " > " + file)
 			# else:
 				# ssh( "echo " + '"' + string + '"' + " >> " + file)
 

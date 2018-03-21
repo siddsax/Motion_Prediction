@@ -93,7 +93,7 @@ class DRA(object):
 					self.params[nm].extend(l.params)
 					self.num_params += l.numparams
 			print("======---------=======")
-			print 'Number of parameters in DRA: ',self.num_params
+
 			
 			self.Y_pr[nm] = nodeLayers[-1].output()
 			self.Y[nm] = self.nodeLabels[nm]
@@ -167,7 +167,6 @@ class DRA(object):
 				for i in range(iter_start):
 					line = lines[i]
 					values = line.strip().split(',')
-					print values
 					if len(values) == 1:
 						skel_loss_after_each_minibatch.append(float(values[0]))
 						validation_set.append(-1)
@@ -284,8 +283,6 @@ class DRA(object):
 
 				examples_taken_from_node = 0	
 				for nm in nodeNames:
-					print("------------")
-					print(tr_X.keys())
 					if(len(tr_X[nm])) == 0:
 						examples_taken_from_node = min((j+1)*batch_size,numExamples[nm]) - j*batch_size
 						tr_X[nm] = copy.deepcopy(trX[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:])
@@ -364,7 +361,6 @@ class DRA(object):
 				validation_error = 0.0
 				Tvalidation = 0
 				for nm in trX_validation.keys():
-					# nt = nm.split(':')[1]
 					validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
 					Tvalidation = trX_validation[nm].shape[0]
 				validation_set[-1] = validation_error
@@ -434,7 +430,6 @@ class DRA(object):
 	def saveCellState(self,cellstate,path,fname):
 		nodeNames = cellstate.keys()
 		nm = nodeNames[0]
-		print nodeNames
 		T = cellstate[nm].shape[0]
 		N = cellstate[nm].shape[1]
 		D = cellstate[nm].shape[2]
@@ -455,7 +450,6 @@ class DRA(object):
 		nodeNames = teX.keys()
 		predict = {}
 		for nm in nodeNames:
-			nt = nm.split(':')[1]
 			predict[nm] = self.predict_node[nm](teX[nm],1e-5)
 		return predict
 
@@ -480,14 +474,12 @@ class DRA(object):
 		for i in range(sequence_length):
 			nodeFeatures = {}
 			for nm in nodeNames:
-				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
 				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
 				#nodeFeatures[nodeName] = np.array([prediction])
 				nodeFeatures[nodeName] = prediction[-1:,:,:]
 				teY[nm].append(nodeFeatures[nodeName][0,:,:])
 			for nm in nodeNames:
-				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
 				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
 				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
@@ -501,7 +493,6 @@ class DRA(object):
 		nodeNames = teX.keys()
 		prediction = {}
 		for nm in nodeNames:
-			nt = nm.split(':')[1]
 			prediction[nm] = self.predict_node[nm](teX[nm],1e-5)
 		return prediction
 		
@@ -523,21 +514,18 @@ class DRA(object):
 		for i in range(sequence_length):
 			nodeFeatures = {}
 			for nm in nodeNames:
-				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
 				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
 				#nodeFeatures[nodeName] = np.array([prediction])
 				nodeFeatures[nodeName] = prediction[-1:,:,:]
 				teY[nm].append(nodeFeatures[nodeName][0,:,:])
 			for nm in nodeNames:
-				nt = nm.split(':')[1]
 				nodeName = nm.split(':')[0]
 				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
 				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
 			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
 		cellstates = {}
 		for nm in nodeNames:
-			nt = nm.split(':')[1]
 			nodeName = nm.split(':')[0]
 			cellstates[nm] = self.get_cell[nm](to_return[nm],1e-5)
 		return cellstates
@@ -562,79 +550,4 @@ class DRA(object):
 			insert_at = np.delete(idx,np.where(idx < 0))
 			single_vec[:,:,insert_at] = X[k]
 		return single_vec
-
-# Depricated code
-'''
-		
-	def predict_sequence(self,teX_original,sequence_length=100,poseDataset=None,graph=None):
-		teX = copy.deepcopy(teX_original)
-		nodeNames = teX.keys()
-
-		teY = {}
-		for nm in nodeNames:
-			teY[nm] = []
-
-		for i in range(sequence_length):
-			nodeFeatures = {}
-			for nm in nodeNames:
-				nt = nm.split(':')[1]
-				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nm](teX[nm],1e-5)
-				nodeFeatures[nodeName] = prediction[-1:,:,:]
-				if len(teY[nm]) == 0:
-					teY[nm] = copy.deepcopy(nodeFeatures[nodeName])
-				else:
-					teY[nm] = np.append(teY[nm],nodeFeatures[nodeName],axis=0)
-			for nm in nodeNames:
-				nt = nm.split(':')[1]
-				nodeName = nm.split(':')[0]
-				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,poseDataset)
-				teX[nm] = np.append(teX[nm],nodeRNNFeatures,axis=0)
-		del teX
-		return teY
-'''	
-'''	
-losses = []
-loss = 0.0
-for nm in nodeNames:
-	nt = nm.split(':')[1]
-	losses.append(self.predict_node_loss[nm](trX[nm],trY[nm],1e-5))
-	loss += losses[-1]
-w_1 = self.nodeRNNs['torso'][0].params[0].get_value()
-o_1 = self.predict_node['torso'](trX['torso:torso'],1e-5)
-tlf_1 = self.torso_leg_features(trX['torso:torso'])
-taf_1 = self.torso_arm_features(trX['torso:torso'])
-tif_1 = self.torso_input_features(trX['torso:torso'])
-print '\n ****'
-print 'Curent model: loss={0} loss_list={1}'.format(loss,losses)
-
-
-print 'saving snapshot checkpoint.{0}'.format(epoch)
-saveDRA(self,"{0}checkpoint.{1}".format(path,epoch))
-model = loadDRA("{0}checkpoint.{1}".format(path,epoch))
-losses = []
-loss = 0.0
-for nm in nodeNames:
-	nt = nm.split(':')[1]
-	losses.append(model.predict_node_loss[nm](trX[nm],trY[nm],1e-5))
-	loss += losses[-1]
-w_2 = model.nodeRNNs['torso'][0].params[0].get_value()
-o_2 = model.predict_node['torso'](trX['torso:torso'],1e-5)
-tlf_2 = model.torso_leg_features(trX['torso:torso'])
-taf_2 = model.torso_arm_features(trX['torso:torso'])
-tif_2 = model.torso_input_features(trX['torso:torso'])
-print 'Saved model: loss={0} loss_list={1}'.format(loss,losses)
-print np.max(tlf_1 - tlf_2)
-print np.min(tlf_1 - tlf_2)
-print np.max(taf_1 - taf_2)
-print np.min(taf_1 - taf_2)
-print np.max(tif_1 - tif_2)
-print np.min(tif_1 - tif_2)
-print np.max(w_1 - w_2)
-print np.min(w_1 - w_2)
-print np.max(o_1 - o_2)
-print np.min(o_1 - o_2)
-print '****\n'
-del model
-'''
 

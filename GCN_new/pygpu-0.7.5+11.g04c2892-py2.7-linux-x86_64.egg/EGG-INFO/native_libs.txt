@@ -1,4 +1,0 @@
-pygpu/_elemwise.so
-pygpu/blas.so
-pygpu/collectives.so
-pygpu/gpuarray.so
