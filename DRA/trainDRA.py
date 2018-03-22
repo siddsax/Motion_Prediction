@@ -16,7 +16,6 @@ import pdb
 import socket as soc
 import copy
 import readCRFgraph as graph
-from unNormalizeData import unNormalizeData
 import sys
 from py_server import ssh
 global rng
@@ -204,7 +203,7 @@ def trainDRA():
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
 		use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-		new_idx=new_idx,featureRange=featureRange,poseDataset=poseDataset,graph=graph,maxiter=args.maxiter,unNormalizeData=unNormalizeData)
+		new_idx=new_idx,featureRange=featureRange,poseDataset=poseDataset,graph=graph,maxiter=args.maxiter)
 
 def saveNormalizationStats(path):
 	activities = {}

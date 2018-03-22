@@ -16,7 +16,6 @@ import pdb
 import socket as soc
 import copy
 import readCRFgraph as graph
-#from unNormalizeData import unNormalizeData
 import sys
 from py_server import ssh
 global rng
@@ -26,7 +25,6 @@ global rng
 
 
 rng = np.random.RandomState(1234567890)
-# theano.config.optimizer='None'
 
 
 
@@ -71,7 +69,10 @@ parser.add_argument('--drop_features',type=int,default=0)
 parser.add_argument('--subsample_data',type=int,default=1)
 parser.add_argument('--drop_id',type=str,default='')
 parser.add_argument('--ssh',type=str,default=0)
+parser.add_argument('--test',type=str,default=0)
 args = parser.parse_args()
+if(args.test):
+	theano.config.optimizer='None'
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
 for k in convert_list_to_float:
@@ -130,7 +131,6 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 
 def DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections):
 
-	print("KronenbergKronenbergKronenbergKronenbergKronenbergKronenberg")
 	edgeRNNs = {}
 	nodeRNNs = {}
 	nodeLabels = {}
@@ -139,24 +139,38 @@ def DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures
 		num_classes = nodeList[nm]
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
 			]
-		nodeRNNs[nm] = [
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('rectify',args.fc_init,size=100,rng=rng),
-				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
-				]
-		et = nm+'_temporal'
-		edgeListComplete.append(et)
-		edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-				FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
-				]
-		et = nm+'_normal'
-		edgeListComplete.append(et)
-		edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-                  FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-                  FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
-                  ]
+		if(args.test):
+			nodeRNNs[nm] = [
+					FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+					]
+			et = nm+'_temporal'
+			edgeListComplete.append(et)
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+					]
+			et = nm+'_normal'
+			edgeListComplete.append(et)
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+					]
+		else:
+			nodeRNNs[nm] = [
+					multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+					FCLayer('rectify',args.fc_init,size=100,rng=rng),
+					FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
+					]
+			et = nm+'_temporal'
+			edgeListComplete.append(et)
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+					FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+					]
+			et = nm+'_normal'
+			edgeListComplete.append(et)
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
+					FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
+					]
+			
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	dra = DRA(nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
@@ -167,7 +181,7 @@ def trainDRA():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
-	if(args.ssh):
+	if(args.ssh == 1):
 		script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
 		ssh( "echo " + script + " > file.sh")
 		ssh("bash file.sh")
@@ -197,7 +211,7 @@ def trainDRA():
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
 		use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-              new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, unNormalizeData=unNormalizeData, ssh_f=args.ssh)
+              new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, ssh_f=args.ssh)
 
 def saveNormalizationStats(path):
 	activities = {}

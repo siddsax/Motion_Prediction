@@ -2,6 +2,32 @@ from headers import *
 from py_server import ssh
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
+
+
+def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
+        T = normalizedData.shape[0]
+        D = data_mean.shape[0]
+        origData = np.zeros((T, D), dtype=np.float32)
+        dimensions_to_use = []
+        for i in range(D):
+                if i in dimensions_to_ignore:
+                        continue
+                dimensions_to_use.append(i)
+        dimensions_to_use = np.array(dimensions_to_use)
+
+        if not len(dimensions_to_use) == normalizedData.shape[1]:
+                return []
+
+        origData[:, dimensions_to_use] = normalizedData
+
+        stdMat = data_std.reshape((1, D))
+        stdMat = np.repeat(stdMat, T, axis=0)
+        meanMat = data_mean.reshape((1, D))
+        meanMat = np.repeat(meanMat, T, axis=0)
+        origData = np.multiply(origData, stdMat) + meanMat
+        return origData
+
+
 class DRA(object):
 	def __init__(self,nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
 		'''
@@ -143,7 +169,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,unNormalizeData=None,ssh_f=0):
+		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -423,7 +449,7 @@ class DRA(object):
 				string += st+'\n'
 			# print(string)
 			# if(j==0):
-			if(ssh_flag):
+			if(ssh_flag==1):
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
 	

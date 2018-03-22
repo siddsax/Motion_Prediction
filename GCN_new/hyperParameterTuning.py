@@ -7,7 +7,10 @@ import sys
 if(int(sys.argv[1])):
 	from py_server import ssh
 
-base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'#open('basedir','r').readline().strip()
+if(int(sys.argv[1])==2):
+	base_dir = '/home/siddhartha/Motion_Prediction/GCN_new'
+else:
+	base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
 gpus = [0,1,3]
 ## Set gpus = [gpu_id] if you don't have a gpu then set gpus = []
 
@@ -30,11 +33,12 @@ params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 512 #
-params['node_lstm_size'] = 512 # 
-params['fc_size'] = 256# 
-params['snapshot_rate'] = 25 #100# Save the model after every 250 iterations
+params['lstm_size'] = 1#512 #
+params['node_lstm_size'] = 1#512 # 
+params['fc_size'] = 1#256# 
+params['snapshot_rate'] = 1#25 #100# Save the model after every 250 iterations
 params['train_for'] = 'final' 
+params['test'] =  int(sys.argv[2])
 
 
 ## Tweak these hyperparameters only if you want to try out new models etc. This is only for 'Advanced' users
@@ -62,14 +66,14 @@ use_gpu = 1
 
 #if params['model_to_train'] == 'dra':
 
-if(len(sys.argv)==3):
-	name = sys.argv[2]
+if(len(sys.argv)==4):
+	name = sys.argv[3]
 else:
 	name = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
-params['checkpoint_path'] = '/new_data/gpu/siddsax/motion_pred_checkpoints/DRA/' + name
+params['checkpoint_path'] = base_dir + '/DRA/' + name
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 
-if(int(sys.argv[1])):
+if(int(sys.argv[1])==1):
 	script = "'if [ ! -d \"" + path_to_checkpoint + \
 		"\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
 	ssh("echo " + script + " > file.sh")
