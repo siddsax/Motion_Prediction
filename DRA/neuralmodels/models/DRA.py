@@ -327,7 +327,7 @@ class DRA(object):
 					tr_X[nt] = []
 					tr_Y[nt] = []
 
-				if int(iterations) % snapshot_rate == 0:
+				if int(iterations) % (snapshot_rate*4) == 0:
 					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
 					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		

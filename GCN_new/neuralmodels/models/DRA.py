@@ -151,8 +151,8 @@ class DRA(object):
 		for i in range(np.shape(test_ground_truth)[1]):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
-		# fname = 'test_ground_truth_unnorm'
-		# self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=ssh_f)
+		fname = 'test_ground_truth_unnorm'
+		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=ssh_f)
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -324,7 +324,7 @@ class DRA(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if int(iterations) % snapshot_rate == 0:
+				if int(iterations) % (snapshot_rate*4) == 0:
 					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
 					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
 		
@@ -339,21 +339,21 @@ class DRA(object):
 					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 					# test_ground_truth
-					#validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
-					# print("{0: <16} |".format(action), end="")
-					#seq_length_out = len(validation_euler_error)
-					#for ms in [1,3,7,9,13,24]:
-					#	if seq_length_out >= ms+1:
-					#		print(" {0:.3f} |".format( validation_euler_error[ms] ))
-					#	else:
-					#		print("   n/a |")
+					# validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
+					# # print("{0: <16} |".format(action))#, end="")
+					# seq_length_out = len(validation_euler_error)
+					# for ms in [1,3,7,9,13,24]:
+					# 	if seq_length_out >= ms+1:
+					# 		print(" {0:.3f} |".format( validation_euler_error[ms] ))
+					# 	else:
+					# 		print("   n/a |")
 					# print("Reported Error = " + str(validation_euler_error))
-					print("-------------------------")
 
 					
-					# if (int(iterations) % snapshot_rate == 0):
-						# fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-						# self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname)
+					if (int(iterations) % snapshot_rate == 0):
+						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=ssh_f)
+					print("-------------------------")
 
 
 			'''Computing error on validation set'''

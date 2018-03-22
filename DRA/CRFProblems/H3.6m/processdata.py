@@ -15,7 +15,7 @@ testSubject = ['S5']
 allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 
 #actions =['directions','discussion','eating','greeting','phoning','posing','purchases','sitting','sittingdown','smoking','takingphoto','waiting','walking','walkingdog','walkingtogether']
-actions = ['walking','eating','smoking']
+actions = ['walking']#,'eating','smoking']
 subactions=['1','2']
 base_dir = '..'
 # base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
