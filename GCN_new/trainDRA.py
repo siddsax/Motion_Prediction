@@ -16,7 +16,7 @@ import pdb
 import socket as soc
 import copy
 import readCRFgraph as graph
-from unNormalizeData import unNormalizeData
+#from unNormalizeData import unNormalizeData
 import sys
 from py_server import ssh
 global rng
