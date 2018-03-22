@@ -2,7 +2,7 @@ from headers import *
 from py_server import ssh
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
-
+from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
         T = normalizedData.shape[0]

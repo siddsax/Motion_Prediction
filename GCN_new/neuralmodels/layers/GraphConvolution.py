@@ -13,8 +13,8 @@ from theano.tensor.elemwise import CAReduce
 from headers import *
 
 
-
-class GraphConvolution_input(object):
+class GraphConvolution(object):
+	
 	def __init__(self, size,adjacency, num_features_nonzero=False, drop_value=None,rng=None, init='glorot',bias=False,sparse_inputs=False,dropout=True, activation_str='rectify', weights=False,featureless=False):
 
 		self.settings = locals()
@@ -30,6 +30,7 @@ class GraphConvolution_input(object):
 		self.weights = weights
 		self.bias = bias
 		self.adjacency = adjacency
+		self.numparams = 0
 		if dropout:
 			self.drop_value = drop_value
 		else:
@@ -38,17 +39,19 @@ class GraphConvolution_input(object):
 		if self.sparse_inputs:
 			self.num_features_nonzero = num_features_nonzero
 
-	def connect(self,features_below,size_below):
-		self.features_below = features_below
-		self.inputD = size_below
+	def connect(self,layer_below):
+		self.layer_below = layer_below
+		self.inputD = layer_below.size
 		# self.W = list()
 		# for i in range(len(self.adjacency)):
 		# 	self.W.append(self.init((self.inputD,self.size),rng=self.rng))
 		self.W = self.init((self.inputD,self.size),rng=self.rng)
+		self.numparams += self.inputD*self.size
 		
 		if self.bias:
 			self.b = zero0s((self.size))
 			self.params = [self.W, self.b]
+			self.numparams += self.size
 		else:
 			self.params = [self.W]	
 
@@ -62,7 +65,7 @@ class GraphConvolution_input(object):
 
 
 	def output(self,seq_output=True):
-		x = T.as_tensor_variable(self.features_below)
+		x = self.layer_below.output(seq_output=seq_output)
 		# return self.activation(T.dot(X, self.W) + self.b)		
 
  		dropout = Dropout()
@@ -73,7 +76,7 @@ class GraphConvolution_input(object):
 
 		# convolve
 		# theano.shared(value=np.zeros(shape,dtype=theano.config.floatX))
-		output = zero0s((self.inputD,self.size))
+		# output = zero0s((self.inputD,self.size))
 		supports = list()
 		# for i in range(len(self.adjacency)):
 
@@ -85,8 +88,9 @@ class GraphConvolution_input(object):
 		else:
 			pre_sup = self.W[i]
 		support = T.dot(self.adjacency, pre_sup)
-		supports.append(support)
-		output += support
+		# supports.append(support)
+		# print(support)
+		output = support
 
 		if self.bias:
 			output += self.b
