@@ -88,7 +88,7 @@ parser.add_argument('--test',type=str,default=0)
 parser.add_argument('--dump_path', type=str, default='checkpoint')
 parser.add_argument('--drop_value', type=int, default=.5)
 args = parser.parse_args()
-if(args.test):
+if(int(args.test)):
 	theano.config.optimizer='None'
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
@@ -155,7 +155,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 	graphLayers = []
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
-		if(args.test):
+		if(int(args.test)):
 			print nm
 			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
 			et = nm+'_temporal'
@@ -169,6 +169,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							 ]
 
 		else:
+			print("BOOM")
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,
 							skip_output=True, input_output_fused=True),
@@ -200,7 +201,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							]
 
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
-		if(args.test):
+		if(int(args.test)):
 			graphLayers = [GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)]
 		else:
 			graphLayers = [GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
