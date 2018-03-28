@@ -34,8 +34,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		nodeToEdgeConnections[node_name] = {}
 		nodeToEdgeConnections[node_name][node_name+'_normal'] = [0, 0]
 		nodeToEdgeConnections[node_name][node_name+'_temporal'] = [0, 0]
-		edgeList.append(node_name+'_temporal')
 		edgeList.append(node_name+'_normal')
+		edgeList.append(node_name+'_temporal')
 
 		# nodeToEdgeConnections[node_type][node_type+'_input'] = [0,0]
 		nodeFeatureLength[node_name] = 0
@@ -127,7 +127,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		trY_validate[nm] = Y_validate
 		trY_forecast[nm] = Y_forecast
 		trX_nodeFeatures[nm] = X_forecast
-	return nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validate,trY_validate,trX_forecast,trY_forecast,trX_nodeFeatures	
+		adjacency = poseDataset.adjacency
+	return nodeNames, nodeList, nodeFeatureLength, nodeConnections, edgeList, edgeListComplete, edgeFeatures, nodeToEdgeConnections, trX, trY, trX_validate, trY_validate, trX_forecast, trY_forecast, trX_nodeFeatures, adjacency
 
 def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):
 	edge_features = {}

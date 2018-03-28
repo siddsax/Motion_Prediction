@@ -1,7 +1,5 @@
 from headers import *
 from py_server import ssh
-# import theano.sandbox.cuda
-# theano.sandbox.cuda.use("gpu0")
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
@@ -29,7 +27,7 @@ def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
 
 
 class DRA(object):
-	def __init__(self,nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
+	def __init__(self, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, cost, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=0.0, update_type=RMSprop(), weight_decay=0.0):
 		'''
 		edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
 		
@@ -45,12 +43,12 @@ class DRA(object):
 		self.nodeToEdgeConnections = nodeToEdgeConnections
 		self.edgeListComplete = edgeListComplete
 		self.nodeLabels = nodeLabels
+		self.graphLayers = graphLayers
+		self.finalLayer = finalLayer
 		self.learning_rate = learning_rate
 		self.clipnorm = clipnorm
 		self.weight_decay = weight_decay
 		
-		nodeNames = nodeRNNs.keys()
-		edgeTypes = edgeRNNs.keys()
 
 		self.cost = {}
 		self.X = {}
@@ -62,7 +60,6 @@ class DRA(object):
 		self.train_node = {}
 		self.predict_node = {}
 		self.predict_node_last_timestep = {}
-		self.masterlayer = {}
 		self.grads = {}
 		self.predict_node_loss = {}
 		self.grad_norm = {}
@@ -72,9 +69,28 @@ class DRA(object):
 		self.update_type = update_type
 		self.update_type.lr = self.learning_rate
 		self.update_type.clipnorm = self.clipnorm
-
-		self.num_params = 0
 		self.std = T.scalar(dtype=theano.config.floatX)
+
+		edgeTypes = edgeRNNs.keys()
+		self.num_params = 0
+		if(len(self.graphLayers)):
+			self.params_all = []
+			self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
+			self.Y_all.tag.test_value = np.random.rand(7,150, 54)
+			self.masterlayer = unConcatenateVectors(nodeToEdgeConnections)
+			self.X_all=self.masterlayer.input#T.tensor3(name="Data", dtype=theano.config.floatX)
+		else:
+			self.params_all = {}
+			self.Y_all = {}
+			self.X_all = {}
+			self.masterlayer = {}
+			for nm in nodeNames:
+				self.params_all[nm] = []
+				self.Y_all[nm] = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
+				self.Y_all[nm].tag.test_value = np.random.rand(7,150, 54)
+				self.masterlayer[nm] = unConcatenateVectors(nodeToEdgeConnections[nm],flag=0)
+				self.X_all[nm]=self.masterlayer[nm].input#T.tensor3(name="Data", dtype=theano.config.floatX)
+		
 
 		for et in edgeTypes:
 			layers = self.edgeRNNs[et]
@@ -82,44 +98,108 @@ class DRA(object):
 				layers[i].connect(layers[i-1])
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
-		
-		for nm in nodeNames:
-			self.params[nm] = []
-			self.masterlayer[nm] = unConcatenateVectors(nodeToEdgeConnections[nm])
-			self.X[nm] = self.masterlayer[nm].input
+			print("======---------=======")
 
-			'''We first connect all the edgeRNNs (building the network bottom-up)'''
-			nodeLayers = self.nodeRNNs[nm]
+		indv_node_layers = []
+		for nm in nodeNames:
 			edgesConnectedTo = nodeToEdgeConnections[nm].keys()
 			layers_below = []
 			for et in edgeListComplete:
 				if et not in edgesConnectedTo:
 					continue
 				edgeLayers = self.edgeRNNs[et]
+				
 				layers_below.append(edgeLayers)
-				edgeLayers[0].input = self.masterlayer[nm].output(et)
+				if(len(self.graphLayers)):				
+					edgeLayers[0].input = self.masterlayer.output(et,nm)
+				else:
+					edgeLayers[0].input = self.masterlayer[nm].output(et)
+					
+				
 				for l in edgeLayers:
 					if hasattr(l,'params'):
-						self.params[nm].extend(l.params)
+						if(len(self.graphLayers)):
+							self.params_all.extend(l.params)
+						else:
+							self.params_all[nm].extend(l.params)
 						self.num_params += l.numparams
-				print("======---------=======")
 
 
-			'''We now connect the bottom layer of nodeRNN with the concatenated output of edgeRNNs'''
 			cv = ConcatenateVectors()
 			cv.connect(layers_below)
+			print self.nodeRNNs.keys()
+			nodeLayers = self.nodeRNNs[nm]
 			nodeLayers[0].connect(cv)
-			
-			'''Finally we connect the layers of NodeRNN'''
 			for i in range(1,len(nodeLayers)):
 				nodeLayers[i].connect(nodeLayers[i-1])
+			print("======---------=======")
 
 			for l in nodeLayers:
 				if hasattr(l,'params'):
-					self.params[nm].extend(l.params)
+					if(len(self.graphLayers)):
+						self.params_all.extend(l.params)
+					else:
+						self.params_all[nm].extend(l.params)
 					self.num_params += l.numparams
-			print("======---------=======")
 
+			indv_node_layers.append(nodeLayers[-1])
+		if(len(self.graphLayers)):
+			cv = Concatenate_Node_Layers()
+			cv.connect(indv_node_layers)
+
+# -------------------------- Graph --------------------------------------
+			layers = self.graphLayers
+			layers[0].connect(cv)
+			for i in range(1,len(layers)):
+				layers[i].connect(layers[i-1])
+				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+					layers[i].std = self.std
+
+			for l in layers:
+				if hasattr(l,'params'):
+					self.params_all.extend(l.params)
+					self.num_params += l.numparams
+
+# -------------------------- --- --------------------------------------
+	
+		indx = 0
+		out = {}
+		for nm in nodeNames:
+			layers = self.finalLayer[nm]
+			if(len(self.graphLayers)):
+				layers[0].connect(self.graphLayers[-1],indx)
+			else:
+				layers[0].connect(indv_node_layers[indx])
+			for i in range(1,len(layers)):
+				layers[i].connect(layers[i-1])
+				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+					layers[i].std = self.std
+			print("======---------=======")
+			indx+=1
+			for l in layers:
+				if hasattr(l,'params'):
+					if(len(self.graphLayers)):
+						self.params_all.extend(l.params)
+					else:
+						self.params_all[nm].extend(l.params)
+					self.num_params += l.numparams
+
+			out[nm] =  layers[-1].output()
+
+		print len(self.graphLayers)
+		if(len(self.graphLayers)):
+			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
+			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
+
+			print 'Number of parameters in GCNN: ',self.num_params
+			[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
+			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+			self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
+			self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
+			self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
+			print("====================================================")
+		else:
 			
 			self.Y_pr[nm] = nodeLayers[-1].output()
 			self.Y[nm] = self.nodeLabels[nm]
@@ -142,27 +222,6 @@ class DRA(object):
 		
 
 		print("=============")
-		for nm in nodeNames:
-			nodeLayers = self.nodeRNNs[nm]
-			for layer in nodeLayers:
-				if hasattr(layer,'params'):
-					for par in layer.params:
-						val = par.get_value()
-						temp = 1
-						for i in range(val.ndim):
-							temp *= val.shape[i]		
-						self.num_params += temp
-		for et in edgeTypes:
-			edgeLayers = self.edgeRNNs[et]
-			for layer in edgeLayers:
-				if hasattr(layer,'params'):
-					for par in layer.params:
-						val = par.get_value()
-						temp = 1
-						for i in range(val.ndim):
-							temp *= val.shape[i]		
-						self.num_params += temp
-		print 'Number of parameters in DRA: ',self.num_params
 
 	def fitModel(self,trX,trY,snapshot_rate=1,path=None,pathD=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,
@@ -179,6 +238,7 @@ class DRA(object):
 
 		fname = 'test_ground_truth_unnorm'
 		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=ssh_f)
+		print("---------- Saved Ground Truth -----------------------")
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
@@ -188,17 +248,17 @@ class DRA(object):
 		loss_after_each_minibatch = []
 		complete_logger = ''
 		if iter_start > 0:
-			if path:
-				lines = open('{0}logfile'.format(path)).readlines()
-				for i in range(iter_start):
-					line = lines[i]
-					values = line.strip().split(',')
-					if len(values) == 1:
-						skel_loss_after_each_minibatch.append(float(values[0]))
-						validation_set.append(-1)
-					elif len(values) == 2:
-						skel_loss_after_each_minibatch.append(float(values[0]))
-						validation_set.append(float(values[1]))
+			# if path:
+			# 	lines = open('{0}logfile'.format(path)).readlines()
+			# 	for i in range(iter_start):
+			# 		line = lines[i]
+			# 		values = line.strip().split(',')
+			# 		if len(values) == 1:
+			# 			skel_loss_after_each_minibatch.append(float(values[0]))
+			# 			validation_set.append(-1)
+			# 		elif len(values) == 2:
+			# 			skel_loss_after_each_minibatch.append(float(values[0]))
+			# 			validation_set.append(float(values[1]))
 				#if os.path.exists('{0}complete_log'.format(path)):
 				#	complete_logger = open('{0}complete_log'.format(path)).read()
 				#	complete_logger = complete_logger[:epoch_count]
@@ -214,12 +274,13 @@ class DRA(object):
 		skel_dim = 0
 		
 
-		nodeNames = self.nodeRNNs.keys()
+# ----------------------data cleaning related tasks ------------------------------------------------
+		nodeNames = trX.keys()
+
 		for nm in nodeNames:
 			tr_X[nm] = []
 			tr_Y[nm] = []
 
-		nodeNames = trX.keys()
 		for nm in nodeNames:
 			N = trX[nm].shape[1]
 			seq_length = trX[nm].shape[0]
@@ -261,7 +322,6 @@ class DRA(object):
 			break
 
 		print "batches in each epoch ",batches_in_one_epoch
-		print nodeNames	
 		#iterations = epoch_count * batches_in_one_epoch * 1.0
 		numrange = np.arange(Nmax)
 		#for epoch in range(epoch_count,epochs):
@@ -326,99 +386,111 @@ class DRA(object):
 				loss = 0.0
 				skel_loss = 0.0
 				grad_norms = []
-				for nm in nodeNames:
-					loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
-					g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
+# ---------------------------------------------------------------------------------------------
+# ------------------------------ Model relted tasks -------------------------------------------
+				# for nm in nodeNames:
+
+				if(len(self.graphLayers)):
+					tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
+					tr_X_all = tr_X[nodeNames[0]]
+
+					for i in range(1,len(nodeNames)):
+						tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
+
+					loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
+				
+					g = self.grad_norm(tr_X_all,tr_Y_all,std)
 					grad_norms.append(g)
-					skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
 					loss += loss_for_current_node
-					skel_loss += skel_loss_for_current_node
+				
+				else:
+					loss_for_current_node = 0
+					g = 0
+				
+					for nm in nodeNames:
+						loss_for_current_node = self.train_node[nm](tr_X[nm],tr_Y[nm],learning_rate,std)
+						g = self.grad_norm[nm](tr_X[nm],tr_Y[nm],std)
+						grad_norms.append(g)
+						skel_loss_for_current_node = loss_for_current_node*tr_X[nm].shape[1]*1.0 / examples_taken_from_node
+						loss += loss_for_current_node
+						skel_loss += skel_loss_for_current_node
+					skel_loss_after_each_minibatch.append(skel_loss)
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
-				skel_loss_after_each_minibatch.append(skel_loss)
-				termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(loss,epoch,j,(skel_loss*1.0/(seq_length*skel_dim)),grad_norms,learning_rate,np.sqrt(skel_loss*1.0/seq_length),std,iterations)
+				if(len(self.graphLayers)):
+					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6}  '.format(
+					        loss, epoch, j, grad_norms, learning_rate, std, iterations)
+				else:
+					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(
+					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
+
 				complete_logger += termout + '\n'
 				print termout
-			
+
+	# --------------------------- SAVING PERFORMACE CHECKING ET CETRA --------------------------------------------------------
+
+
 				del tr_X
 				del tr_Y
 							
 				tr_X = {}
 				tr_Y = {}
+
 				for nm in nodeNames:
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if int(iterations) % (snapshot_rate*4) == 0:
-					print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-					saveDRA(self,"{0}checkpoint.{1}".format(path,int(iterations)),"{0}checkpoint.{1}".format(pathD,int(iterations)))
+				if(len(self.graphLayers)):
+					if int(iterations) % (snapshot_rate*4) == 0:
+						print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+						print("{0}checkpoint.{1}".format(pathD,int(iterations)))
+						saveDRA(self, "{0}checkpoint.{1}".format(path, int(iterations)),
+						        "{0}checkpoint.{1}".format(pathD, int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-					# print(trX_forecasting.keys())
-					forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-					# forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
-					forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+				# 	forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# 	forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
-					test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-					for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-						test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
-					# test_ground_truth
-					# validation_euler_error = euler_error(test_forecasted_motion_unnorm,test_ground_truth_unnorm)
-					# # print("{0: <16} |".format(action))#, end="")
-					# seq_length_out = len(validation_euler_error)
-					# for ms in [1,3,7,9,13,24]:
-					# 	if seq_length_out >= ms+1:
-					# 		print(" {0:.3f} |".format( validation_euler_error[ms] ))
-					# 	else:
-					# 		print("   n/a |")
-					# print("Reported Error = " + str(validation_euler_error))
+				# 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+				# 	print("____________________")
+				# 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+				# 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
 					
-					if (int(iterations) % snapshot_rate == 0):
-						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=ssh_f)
-					print("-------------------------")
+				# 	if (int(iterations) % snapshot_rate == 0):
+				# 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+				# 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=ssh_f)
+				# 	print("-------------------------")
 
 
-			'''Computing error on validation set'''
-			if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
-				validation_error = 0.0
-				Tvalidation = 0
-				for nm in trX_validation.keys():
-					validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
-					Tvalidation = trX_validation[nm].shape[0]
-				validation_set[-1] = validation_error
-				termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
-				complete_logger += termout + '\n'
-				print termout
+			# '''Computing error on validation set'''
+			# if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
+			# 	validation_error = 0.0
+			# 	Tvalidation = 0
+			# 	for nm in trX_validation.keys():
+			# 		validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
+			# 		Tvalidation = trX_validation[nm].shape[0]
+			# 	validation_set[-1] = validation_error
+			# 	termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 		
-			if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
-				prediction = self.predict_nextstep(trX_validation)
-				prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
-				prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
-				for i in range(N1):
-					prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
-				predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
-				joint_error = np.linalg.norm(predict - gth)
-				validation_set[-1] = joint_error
-				termout = 'Missing joint error {0}'.format(joint_error )
-				complete_logger += termout + '\n'
-				print termout
+			# if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
+			# 	prediction = self.predict_nextstep(trX_validation)
+			# 	prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
+			# 	prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
+			# 	for i in range(N1):
+			# 		prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
+			# 	predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
+			# 	joint_error = np.linalg.norm(predict - gth)
+			# 	validation_set[-1] = joint_error
+			# 	termout = 'Missing joint error {0}'.format(joint_error )
+			# 	complete_logger += termout + '\n'
+			# 	print termout
 
 			'''Saving the learned model so far'''
-			#if path:
-			#	
-			#	print 'Dir: ',path				
-			#	'''Writing training error and validation error in a log file'''
-			#	f = open('{0}logfile'.format(path),'w')
-			#	for l,v in zip(skel_loss_after_each_minibatch,validation_set):
-			#		f.write('{0},{1}\n'.format(l,v))
-			#	f.close()
-			#	f = open('{0}complete_log'.format(path),'w')
-			#	f.write(complete_logger)
-			#	f.close()
 			
 
 			t1 = time.time()
@@ -427,11 +499,6 @@ class DRA(object):
 			print termout
 			epoch += 1
 
-	def saveForecastError(self,skel_err,err_per_dof,path,fname):
-		f = open('{0}{1}'.format(path,fname),'w')
-		for i in range(skel_err.shape[0]):
-			f.write('T={0} {1}, {2}\n'.format(i,skel_err[i],err_per_dof[i]))
-		f.close()
 
 	def saveForecastedMotion(self,forecast,path,fname,ssh_flag=0):
 		T = forecast.shape[0]
@@ -452,34 +519,8 @@ class DRA(object):
 			if(ssh_flag==1):
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
-	
-	def saveCellState(self,cellstate,path,fname):
-		nodeNames = cellstate.keys()
-		nm = nodeNames[0]
-		T = cellstate[nm].shape[0]
-		N = cellstate[nm].shape[1]
-		D = cellstate[nm].shape[2]
-		for j in range(N):
-			f = open('{0}{2}_N_{1}'.format(path,j,fname),'w')
-			for nm in nodeNames:
-				motion = cellstate[nm][:,j,:]
-				for i in range(T):
-					st = ''
-					for k in range(D):
-						st += str(motion[i,k]) + ','
-					st = st[:-1]
-					f.write(st+'\n')
-			f.close()
 
-
-	def predict_output(self,teX):
-		nodeNames = teX.keys()
-		predict = {}
-		for nm in nodeNames:
-			predict[nm] = self.predict_node[nm](teX[nm],1e-5)
-		return predict
-
-
+# ==============================================================================================
 	def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
@@ -515,47 +556,7 @@ class DRA(object):
 		del teX
 		return teY
 
-	def predict_nextstep(self,teX):
-		nodeNames = teX.keys()
-		prediction = {}
-		for nm in nodeNames:
-			prediction[nm] = self.predict_node[nm](teX[nm],1e-5)
-		return prediction
-		
-	def predict_cell(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
-		teX = copy.deepcopy(teX_original)
-		nodeNames = teX.keys()
-
-		teY = {}
-		to_return = {}
-		T = 0
-		nodeFeatures_t_1 = {}
-		for nm in nodeNames:
-			[T,N,D] = teX[nm].shape
-			to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
-			to_return[nm][:T,:,:] = teX[nm]
-			teY[nm] = []
-			nodeName = nm.split(':')[0]
-			nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
-		for i in range(sequence_length):
-			nodeFeatures = {}
-			for nm in nodeNames:
-				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
-				#nodeFeatures[nodeName] = np.array([prediction])
-				nodeFeatures[nodeName] = prediction[-1:,:,:]
-				teY[nm].append(nodeFeatures[nodeName][0,:,:])
-			for nm in nodeNames:
-				nodeName = nm.split(':')[0]
-				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
-				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
-			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
-		cellstates = {}
-		for nm in nodeNames:
-			nodeName = nm.split(':')[0]
-			cellstates[nm] = self.get_cell[nm](to_return[nm],1e-5)
-		return cellstates
-
+#  ============================================================================================================
 	def concatenateDimensions(self,dictToconcatenate,axis=2):
 		conctArr = []
 		for k in dictToconcatenate.keys():
@@ -576,4 +577,19 @@ class DRA(object):
 			insert_at = np.delete(idx,np.where(idx < 0))
 			single_vec[:,:,insert_at] = X[k]
 		return single_vec
+
+	def theano_convertToSingleVec(self,X,new_idx,featureRange):
+	  keys = X.keys()
+	  # [T,N,D]  = X[keys[0]].shape
+	  D = len(new_idx) - len(np.where(new_idx < 0)[0])
+	  single_vec = X[keys[0]]
+	  for k in range(1,len(keys)):
+	  	single_vec = T.concatenate((single_vec,X[keys[k]]),axis=2) 
+	  for k in keys:
+			nm = k.split(':')[0]
+			idx = new_idx[featureRange[nm]]
+			insert_at = np.delete(idx,np.where(idx < 0))
+			single_vec = T.set_subtensor(single_vec[:,:,insert_at],X[k])
+	  return single_vec
+
 

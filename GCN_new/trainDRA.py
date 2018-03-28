@@ -8,9 +8,10 @@ from neuralmodels.utils import permute
 from neuralmodels.loadcheckpoint import *
 from neuralmodels.costs import softmax_loss, euclidean_loss
 from neuralmodels.models import * 
-from neuralmodels.predictions import OutputMaxProb, OutputSampleFromDiscrete
 from neuralmodels.layers import * 
-from neuralmodels.updates import Adagrad,RMSprop,Momentum,Adadelta
+from neuralmodels.updates import Adagrad, RMSprop, Momentum, Adadelta
+# from GraphConvolution import GraphConvolution
+# from FCLayer_out import FCLayer_out
 import cPickle
 import pdb
 import socket as soc
@@ -23,6 +24,20 @@ global rng
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
 
+#theano.config.scan.allow_gc =True
+#theano.config.scan.allow_output_prealloc =False
+#theano.optimizer_excluding=scanOp_pushout_seqs_ops
+#theano.optimizer_excluding=scan_pushout_dot1
+#theano.optimizer_excluding=scanOp_pushout_output
+#theano.optimizer_excluding="more_mem"
+#theano.config.optimizer.excluding = "scan"
+#theano.config.optimizer='fast_run'
+#theano.config.optimizer_including=local_remove_all_assert
+# theano.config.optimizer='None'
+# theano.config.exception_verbosity='high'
+# theano.config.compute_test_value = 'warn'
+# theano.config.print_test_value = True
+#theano.config.floatX = 'float64'
 
 rng = np.random.RandomState(1234567890)
 
@@ -40,7 +55,7 @@ parser.add_argument('--lstm_size',type=int,default=10)
 parser.add_argument('--fc_size',type=int,default=500)
 parser.add_argument('--lstm_init',type=str,default='uniform')
 parser.add_argument('--fc_init',type=str,default='uniform')
-parser.add_argument('--snapshot_rate',type=int,default=1)
+parser.add_argument('--snapshot_rate',type=int,default=10)
 parser.add_argument('--epochs',type=int,default=2000)
 parser.add_argument('--batch_size',type=int,default=3000)
 parser.add_argument('--clipnorm',type=float,default=25.0)
@@ -70,6 +85,8 @@ parser.add_argument('--subsample_data',type=int,default=1)
 parser.add_argument('--drop_id',type=str,default='')
 parser.add_argument('--ssh',type=str,default=0)
 parser.add_argument('--test',type=str,default=0)
+parser.add_argument('--dump_path', type=str, default='checkpoint')
+parser.add_argument('--drop_value', type=int, default=.5)
 args = parser.parse_args()
 if(args.test):
 	theano.config.optimizer='None'
@@ -129,51 +146,92 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 			f.write(st+'\n')
 		f.close()
 
-def DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections):
-
+def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange, adjacency):
 	edgeRNNs = {}
 	nodeRNNs = {}
+	finalLayer = {}
 	nodeLabels = {}
 	edgeListComplete = []
+	graphLayers = []
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
-		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
-			]
 		if(args.test):
-			nodeRNNs[nm] = [
-					FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
-					]
+			print nm
+			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
 			et = nm+'_temporal'
 			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-					]
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),]
 			et = nm+'_normal'
 			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-					]
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),]
+			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
+							  FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
+							 ]
+
 		else:
-			nodeRNNs[nm] = [
-					multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
-					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-					FCLayer('rectify',args.fc_init,size=100,rng=rng),
-					FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
-					]
+			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
+			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,
+							skip_output=True, input_output_fused=True),
+							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
+							FCLayer('rectify', args.fc_init, size=100, rng=rng),
+							FCLayer('linear', args.fc_init, size=100, rng=rng)
+							]
 			et = nm+'_temporal'
 			edgeListComplete.append(et)
+			
 			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-					FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
-					]
+							FCLayer('rectify', args.fc_init,
+							size=args.fc_size, rng=rng),
+							FCLayer('linear', args.fc_init,
+							size=args.fc_size, rng=rng)
+							]
+
 			et = nm+'_normal'
 			edgeListComplete.append(et)
 			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-					FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
-					FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng)
-					]
-			
-		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
+							FCLayer('rectify', args.fc_init,
+							size=args.fc_size, rng=rng),
+							FCLayer('linear', args.fc_init,
+							size=args.fc_size, rng=rng)
+							]
+			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
+							FCLayer('rectify',args.fc_init,size=100,rng=rng),
+							FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
+							]
+
+			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
+		if(args.test):
+			graphLayers = [GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)]
+		else:
+			graphLayers = [GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(args.fc_size, adjacency,
+							drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(
+							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(args.fc_size, adjacency,
+							drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(
+							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(len(nodeNames)*args.fc_size,
+							adjacency, drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(len(nodeNames)*args.fc_size,
+							adjacency, drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+							GraphConvolution(
+							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							AddNoiseToInput(rng=rng),
+						]
+	print nodeRNNs.keys()
+	print "QWEqwewqewqewqewqewqewqewqeqwewqeW"
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	dra = DRA(nodeNames,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
+	
 	return dra
 
 def trainDRA():
@@ -189,18 +247,39 @@ def trainDRA():
 		if not os.path.exists(path_to_checkpoint):
 			os.mkdir(path_to_checkpoint)
 	# saveNormalizationStats(path_to_checkpoint)
-	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures] = graph.readCRFgraph(poseDataset)
+	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
+
+    # [nodeList,  # {node name} = output dimension
+    #  # dictonary {node name} = temp node feat. length
+    #  temporalNodeFeatureLength,
+    #  nodeFeatureLength,  # {node name} = node feat. length
+    #  nodeConnections,  # {node name} = node names it is connected to
+    #  # the output values of the model i.e. the coordinates of the different joints as a dictionary {node name} = value of the coordinate
+    #  trY, trY_validation, trY_forecasting,
+    #  # {node name} -> ? these are position of joints using which the input fetures are made. trX_forecasting[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1})
+    #  trX_forecast_nodeFeatures,
+
+    #  # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
+    #  trX, trX_validation, trX_forecasting,
+    #  preGraphNets,  # {node name} = {temporal/normal} = {high,low}
+    #  adjacency] = graph.readCRFgraph(poseDataset)
+
 	nodeNames = nodeNames.keys()
 	# print(nodeNames)
 	new_idx = poseDataset.new_idx
 	featureRange = poseDataset.nodeFeaturesRanges
 	dra = []
+    # all the dimensions which are not used ( the dimensions that have very little varianc ) are -1 and other have their respective index number like 0 1 2 3 -1 4 5 ......
+
+	new_idx = poseDataset.new_idx
+	featureRange = poseDataset.nodeFeaturesRanges
+
 	if args.use_pretrained == 1:
 		dra = loadDRA(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		dra = DRAmodelRegression(nodeNames,nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatureLength,nodeToEdgeConnections)
+        dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
 	# sys.exit()
 	# saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)

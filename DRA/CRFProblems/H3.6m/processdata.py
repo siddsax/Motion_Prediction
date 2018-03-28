@@ -30,6 +30,9 @@ nodeFeaturesRanges['right_leg'] = range(6,21)
 nodeFeaturesRanges['left_leg'] = range(21,36)
 drop_right_knee = [9,10,11]
 
+adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+# adjacency = np.asmatrix([[1,1,1],[1,1,0],[1,0,1]])
+
 def normalizationStats(completeData):
 	data_mean = np.mean(completeData,axis=0)
 	data_std =  np.std(completeData,axis=0)

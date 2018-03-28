@@ -147,16 +147,6 @@ class GCNN(object):
 
 # -------------------------- --- --------------------------------------
 
-		###########################################
-		
-		# how data fed to graphsLayers is not correct. see various dims FIXED?
-		# see how data out of it will be structured and then feed to finalLayer FIXED?
-		# make a new FCLayer that has new connect and output 
-		# augment cost so that it can take 2 lists as inputs
-		# feed to theano.function via a list with all Xs
-
-		#########################################
-
 		indx = 0
 		out = {}
 		for nm in nodeNames:
