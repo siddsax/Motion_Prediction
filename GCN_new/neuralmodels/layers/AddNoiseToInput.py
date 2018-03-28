@@ -14,6 +14,7 @@ class AddNoiseToInput(object):
 		if rng is None:
 			self.rng = np.random
 		self.theano_rng = T.shared_randomstreams.RandomStreams(self.rng.randint(2 ** 30))
+		self.numparams = 0
 
 	def connect(self,layer_below):
 		self.layer_below = layer_below
