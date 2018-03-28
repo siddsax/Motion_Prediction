@@ -239,7 +239,7 @@ def trainDRA():
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
-	if(args.ssh == 1):
+	if(int(args.ssh) == 1):
 		script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
 		ssh( "echo " + script + " > file.sh")
 		ssh("bash file.sh")
