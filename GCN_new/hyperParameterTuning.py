@@ -33,10 +33,16 @@ params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-params['lstm_size'] = 1#512 #
-params['node_lstm_size'] = 1#512 # 
-params['fc_size'] = 1#256# 
-params['snapshot_rate'] = 1#25 #100# Save the model after every 250 iterations
+if (int(sys.argv[2])==1):
+	params['lstm_size'] = 1#512 #
+	params['node_lstm_size'] = 1#512 # 
+	params['fc_size'] = 1#256# 
+	params['snapshot_rate'] = 1#25 #100# Save the model after every 250 iterations
+else:
+	params['lstm_size'] = 512 #
+	params['node_lstm_size'] = 512 # 
+	params['fc_size'] = 256# 
+	params['snapshot_rate'] = 25 #100# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 params['test'] =  int(sys.argv[2])
 
