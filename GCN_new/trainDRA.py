@@ -90,6 +90,8 @@ parser.add_argument('--drop_value', type=int, default=.5)
 args = parser.parse_args()
 if(int(args.test)):
 	theano.config.optimizer='None'
+	theano.exception_verbosity='high'
+	print "---------------------We are in testing phase-------------------------"
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
 for k in convert_list_to_float:
@@ -156,14 +158,21 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
 		if(int(args.test)):
-			print nm
+
 			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
+
 			et = nm+'_temporal'
 			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),]
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng)
+			]
+
 			et = nm+'_normal'
 			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),]
+			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
+							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng)
+			]
+
 			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
 							  FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 							 ]
@@ -174,7 +183,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,
 							skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
-							FCLayer('rectify', args.fc_init, size=100, rng=rng),
+							# FCLayer('rectify', args.fc_init, size=100, rng=rng),
 							FCLayer('linear', args.fc_init, size=100, rng=rng)
 							]
 			et = nm+'_temporal'
@@ -228,8 +237,6 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							AddNoiseToInput(rng=rng),
 						]
-	print nodeRNNs.keys()
-	print "QWEqwewqewqewqewqewqewqewqeqwewqeW"
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
 	

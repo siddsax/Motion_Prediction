@@ -21,11 +21,14 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	lines = open(filename).readlines()
 	nodeOrder = []
 	nodeNames = {}
+	nms = poseDataset.nodeNames
+	nts = poseDataset.nodeTypes
 	nodeList = {}
 	nodeToEdgeConnections = {}
 	nodeFeatureLength = {}
 	edgeList = []
-	for node_name, node_type in zip(lines[0].strip().split(','),lines[1].strip().split(',')):
+	print(nms)
+	for node_name, node_type in zip(nms,nts):
 		nodeOrder.append(node_name)
 		nodeNames[node_name] = node_type
 		nodeList[node_name] = 0
@@ -41,42 +44,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		nodeFeatureLength[node_name] = 0
 	
 	edgeFeatures = {}
-	nodeConnections = {}
+	nodeConnections = {}#dump useless
 	edgeListComplete = []
-	for i in range(2,len(lines)):
-		first_nodeName = nodeOrder[i-2]
-		first_nodeType = nodeNames[first_nodeName]
-		nodeConnections[first_nodeName] = []
-		# connections = lines[i].strip().split(',')
-		# for j in range(len(connections)):
-			# if connections[j] == '1':
-		# 		second_nodeName = nodeOrder[j]
-		# 		second_nodeType = nodeNames[second_nodeName]
-		# 		nodeConnections[first_nodeName].append(second_nodeName)
-		
-		# 		edgeType_1 = first_nodeType + '_' + second_nodeType
-		# 		edgeType_2 = second_nodeType + '_' + first_nodeType
-		# 		edgeType = ''
-		# 		if edgeType_1 in edgeList:
-		# 			edgeType = edgeType_1
-		# 			continue
-		# 		elif edgeType_2 in edgeList:
-		# 			edgeType = edgeType_2
-		# 			continue
-		# 		else:
-		# 			edgeType = edgeType_1
-		# 		edgeListComplete.append(edgeType)
-
-		# 		if (first_nodeType + '_input') not in edgeListComplete:
-		# 			edgeListComplete.append(first_nodeType + '_input')
-		# 		if (second_nodeType + '_input') not in edgeListComplete:
-		# 			edgeListComplete.append(second_nodeType + '_input')
-
-		# 		edgeFeatures[edgeType] = 0
-		# edgeType = first_nodeType + '_normal'
-		# nodeToEdgeConnections[first_nodeType][edgeType] = [0,0]
-		# edgeType = first_nodeType + '_temporal'
-		# nodeToEdgeConnections[first_nodeType][edgeType] = [0,0]
 
 	trX = {}
 	trY = {}
@@ -96,7 +65,7 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 		high = 0
 
 		for edgeType in edgeTypesConnectedTo:
-			[edge_features[edgeType],validate_edge_features[edgeType],forecast_edge_features[edgeType]] = poseDataset.getfeatures(nm,edgeType,nodeConnections,nodeNames,forecast_on_noisy_features=forecast_on_noisy_features)
+			[edge_features[edgeType],validate_edge_features[edgeType],forecast_edge_features[edgeType]] = poseDataset.getfeatures(nm,edgeType,nodeNames,forecast_on_noisy_features=forecast_on_noisy_features)
 		flag = 0
 		for edgeType in edgeList:
 			if edgeType not in edgeTypesConnectedTo:
@@ -137,7 +106,7 @@ def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):
 	high = 0
 	its = 0
 	for edgeType in edgeTypesConnectedTo:
-		edge_features[edgeType] = poseDataset.getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,nodeFeatures,nodeFeatures_t_1)
+		edge_features[edgeType] = poseDataset.getDRAfeatures(nodeName,edgeType,nodeNames,nodeFeatures,nodeFeatures_t_1)
 		if(its):
 			nodeRNNFeatures = np.concatenate((nodeRNNFeatures,edge_features[edgeType]),axis=2)
 		else:

@@ -8,14 +8,15 @@ class AddNoiseToInput(object):
 		self.weights = weights
 		self.params = []
 		self.std=T.scalar(dtype=theano.config.floatX)
+		self.std.tag.test_value = .5
 		self.skip_input = skip_input
 		self.jump_up = jump_up
 		self.dropout_noise = dropout_noise
 		if rng is None:
 			self.rng = np.random
 		self.theano_rng = T.shared_randomstreams.RandomStreams(self.rng.randint(2 ** 30))
-		self.numparams = 0
 
+		self.numparams = 0
 	def connect(self,layer_below):
 		self.layer_below = layer_below
 		self.size = self.layer_below.size
@@ -24,8 +25,11 @@ class AddNoiseToInput(object):
 	def output(self,seq_output=True):
 		X = self.layer_below.output(seq_output=seq_output)
 		if self.dropout_noise:
-			binomial_probab = T.extra_ops.repeat(self.theano_rng.binomial(size=(X.shape[0],X.shape[1],1),p=0.5,dtype=theano.config.floatX),X.shape[2],axis=2)
-			out = T.switch(T.le(self.std,theano.shared(value=0.0)),X,(X + (binomial_probab*self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX))))
+			binomial_probab = T.extra_ops.repeat(self.theano_rng.binomial(size=(X.shape[0],X.shape[1],X.shape[2],1),p=0.5,dtype=theano.config.floatX),X.shape[3],axis=3)
+			# print(X.__repr__())
+			a = T.le(self.std,theano.shared(value=0.0))
+			b = (binomial_probab*X)#self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX))
+			out = T.switch(a,X,b)
 			return out
 		else:
 			out = T.switch(T.le(self.std,theano.shared(value=0.0)),X,(X + self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX)))

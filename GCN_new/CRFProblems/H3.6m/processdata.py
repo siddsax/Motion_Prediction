@@ -29,6 +29,7 @@ nodeFeaturesRanges={}
 # nodeFeaturesRanges['left_arm'] = range(51,75)
 # nodeFeaturesRanges['right_leg'] = range(6,21)
 # nodeFeaturesRanges['left_leg'] = range(21,36)
+# nodeNames = ['torso', 'right_arm', 'left_arm', 'right_leg', 'left_leg']
 # -----------------------------------
 nodeFeaturesRanges['torso'] = range(6)
 nodeFeaturesRanges['torso'].extend(range(36, 51))
@@ -36,12 +37,12 @@ nodeFeaturesRanges['arm'] = range(75, 99)
 nodeFeaturesRanges['arm'].extend(range(51, 75))
 nodeFeaturesRanges['leg'] = range(6, 21)
 nodeFeaturesRanges['leg'].extend(range(21, 36))
-
-
+nodeNames = ['torso','arm','leg']
+nodeTypes = ['torso', 'arm', 'leg']
 drop_right_knee = [9,10,11]
 
-adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
-# adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
+# adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
 
 def normalizationStats(completeData):
 	data_mean = np.mean(completeData,axis=0)
@@ -205,19 +206,19 @@ def getlabels(nodeName):
 	D = predictFeatures[nodeName].shape[2]
 	return predictFeatures[nodeName],validate_predictFeatures[nodeName],forecast_predictFeatures[nodeName],forecast_nodeFeatures[nodeName],D
 
-def getfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_on_noisy_features=False):
-	train_features = getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,nodeFeatures_noisy,nodeFeatures_t_1_noisy)
-	validate_features = getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,validate_nodeFeatures_noisy,validate_nodeFeatures_t_1_noisy)
+def getfeatures(nodeName,edgeType,nodeNames,forecast_on_noisy_features=False):
+	train_features = getDRAfeatures(nodeName,edgeType,nodeNames,nodeFeatures_noisy,nodeFeatures_t_1_noisy)
+	validate_features = getDRAfeatures(nodeName,edgeType,nodeNames,validate_nodeFeatures_noisy,validate_nodeFeatures_t_1_noisy)
 
 	forecast_features = []
 	if forecast_on_noisy_features:
-		forecast_features = getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_nodeFeatures_noisy,forecast_nodeFeatures_t_1_noisy)
+		forecast_features = getDRAfeatures(nodeName,edgeType,nodeNames,forecast_nodeFeatures_noisy,forecast_nodeFeatures_t_1_noisy)
 	else:
-		forecast_features = getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,forecast_nodeFeatures,forecast_nodeFeatures_t_1)
+		forecast_features = getDRAfeatures(nodeName,edgeType,nodeNames,forecast_nodeFeatures,forecast_nodeFeatures_t_1)
 
 	return train_features, validate_features, forecast_features
 		
-def getDRAfeatures(nodeName,edgeType,nodeConnections,nodeNames,features_to_use,features_to_use_t_1):
+def getDRAfeatures(nodeName,edgeType,nodeNames,features_to_use,features_to_use_t_1):
 	if edgeType.split('_')[-1] == 'temporal':
 		if temporal_features:
 			return np.concatenate((features_to_use[nodeName],features_to_use[nodeName] - features_to_use_t_1[nodeName]),axis=2)
