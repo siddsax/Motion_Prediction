@@ -15,19 +15,29 @@ testSubject = ['S5']
 allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 
 #actions =['directions','discussion','eating','greeting','phoning','posing','purchases','sitting','sittingdown','smoking','takingphoto','waiting','walking','walkingdog','walkingtogether']
-actions = ['walking']#['walking','eating','smoking']
+actions = ['walking','eating','smoking']
 subactions=['1','2']
 base_dir = '..'
 # base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
 #base_dir = open('basedir','r').readline().strip()
 
 nodeFeaturesRanges={}
+# -----------------------------------
+# nodeFeaturesRanges['torso'] = range(6)
+# nodeFeaturesRanges['torso'].extend(range(36,51))
+# nodeFeaturesRanges['right_arm'] = range(75,99)
+# nodeFeaturesRanges['left_arm'] = range(51,75)
+# nodeFeaturesRanges['right_leg'] = range(6,21)
+# nodeFeaturesRanges['left_leg'] = range(21,36)
+# -----------------------------------
 nodeFeaturesRanges['torso'] = range(6)
-nodeFeaturesRanges['torso'].extend(range(36,51))
-nodeFeaturesRanges['right_arm'] = range(75,99)
-nodeFeaturesRanges['left_arm'] = range(51,75)
-nodeFeaturesRanges['right_leg'] = range(6,21)
-nodeFeaturesRanges['left_leg'] = range(21,36)
+nodeFeaturesRanges['torso'].extend(range(36, 51))
+nodeFeaturesRanges['arm'] = range(75, 99)
+nodeFeaturesRanges['arm'].extend(range(51, 75))
+nodeFeaturesRanges['leg'] = range(6, 21)
+nodeFeaturesRanges['leg'].extend(range(21, 36))
+
+
 drop_right_knee = [9,10,11]
 
 adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
