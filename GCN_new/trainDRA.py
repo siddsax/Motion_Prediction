@@ -281,6 +281,7 @@ def trainDRA():
 	featureRange = poseDataset.nodeFeaturesRanges
 
 	if args.use_pretrained == 1:
+		path_to_checkpoint = '/users/btech/siddsax/'
 		dra = loadDRA(path_to_checkpoint+'checkpoint.'+str(args.iter_to_load))
 		print 'DRA model loaded successfully'
 	else:

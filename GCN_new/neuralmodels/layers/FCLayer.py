@@ -11,6 +11,7 @@ class FCLayer(object):
 		self.rng = rng
 		self.numparams = 0
 
+	
 	def connect(self,layer_below):
 		self.layer_below = layer_below
 		self.inputD = layer_below.size

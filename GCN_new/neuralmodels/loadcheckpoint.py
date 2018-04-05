@@ -147,17 +147,42 @@ def loadDRA(path):
 	model['config']['edgeRNNs'] = edgeRNNs
 
 	nodeRNNs = {}
+	print(model['config']['nodeRNNs'].keys())
+	print(1)
 	for k in model['config']['nodeRNNs'].keys():
 		layerlist = model['config']['nodeRNNs'][k]
 		nodeRNNs[k] = []
+		print(layerlist)
+		print(2)
 		for layer in layerlist:
+			print layer['config'].keys()
+			print 3
 			if 'nested_layers' in layer['config'].keys():
 				if layer['config']['nested_layers']:
 					layer = loadLayers(layer,['layers'])
 			nodeRNNs[k].append(eval(layer['layer'])(**layer['config']))
 		#nodeRNNs[k] = [eval(layer['layer'])(**layer['config']) for layer in layerlist]
 	model['config']['nodeRNNs'] = nodeRNNs
+
+	nodeRNNs = {}
+	print(model['config']['finalLayer'].keys())
+	print 1
+	for k in model['config']['finalLayer'].keys():
+		layerlist = model['config']['finalLayer'][k]
+		nodeRNNs[k] = []
+		print(layerlist)
+		print(2)
+		for layer in layerlist:
+			print layer['config'].keys()
+			print 3
+			if 'nested_layers' in layer['config'].keys():
+				if layer['config']['nested_layers']:
+					layer = loadLayers(layer,['layers'])
+			nodeRNNs[k].append(eval(layer['layer'])(**layer['config']))
+	model['config']['finalLayer'] = nodeRNNs
+
 	model = model_class(**model['config'])
+
 	return model
 	
 def loadSharedRNNVectors(path):
@@ -252,9 +277,26 @@ def saveDRA(model,path,pathD):
 			layer_configs.append({'layer':layer_name, 'config':layer_config})
 		nodeRNN_saver[k] = layer_configs
 	model.settings['nodeRNNs'] = nodeRNN_saver
-	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
+
+	nodeRNNs = getattr(model, 'finalLayer')
+	nodeRNN_saver = {}
+	for k in nodeRNNs.keys():
+		layer_configs = []
+		for layer in nodeRNNs[k]:
+			if hasattr(layer, 'nested_layers'):
+				if layer.nested_layers:
+					layer = CreateSaveableModel(layer, ['layers'])
+			layer_config = layer.settings
+			layer_name = layer.__class__.__name__
+			weights = [p.get_value() for p in layer.params]
+			layer_config['weights'] = weights
+			layer_configs.append({'layer': layer_name, 'config': layer_config})
+		nodeRNN_saver[k] = layer_configs
+	model.settings['finalLayer'] = nodeRNN_saver
+	serializable_model = {
+		'model': model.__class__.__name__, 'config': model.settings}
 	cPickle.dump(serializable_model, open(pathD, 'wb'))
-	ssh(pathD,dst=path,copy=1)
+	ssh(pathD, dst=path, copy=1)
 	os.remove(pathD)
 
 def saveSharedRNNOutput(model, path):
