@@ -180,9 +180,8 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 		else:
 			print("BOOM")
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
-			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,
-							skip_output=True, input_output_fused=True),
-							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
+			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
+							# FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
 							# FCLayer('rectify', args.fc_init, size=100, rng=rng),
 							FCLayer('linear', args.fc_init, size=100, rng=rng)
 							]
@@ -190,22 +189,18 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			edgeListComplete.append(et)
 			
 			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,
-							size=args.fc_size, rng=rng),
-							FCLayer('linear', args.fc_init,
-							size=args.fc_size, rng=rng)
+							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng),
+							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
 							]
 
 			et = nm+'_normal'
 			edgeListComplete.append(et)
 			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,
-							size=args.fc_size, rng=rng),
-							FCLayer('linear', args.fc_init,
-							size=args.fc_size, rng=rng)
+							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng),
+							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
 							]
 			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
-							FCLayer('rectify',args.fc_init,size=100,rng=rng),
+							# FCLayer('rectify',args.fc_init,size=100,rng=rng),
 							FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 							]
 
@@ -214,28 +209,28 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			graphLayers = [GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)]
 		else:
 			graphLayers = [GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
+							# AddNoiseToInput(rng=rng),
 							GraphConvolution(args.fc_size, adjacency,
 							drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
+							# AddNoiseToInput(rng=rng),
 							GraphConvolution(
 							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
+							# AddNoiseToInput(rng=rng),
 							GraphConvolution(args.fc_size, adjacency,
 							drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
+							# AddNoiseToInput(rng=rng),
 							GraphConvolution(
 							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
-							GraphConvolution(len(nodeNames)*args.fc_size,
-							adjacency, drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
-							GraphConvolution(len(nodeNames)*args.fc_size,
-							adjacency, drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
-							GraphConvolution(
-							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng),
+							# # AddNoiseToInput(rng=rng),
+							# GraphConvolution(len(nodeNames)*args.fc_size,
+							# adjacency, drop_value=args.drop_value),
+							# # AddNoiseToInput(rng=rng),
+							# GraphConvolution(len(nodeNames)*args.fc_size,
+							# adjacency, drop_value=args.drop_value),
+							# # AddNoiseToInput(rng=rng),
+							# GraphConvolution(
+							# args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							# AddNoiseToInput(rng=rng),
 						]
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
@@ -256,7 +251,9 @@ def trainDRA():
 			os.mkdir(path_to_checkpoint)
 	# saveNormalizationStats(path_to_checkpoint)
 	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
-
+	for ks in trY.keys():
+		print(np.shape(trY[ks]))
+	print("$$$$$$$$$$$$$$$$$$$$$$$$$")
     # [nodeList,  # {node name} = output dimension
     #  # dictonary {node name} = temp node feat. length
     #  temporalNodeFeatureLength,

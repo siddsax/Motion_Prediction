@@ -164,6 +164,8 @@ class DRA(object):
 	
 		indx = 0
 		out = {}
+		print(nodeNames)
+		print("########################################################################3")
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
 			if(len(self.graphLayers)):
@@ -237,7 +239,7 @@ class DRA(object):
 			test_ground_truth_unnorm[:,i,:] = unNormalizeData(test_ground_truth[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
 
 		fname = 'test_ground_truth_unnorm'
-		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=ssh_f)
+		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=int(ssh_f))
 		print("---------- Saved Ground Truth -----------------------")
 
 		'''If loading an existing model then some of the parameters needs to be restored'''
@@ -281,6 +283,8 @@ class DRA(object):
 			tr_X[nm] = []
 			tr_Y[nm] = []
 
+		print(nodeNames)
+		print("BOOZEBOOZEBOOZEBOOZEBOOZEBOOZEBOOZE")
 		for nm in nodeNames:
 			N = trX[nm].shape[1]
 			seq_length = trX[nm].shape[0]
@@ -449,20 +453,20 @@ class DRA(object):
 						        "{0}checkpoint.{1}".format(pathD, int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-				# 	forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-				# 	forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+				 	forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+					# forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
-				# 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-				# 	print("____________________")
-				# 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-				# 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+				 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+				 	print("____________________")
+				 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+				 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
 					
-				# 	if (int(iterations) % snapshot_rate == 0):
-				# 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-				# 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=ssh_f)
-				# 	print("-------------------------")
+					if (int(iterations) % snapshot_rate == 0):
+				 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+				 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
+				 	print("-------------------------")
 
 
 			# '''Computing error on validation set'''
@@ -517,42 +521,90 @@ class DRA(object):
 			# print(string)
 			# if(j==0):
 			if(ssh_flag==1):
+				print("----------BOOOM--------------")
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
 
 # ==============================================================================================
-	def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+	# def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+	# 	teX = copy.deepcopy(teX_original)
+	# 	nodeNames = teX.keys()
+
+	# 	teY = {}
+	# 	to_return = {}
+	# 	T = 0
+	# 	nodeFeatures_t_1 = {}
+	# 	for nm in nodeNames:
+	# 		[T,N,D] = teX[nm].shape
+	# 		to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
+	# 		to_return[nm][:T,:,:] = teX[nm]
+	# 		teY[nm] = []
+	# 		nodeName = nm.split(':')[0]
+	# 		nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
+
+
+	# 	for i in range(sequence_length):
+	# 		nodeFeatures = {}
+	# 		for nm in nodeNames:
+	# 			nodeName = nm.split(':')[0]
+	# 			prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
+	# 			#nodeFeatures[nodeName] = np.array([prediction])
+	# 			nodeFeatures[nodeName] = prediction[-1:,:,:]
+	# 			teY[nm].append(nodeFeatures[nodeName][0,:,:])
+	# 		for nm in nodeNames:
+	# 			nodeName = nm.split(':')[0]
+	# 			nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
+	# 			to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
+	# 		nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
+	# 	for nm in nodeNames:
+	# 		teY[nm] = np.array(teY[nm])
+	# 	del teX
+	# 	return teY
+
+	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
-		teY = {}
 		to_return = {}
-		T = 0
-		nodeFeatures_t_1 = {}
+		Tc = 0
+		body_positions_1 = {}
+		teX_original_nodeFeatures_all = teX_original_nodeFeatures[nodeNames[0]]
+		for nm in range(1,len(nodeNames)):
+			teX_original_nodeFeatures_all =  np.concatenate((teX_original_nodeFeatures_all,teX_original_nodeFeatures[nodeNames[nm]]),axis=2)
 		for nm in nodeNames:
-			[T,N,D] = teX[nm].shape
-			to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
-			to_return[nm][:T,:,:] = teX[nm]
-			teY[nm] = []
-			nodeName = nm.split(':')[0]
-			nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
+			[Tc,N,D] = teX_original[nm].shape ################### ?????????????????
+			body_positions_1[nm] = teX_original[nm][-1:,:,:].reshape((1,N,D))
 
+		dim = 0
+		for nm in nodeNames:
+			# print(nm)
+			# print(featureRange)
+			# print(featureRange[nm])
+			idx = new_idx[featureRange[nm]]
+			insert_from = np.delete(idx,np.where(idx < 0))
+			dim += len(insert_from)
+
+		teY = np.zeros((sequence_length,N,dim))
 
 		for i in range(sequence_length):
-			nodeFeatures = {}
-			for nm in nodeNames:
-				nodeName = nm.split(':')[0]
-				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
-				#nodeFeatures[nodeName] = np.array([prediction])
-				nodeFeatures[nodeName] = prediction[-1:,:,:]
-				teY[nm].append(nodeFeatures[nodeName][0,:,:])
-			for nm in nodeNames:
-				nodeName = nm.split(':')[0]
-				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
-				to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
-			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
-		for nm in nodeNames:
-			teY[nm] = np.array(teY[nm])
+			body_positions = {}
+			prediction = self.predict_node(teX_original_nodeFeatures_all,1e-5)
+			prediction_next = prediction[-1,:,:]
+			teY[i,:,:] = prediction_next
+			for nm in range(len(nodeNames)):
+
+				idx = new_idx[featureRange[nodeNames[nm]]]
+				insert_from = np.delete(idx,np.where(idx < 0))
+				a = prediction_next[:,insert_from].reshape((1,N,np.size(prediction_next[:,insert_from])/N))
+				body_positions[nodeNames[nm]] = a
+
+			features_all = graph.getNodeFeature(nodeNames[0],body_positions,body_positions_1,poseDataset) 
+			for nm in range(1,len(nodeNames)):
+				features = graph.getNodeFeature(nodeNames[nm],body_positions,body_positions_1,poseDataset) # previously nodeRNNFeatures, they are concatenation of node and temporal features for the current time step made using nodeFeatures and nodeFeatures-1
+				features_all = np.concatenate((features_all,features),axis=2)
+			teX_original_nodeFeatures_all = np.concatenate((teX_original_nodeFeatures_all,features_all),axis=0)
+			printbody_positions_1 = copy.deepcopy(body_positions)
+		
 		del teX
 		return teY
 

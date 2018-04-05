@@ -55,6 +55,8 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
 	trY_forecast = {}
 	trX_nodeFeatures = {}
 	poseDataset.addNoiseToFeatures(noise=noise)
+	print(nodeNames)
+	print("$#$#$#$#$#$#$#$")
 	for nm in nodeNames:
 		edge_features = {}
 		validate_edge_features = {}

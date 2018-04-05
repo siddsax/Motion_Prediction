@@ -23,26 +23,27 @@ base_dir = '..'
 
 nodeFeaturesRanges={}
 # -----------------------------------
-# nodeFeaturesRanges['torso'] = range(6)
-# nodeFeaturesRanges['torso'].extend(range(36,51))
-# nodeFeaturesRanges['right_arm'] = range(75,99)
-# nodeFeaturesRanges['left_arm'] = range(51,75)
-# nodeFeaturesRanges['right_leg'] = range(6,21)
-# nodeFeaturesRanges['left_leg'] = range(21,36)
-# nodeNames = ['torso', 'right_arm', 'left_arm', 'right_leg', 'left_leg']
-# -----------------------------------
 nodeFeaturesRanges['torso'] = range(6)
-nodeFeaturesRanges['torso'].extend(range(36, 51))
-nodeFeaturesRanges['arm'] = range(75, 99)
-nodeFeaturesRanges['arm'].extend(range(51, 75))
-nodeFeaturesRanges['leg'] = range(6, 21)
-nodeFeaturesRanges['leg'].extend(range(21, 36))
-nodeNames = ['torso','arm','leg']
-nodeTypes = ['torso', 'arm', 'leg']
-drop_right_knee = [9,10,11]
+nodeFeaturesRanges['torso'].extend(range(36,51))
+nodeFeaturesRanges['right_arm'] = range(75,99)
+nodeFeaturesRanges['left_arm'] = range(51,75)
+nodeFeaturesRanges['right_leg'] = range(6,21)
+nodeFeaturesRanges['left_leg'] = range(21,36)
+nodeNames = ['torso', 'right_arm', 'left_arm', 'right_leg', 'left_leg']
+nodeTypes = ['torso', 'arm', 'arm', 'leg', 'leg']
+adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
+# -----------------------------------
+# nodeFeaturesRanges['torso'] = range(6)
+# nodeFeaturesRanges['torso'].extend(range(36, 51))
+# nodeFeaturesRanges['arm'] = range(75, 99)
+# nodeFeaturesRanges['arm'].extend(range(51, 75))
+# nodeFeaturesRanges['leg'] = range(6, 21)
+# nodeFeaturesRanges['leg'].extend(range(21, 36))
+# nodeNames = ['torso','arm','leg']
+# nodeTypes = ['torso', 'arm', 'leg']
+# adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
 
-# adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,1,1]])
-adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
+drop_right_knee = [9,10,11]
 
 def normalizationStats(completeData):
 	data_mean = np.mean(completeData,axis=0)
