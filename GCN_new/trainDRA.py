@@ -206,7 +206,9 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 		if(int(args.test)):
-			graphLayers = [GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)]
+			graphLayers = [
+				# GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)
+				]
 		else:
 			graphLayers = [
 							# GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),

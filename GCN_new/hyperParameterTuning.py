@@ -48,7 +48,7 @@ params['test'] =  int(sys.argv[2])
 
 
 ## Tweak these hyperparameters only if you want to try out new models etc. This is only for 'Advanced' users
-params['use_pretrained'] = 1
+params['use_pretrained'] = 0
 params['iter_to_load'] = 20
 params['model_to_train'] = 'dra'
 params['crf'] = ''
