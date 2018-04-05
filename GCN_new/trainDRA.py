@@ -208,29 +208,30 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 		if(int(args.test)):
 			graphLayers = [GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)]
 		else:
-			graphLayers = [GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,
-							drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
-							GraphConvolution(
-							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,
-							drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
-							GraphConvolution(
-							args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+			graphLayers = [
+							# GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(len(nodeNames)*args.fc_size,
-							# adjacency, drop_value=args.drop_value),
-							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(len(nodeNames)*args.fc_size,
-							# adjacency, drop_value=args.drop_value),
+							# GraphConvolution(args.fc_size, adjacency,
+							# drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
 							# GraphConvolution(
 							# args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
+							# # AddNoiseToInput(rng=rng),
+							# GraphConvolution(args.fc_size, adjacency,
+							# drop_value=args.drop_value),
+							# # AddNoiseToInput(rng=rng),
+							# GraphConvolution(
+							# args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							# # # AddNoiseToInput(rng=rng),
+							# # GraphConvolution(len(nodeNames)*args.fc_size,
+							# # adjacency, drop_value=args.drop_value),
+							# # # AddNoiseToInput(rng=rng),
+							# # GraphConvolution(len(nodeNames)*args.fc_size,
+							# # adjacency, drop_value=args.drop_value),
+							# # # AddNoiseToInput(rng=rng),
+							# # GraphConvolution(
+							# # args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							# # AddNoiseToInput(rng=rng),
 						]
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)

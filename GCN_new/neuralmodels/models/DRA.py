@@ -73,7 +73,7 @@ class DRA(object):
 
 		edgeTypes = edgeRNNs.keys()
 		self.num_params = 0
-		if(len(self.graphLayers)):
+		if(1):
 			self.params_all = []
 			self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
 			self.Y_all.tag.test_value = np.random.rand(7,150, 54)
@@ -110,7 +110,7 @@ class DRA(object):
 				edgeLayers = self.edgeRNNs[et]
 				
 				layers_below.append(edgeLayers)
-				if(len(self.graphLayers)):				
+				if(1):				
 					edgeLayers[0].input = self.masterlayer.output(et,nm)
 				else:
 					edgeLayers[0].input = self.masterlayer[nm].output(et)
@@ -118,7 +118,7 @@ class DRA(object):
 				
 				for l in edgeLayers:
 					if hasattr(l,'params'):
-						if(len(self.graphLayers)):
+						if(1):
 							self.params_all.extend(l.params)
 						else:
 							self.params_all[nm].extend(l.params)
@@ -127,7 +127,6 @@ class DRA(object):
 
 			cv = ConcatenateVectors()
 			cv.connect(layers_below)
-			print self.nodeRNNs.keys()
 			nodeLayers = self.nodeRNNs[nm]
 			nodeLayers[0].connect(cv)
 			for i in range(1,len(nodeLayers)):
@@ -136,40 +135,38 @@ class DRA(object):
 
 			for l in nodeLayers:
 				if hasattr(l,'params'):
-					if(len(self.graphLayers)):
+					if(1):
 						self.params_all.extend(l.params)
 					else:
 						self.params_all[nm].extend(l.params)
 					self.num_params += l.numparams
 
 			indv_node_layers.append(nodeLayers[-1])
-		if(len(self.graphLayers)):
+		if(1):
 			cv = Concatenate_Node_Layers()
 			cv.connect(indv_node_layers)
 
-# -------------------------- Graph --------------------------------------
-			layers = self.graphLayers
-			layers[0].connect(cv)
-			for i in range(1,len(layers)):
-				layers[i].connect(layers[i-1])
-				if layers[i].__class__.__name__ == 'AddNoiseToInput':
-					layers[i].std = self.std
+# # -------------------------- Graph --------------------------------------
+# 			layers = self.graphLayers
+# 			layers[0].connect(cv)
+# 			for i in range(1,len(layers)):
+# 				layers[i].connect(layers[i-1])
+# 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+# 					layers[i].std = self.std
 
-			for l in layers:
-				if hasattr(l,'params'):
-					self.params_all.extend(l.params)
-					self.num_params += l.numparams
+# 			for l in layers:
+# 				if hasattr(l,'params'):
+# 					self.params_all.extend(l.params)
+# 					self.num_params += l.numparams
 
 # -------------------------- --- --------------------------------------
 	
 		indx = 0
 		out = {}
-		print(nodeNames)
-		print("########################################################################3")
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
-			if(len(self.graphLayers)):
-				layers[0].connect(self.graphLayers[-1],indx)
+			if(1):
+				layers[0].connect(cv,indx)
 			else:
 				layers[0].connect(indv_node_layers[indx])
 			for i in range(1,len(layers)):
@@ -180,7 +177,7 @@ class DRA(object):
 			indx+=1
 			for l in layers:
 				if hasattr(l,'params'):
-					if(len(self.graphLayers)):
+					if(1):
 						self.params_all.extend(l.params)
 					else:
 						self.params_all[nm].extend(l.params)
@@ -188,8 +185,7 @@ class DRA(object):
 
 			out[nm] =  layers[-1].output()
 
-		print len(self.graphLayers)
-		if(len(self.graphLayers)):
+		if(1):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
@@ -283,8 +279,6 @@ class DRA(object):
 			tr_X[nm] = []
 			tr_Y[nm] = []
 
-		print(nodeNames)
-		print("BOOZEBOOZEBOOZEBOOZEBOOZEBOOZEBOOZE")
 		for nm in nodeNames:
 			N = trX[nm].shape[1]
 			seq_length = trX[nm].shape[0]
@@ -394,7 +388,7 @@ class DRA(object):
 # ------------------------------ Model relted tasks -------------------------------------------
 				# for nm in nodeNames:
 
-				if(len(self.graphLayers)):
+				if(1):
 					tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
 					tr_X_all = tr_X[nodeNames[0]]
 
@@ -422,7 +416,7 @@ class DRA(object):
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
-				if(len(self.graphLayers)):
+				if(1):
 					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6}  '.format(
 					        loss, epoch, j, grad_norms, learning_rate, std, iterations)
 				else:
@@ -445,7 +439,7 @@ class DRA(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if(len(self.graphLayers)):
+				if(1):
 					if int(iterations) % (snapshot_rate*4) == 0:
 						print 'saving snapshot checkpoint.{0}'.format(int(iterations))
 						print("{0}checkpoint.{1}".format(pathD,int(iterations)))
@@ -458,7 +452,6 @@ class DRA(object):
 					# forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
 				 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-				 	print("____________________")
 				 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
 				 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
@@ -518,10 +511,8 @@ class DRA(object):
 					st += str(motion[i,k]) + ','
 				st = st[:-1]
 				string += st+'\n'
-			# print(string)
 			# if(j==0):
 			if(ssh_flag==1):
-				print("----------BOOOM--------------")
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
 
@@ -577,9 +568,6 @@ class DRA(object):
 
 		dim = 0
 		for nm in nodeNames:
-			# print(nm)
-			# print(featureRange)
-			# print(featureRange[nm])
 			idx = new_idx[featureRange[nm]]
 			insert_from = np.delete(idx,np.where(idx < 0))
 			dim += len(insert_from)
@@ -603,7 +591,6 @@ class DRA(object):
 				features = graph.getNodeFeature(nodeNames[nm],body_positions,body_positions_1,poseDataset) # previously nodeRNNFeatures, they are concatenation of node and temporal features for the current time step made using nodeFeatures and nodeFeatures-1
 				features_all = np.concatenate((features_all,features),axis=2)
 			teX_original_nodeFeatures_all = np.concatenate((teX_original_nodeFeatures_all,features_all),axis=0)
-			printbody_positions_1 = copy.deepcopy(body_positions)
 		
 		del teX
 		return teY
