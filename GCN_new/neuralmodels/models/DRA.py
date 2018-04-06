@@ -73,7 +73,7 @@ class DRA(object):
 
 		edgeTypes = edgeRNNs.keys()
 		self.num_params = 0
-		if(1):
+		if(len(self.graphLayers)):
 			self.params_all = []
 			self.Y_all = T.dtensor3(name="labels")#, dtype=theano.config.floatX)
 			self.Y_all.tag.test_value = np.random.rand(7,150, 54)
@@ -110,7 +110,7 @@ class DRA(object):
 				edgeLayers = self.edgeRNNs[et]
 				
 				layers_below.append(edgeLayers)
-				if(1):				
+				if(len(self.graphLayers)):				
 					edgeLayers[0].input = self.masterlayer.output(et,nm)
 				else:
 					edgeLayers[0].input = self.masterlayer[nm].output(et)
@@ -118,7 +118,7 @@ class DRA(object):
 				
 				for l in edgeLayers:
 					if hasattr(l,'params'):
-						if(1):
+						if(len(self.graphLayers)):
 							self.params_all.extend(l.params)
 						else:
 							self.params_all[nm].extend(l.params)
@@ -135,29 +135,29 @@ class DRA(object):
 
 			for l in nodeLayers:
 				if hasattr(l,'params'):
-					if(1):
+					if(len(self.graphLayers)):
 						self.params_all.extend(l.params)
 					else:
 						self.params_all[nm].extend(l.params)
 					self.num_params += l.numparams
 
 			indv_node_layers.append(nodeLayers[-1])
-		if(1):
+		if(len(self.graphLayers)):
 			cv = Concatenate_Node_Layers()
 			cv.connect(indv_node_layers)
 
 # # -------------------------- Graph --------------------------------------
-# 			layers = self.graphLayers
-# 			layers[0].connect(cv)
-# 			for i in range(1,len(layers)):
-# 				layers[i].connect(layers[i-1])
-# 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
-# 					layers[i].std = self.std
+			layers = self.graphLayers
+			layers[0].connect(cv)
+			for i in range(1,len(layers)):
+				layers[i].connect(layers[i-1])
+				if layers[i].__class__.__name__ == 'AddNoiseToInput':
+					layers[i].std = self.std
 
-# 			for l in layers:
-# 				if hasattr(l,'params'):
-# 					self.params_all.extend(l.params)
-# 					self.num_params += l.numparams
+			for l in layers:
+				if hasattr(l,'params'):
+					self.params_all.extend(l.params)
+					self.num_params += l.numparams
 
 # -------------------------- --- --------------------------------------
 	
@@ -165,8 +165,8 @@ class DRA(object):
 		out = {}
 		for nm in nodeNames:
 			layers = self.finalLayer[nm]
-			if(1):
-				layers[0].connect(cv,indx)
+			if(len(self.graphLayers)):
+				layers[0].connect(self.graphLayers[-1], indx)
 			else:
 				layers[0].connect(indv_node_layers[indx])
 			for i in range(1,len(layers)):
@@ -177,7 +177,7 @@ class DRA(object):
 			indx+=1
 			for l in layers:
 				if hasattr(l,'params'):
-					if(1):
+					if(len(self.graphLayers)):
 						self.params_all.extend(l.params)
 					else:
 						self.params_all[nm].extend(l.params)
@@ -185,7 +185,7 @@ class DRA(object):
 
 			out[nm] =  layers[-1].output()
 
-		if(1):
+		if(len(self.graphLayers)):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
@@ -198,25 +198,18 @@ class DRA(object):
 			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
 			print("====================================================")
 		else:
-			
-			self.Y_pr[nm] = nodeLayers[-1].output()
-			self.Y[nm] = self.nodeLabels[nm]
-			
-			self.cost[nm] = cost(self.Y_pr[nm],self.Y[nm]) + self.weight_decay * nodeLayers[-1].L2_sqr
-		
-			[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params[nm],self.cost[nm])
-		
-			self.train_node[nm] = theano.function([self.X[nm],self.Y[nm],self.learning_rate,self.std],self.cost[nm],updates=self.updates[nm],on_unused_input='ignore')
-		
-			self.predict_node[nm] = theano.function([self.X[nm],self.std],self.Y_pr[nm],on_unused_input='ignore')
-	
-			self.predict_node_loss[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.cost[nm],on_unused_input='ignore')
-		
-			self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
-		
-			self.grad_norm[nm] = theano.function([self.X[nm],self.Y[nm],self.std],self.norm[nm],on_unused_input='ignore')
-		
-			# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
+			for nm in nodeNames:
+				k = out[nm].shape
+				out[nm] = out[nm].reshape((k[0],k[1],k[3]))
+				self.Y_pr[nm] = out[nm]#nodeLayers[-1].output()
+				self.cost[nm] = cost(self.Y_pr[nm],self.Y_all[nm]) + self.weight_decay * nodeLayers[-1].L2_sqr
+				[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params_all[nm],self.cost[nm])
+				self.train_node[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.learning_rate,self.std],self.cost[nm],updates=self.updates[nm],on_unused_input='ignore')
+				self.predict_node[nm] = theano.function([self.X_all[nm],self.std],self.Y_pr[nm],on_unused_input='ignore')
+				self.predict_node_loss[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.std],self.cost[nm],on_unused_input='ignore')
+				self.norm[nm] = T.sqrt(sum([T.sum(g**2) for g in self.grads[nm]]))
+				self.grad_norm[nm] = theano.function([self.X_all[nm],self.Y_all[nm],self.std],self.norm[nm],on_unused_input='ignore')
+				# self.get_cell[nm] = theano.function([self.X[nm],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
 		
 
 		print("=============")
@@ -388,7 +381,7 @@ class DRA(object):
 # ------------------------------ Model relted tasks -------------------------------------------
 				# for nm in nodeNames:
 
-				if(1):
+				if(len(self.graphLayers)):
 					tr_Y_all = self.convertToSingleVec(tr_Y, new_idx, featureRange)
 					tr_X_all = tr_X[nodeNames[0]]
 
@@ -416,7 +409,7 @@ class DRA(object):
 				iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
-				if(1):
+				if(len(self.graphLayers)):
 					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6}  '.format(
 					        loss, epoch, j, grad_norms, learning_rate, std, iterations)
 				else:
@@ -439,7 +432,7 @@ class DRA(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if(1):
+				if(len(self.graphLayers)):
 					if int(iterations) % (snapshot_rate*4) == 0:
 						print 'saving snapshot checkpoint.{0}'.format(int(iterations))
 						print("{0}checkpoint.{1}".format(pathD,int(iterations)))
@@ -448,8 +441,11 @@ class DRA(object):
 		
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-				 	forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-					# forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+					if(len(self.graphLayers)):
+				 		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+					else:
+					 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+						forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
 				 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
 				 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
@@ -517,40 +513,41 @@ class DRA(object):
 
 
 # ==============================================================================================
-	# def predict_sequence(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
-	# 	teX = copy.deepcopy(teX_original)
-	# 	nodeNames = teX.keys()
+	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+		teX = copy.deepcopy(teX_original)
+		nodeNames = teX.keys()
 
-	# 	teY = {}
-	# 	to_return = {}
-	# 	T = 0
-	# 	nodeFeatures_t_1 = {}
-	# 	for nm in nodeNames:
-	# 		[T,N,D] = teX[nm].shape
-	# 		to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
-	# 		to_return[nm][:T,:,:] = teX[nm]
-	# 		teY[nm] = []
-	# 		nodeName = nm.split(':')[0]
-	# 		nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
+		teY = {}
+		to_return = {}
+		T = 0
+		nodeFeatures_t_1 = {}
+		for nm in nodeNames:
+			[T,N,D] = teX[nm].shape
+			to_return[nm] = np.zeros((T+sequence_length,N,D),dtype=theano.config.floatX)
+			to_return[nm][:T,:,:] = teX[nm]
+			teY[nm] = []
+			nodeName = nm.split(':')[0]
+			nodeFeatures_t_1[nodeName] = teX_original_nodeFeatures[nm][-1:,:,:]
 
 
-	# 	for i in range(sequence_length):
-	# 		nodeFeatures = {}
-	# 		for nm in nodeNames:
-	# 			nodeName = nm.split(':')[0]
-	# 			prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
-	# 			#nodeFeatures[nodeName] = np.array([prediction])
-	# 			nodeFeatures[nodeName] = prediction[-1:,:,:]
-	# 			teY[nm].append(nodeFeatures[nodeName][0,:,:])
-	# 		for nm in nodeNames:
-	# 			nodeName = nm.split(':')[0]
-	# 			nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
-	# 			to_return[nm][T+i,:,:] = nodeRNNFeatures[0,:,:]
-	# 		nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
-	# 	for nm in nodeNames:
-	# 		teY[nm] = np.array(teY[nm])
-	# 	del teX
-	# 	return teY
+		for i in range(sequence_length):
+			nodeFeatures = {}
+			for nm in nodeNames:
+				nodeName = nm.split(':')[0]
+				prediction = self.predict_node[nm](to_return[nm][:(T+i),:,:],1e-5)
+				#nodeFeatures[nodeName] = np.array([prediction])
+				nodeFeatures[nodeName] = prediction[-1:,:,:]
+				teY[nm].append(nodeFeatures[nodeName][0, :, :])
+			for nm in nodeNames:
+				nodeName = nm.split(':')[0]
+				nodeRNNFeatures = graph.getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset)
+				a = nodeRNNFeatures[0, :, :]
+				to_return[nm][T+i,:,:] = a
+			nodeFeatures_t_1 = copy.deepcopy(nodeFeatures)
+		for nm in nodeNames:
+			teY[nm] = np.array(teY[nm])
+		del teX
+		return teY
 
 	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
 		teX = copy.deepcopy(teX_original)
@@ -607,6 +604,7 @@ class DRA(object):
 	
 	def convertToSingleVec(self,X,new_idx,featureRange):
 		keys = X.keys()
+		print X[keys[0]].shape
 		[T,N,D]  = X[keys[0]].shape
 		D = len(new_idx) - len(np.where(new_idx < 0)[0])
 		single_vec = np.zeros((T,N,D),dtype=np.float32)
