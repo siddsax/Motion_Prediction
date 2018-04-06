@@ -181,8 +181,8 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			print("BOOM")
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
-							# FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
-							# FCLayer('rectify', args.fc_init, size=100, rng=rng),
+							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
+							FCLayer('rectify', args.fc_init, size=100, rng=rng),
 							FCLayer('linear', args.fc_init, size=100, rng=rng)
 							]
 			et = nm+'_temporal'
@@ -200,7 +200,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
 							]
 			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
-							# FCLayer('rectify',args.fc_init,size=100,rng=rng),
+							FCLayer('rectify',args.fc_init,size=100,rng=rng),
 							FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
 							]
 
