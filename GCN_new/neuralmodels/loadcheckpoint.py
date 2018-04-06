@@ -129,8 +129,6 @@ def loadmultipleDRA(path1,path2,swap_edgernn,swap_edgernn2,swap_nodernn,swap_nod
 	return model
 
 def loadDRA(path):
-	print(path)
-	print("~~~~~~~~~~~~~~~~~~~")
 	model = cPickle.load(open(path))
 	model_class = eval(model['model'])  #getattr(models, model['model'])
 
@@ -147,16 +145,16 @@ def loadDRA(path):
 	model['config']['edgeRNNs'] = edgeRNNs
 
 	nodeRNNs = {}
-	print(model['config']['nodeRNNs'].keys())
-	print(1)
+	# print(model['config']['nodeRNNs'].keys())
+	# print(1)
 	for k in model['config']['nodeRNNs'].keys():
 		layerlist = model['config']['nodeRNNs'][k]
 		nodeRNNs[k] = []
-		print(layerlist)
-		print(2)
+		# print(layerlist)
+		# print(2)
 		for layer in layerlist:
-			print layer['config'].keys()
-			print 3
+			# print layer['config'].keys()
+			# print 3
 			if 'nested_layers' in layer['config'].keys():
 				if layer['config']['nested_layers']:
 					layer = loadLayers(layer,['layers'])
@@ -165,16 +163,16 @@ def loadDRA(path):
 	model['config']['nodeRNNs'] = nodeRNNs
 
 	nodeRNNs = {}
-	print(model['config']['finalLayer'].keys())
-	print 1
+	# print(model['config']['finalLayer'].keys())
+	# print 1
 	for k in model['config']['finalLayer'].keys():
 		layerlist = model['config']['finalLayer'][k]
 		nodeRNNs[k] = []
-		print(layerlist)
-		print(2)
+		# print(layerlist)
+		# print(2)
 		for layer in layerlist:
-			print layer['config'].keys()
-			print 3
+			# print layer['config'].keys()
+			# print 3
 			if 'nested_layers' in layer['config'].keys():
 				if layer['config']['nested_layers']:
 					layer = loadLayers(layer,['layers'])
@@ -275,6 +273,8 @@ def saveDRA(model,path,pathD):
 			weights = [p.get_value() for p in layer.params]
 			layer_config['weights'] = weights
 			layer_configs.append({'layer':layer_name, 'config':layer_config})
+			print(layer_configs)
+			print(-1)
 		nodeRNN_saver[k] = layer_configs
 	model.settings['nodeRNNs'] = nodeRNN_saver
 
@@ -291,6 +291,8 @@ def saveDRA(model,path,pathD):
 			weights = [p.get_value() for p in layer.params]
 			layer_config['weights'] = weights
 			layer_configs.append({'layer': layer_name, 'config': layer_config})
+			print(layer_configs)
+			print(-1)
 		nodeRNN_saver[k] = layer_configs
 	model.settings['finalLayer'] = nodeRNN_saver
 	serializable_model = {

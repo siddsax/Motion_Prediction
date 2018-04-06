@@ -199,6 +199,7 @@ class DRA(object):
 			print("====================================================")
 		else:
 			print "=-==-=-=-=-=-=-=--=---=-==-=-==--=-=-"
+			print 'Number of parameters in GCNN: ',self.num_params
 			for nm in nodeNames:
 				k = out[nm].shape
 				out[nm] = out[nm].reshape((k[0],k[1],k[3]))
