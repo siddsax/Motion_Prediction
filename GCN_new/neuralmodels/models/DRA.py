@@ -198,6 +198,7 @@ class DRA(object):
 			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
 			print("====================================================")
 		else:
+			print "=-==-=-=-=-=-=-=--=---=-==-=-==--=-=-"
 			for nm in nodeNames:
 				k = out[nm].shape
 				out[nm] = out[nm].reshape((k[0],k[1],k[3]))
