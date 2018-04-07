@@ -35,8 +35,8 @@ def orthogonal(shape, scale=1.1, rng=None):
 def glorot(shape, rng=None):
 	if rng is None:
 		rng = np.random
-	# print(shape)
+
 	var = 6.0/(shape[0]+shape[1])
 	stddev = math.sqrt(var)
-	# return theano.shared(value=(rng.normal(0.0,stddev,size=shape)).astype(theano.config.floatX))
+	
 	return theano.shared(value=(rng.uniform(size=shape, low=-stddev, high=stddev)).astype(theano.config.floatX), name="weights")

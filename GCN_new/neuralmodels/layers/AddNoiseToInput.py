@@ -26,7 +26,7 @@ class AddNoiseToInput(object):
 		X = self.layer_below.output(seq_output=seq_output)
 		if self.dropout_noise:
 			binomial_probab = T.extra_ops.repeat(self.theano_rng.binomial(size=(X.shape[0],X.shape[1],X.shape[2],1),p=0.5,dtype=theano.config.floatX),X.shape[3],axis=3)
-			# print(X.__repr__())
+
 			a = T.le(self.std,theano.shared(value=0.0))
 			b = (binomial_probab*X)#self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX))
 			out = T.switch(a,X,b)

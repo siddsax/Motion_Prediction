@@ -101,7 +101,7 @@ for k in convert_list_to_float:
 			temp_list.append(float(v))
 		setattr(args,k,temp_list)
 
-print args
+
 if args.use_pretrained:
 	print 'Loading pre-trained model with iter={0}'.format(args.iter_to_load)
 gradient_method = Momentum(momentum=args.momentum)
@@ -174,7 +174,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			]
 
 		else:
-			print("BOOM")
+			
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
@@ -211,6 +211,10 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							# # AddNoiseToInput(rng=rng),
 							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
@@ -254,28 +258,13 @@ def trainDRA():
 	else:
 		if not os.path.exists(path_to_checkpoint):
 			os.mkdir(path_to_checkpoint)
-	# saveNormalizationStats(path_to_checkpoint)
-	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
-	for ks in trY.keys():
-		print(np.shape(trY[ks]))
-	print("$$$$$$$$$$$$$$$$$$$$$$$$$")
-    # [nodeList,  # {node name} = output dimension
-    #  # dictonary {node name} = temp node feat. length
-    #  temporalNodeFeatureLength,
-    #  nodeFeatureLength,  # {node name} = node feat. length
-    #  nodeConnections,  # {node name} = node names it is connected to
-    #  # the output values of the model i.e. the coordinates of the different joints as a dictionary {node name} = value of the coordinate
-    #  trY, trY_validation, trY_forecasting,
-    #  # {node name} -> ? these are position of joints using which the input fetures are made. trX_forecasting[nodeName] is nothing but just a concatenation of the node_features(which are just this in my model) and temporalfeatures (which is this:[this-this_{-1})
-    #  trX_forecast_nodeFeatures,
 
-    #  # {node name}  = concatenation of [node feature] + [temporal node feature] this is identified using the preGraphnets variable
-    #  trX, trX_validation, trX_forecasting,
-    #  preGraphNets,  # {node name} = {temporal/normal} = {high,low}
-    #  adjacency] = graph.readCRFgraph(poseDataset)
+	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
+
+
 
 	nodeNames = nodeNames.keys()
-	# print(nodeNames)
+	
 	new_idx = poseDataset.new_idx
 	featureRange = poseDataset.nodeFeaturesRanges
 	dra = []
@@ -292,9 +281,9 @@ def trainDRA():
 		args.iter_to_load = 0
         dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
-	# sys.exit()
-	# saveForecastedMotion(dra.convertToSingleVec(trY_forecasting,new_idx,featureRange),path_to_checkpoint)
-	# saveForecastedMotion(dra.convertToSingleVec(trX_forecast_nodeFeatures,new_idx,featureRange),path_to_checkpoint,'motionprefix_N_')
+
+
+
 
 	dra.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, pathD=path_to_dump, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,

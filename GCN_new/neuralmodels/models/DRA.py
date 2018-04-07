@@ -143,9 +143,9 @@ class DRA(object):
 
 			indv_node_layers.append(nodeLayers[-1])
 			names.append(nm)
-		print(len(indv_node_layers))
-		print(names)
-		print("************************")
+		
+	
+
 		if(len(self.graphLayers)):
 			cv = Concatenate_Node_Layers()
 			cv.connect(indv_node_layers)
@@ -206,10 +206,10 @@ class DRA(object):
 			self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
 			self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
 			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-			print("====================================================")
+		
 		else:
-			print "=-==-=-=-=-=-=-=--=---=-==-=-==--=-=-"
-			print 'Number of parameters in GCNN: ',self.num_params
+			
+			print 'Number of parameters in GCNN without the graph: ',self.num_params
 			for nm in nodeNames:
 				# k = out[nm].shape
 				# out[nm] = out[nm].reshape((k[0],k[1],k[3]))
@@ -467,7 +467,7 @@ class DRA(object):
 					if (int(iterations) % snapshot_rate == 0):
 				 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 				 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
-				 	print("-------------------------")
+				 	
 
 
 			'''Saving the learned model so far'''

@@ -1,4 +1,6 @@
 import subprocess as sbp
+import sys
+sys.dont_write_bytecode = True
 import os
 import copy
 import socket as soc
@@ -55,7 +57,7 @@ params['crf'] = ''
 params['copy_state'] = 0
 params['full_skeleton'] = 1
 params['weight_decay'] = 0.0
-params['temporal_features'] = 0
+params['temporal_features'] = 1
 params['dra_type'] = 'simple'
 params['dataset_prefix'] = ''
 params['drop_features'] = 0
@@ -76,7 +78,7 @@ if(len(sys.argv)==4):
 	name = sys.argv[3]
 else:
 	name = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
-params['checkpoint_path'] = base_dir + '/DRA/' + name
+params['checkpoint_path'] = base_dir + '/GCNN/' + name
 path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 
 if(int(sys.argv[1])==1):

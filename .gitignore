@@ -12,7 +12,6 @@ Graph_CNNs/matlab/
 Graph_CNNs/neuralmodels/models/H36M.conf
 Graph_CNNs/nohup.out
 dataset/
-py_server.py
 checkpoints
 checkpoints_gcnn_T_150_bs_100_tg_100_
 dump

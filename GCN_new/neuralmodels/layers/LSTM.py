@@ -9,8 +9,8 @@ class LSTM(object):
 		del self.settings['self']
 		self.activation = getattr(activations,activation_str)
 		self.activation_gate = getattr(activations,activation_gate)
-		print(type(truncate_gradient))
-		print("-------------------")
+
+
 		self.truncate_gradient = truncate_gradient
 		self.init = getattr(inits,init)
 		self.uniform = getattr(inits,'uniform')
