@@ -99,7 +99,7 @@ class DRA(object):
 				if layers[i].__class__.__name__ == 'AddNoiseToInput':
 					layers[i].std = self.std
 			print("======---------=======")
-
+		names = []
 		indv_node_layers = []
 		for nm in nodeNames:
 			edgesConnectedTo = nodeToEdgeConnections[nm].keys()
@@ -142,6 +142,10 @@ class DRA(object):
 					self.num_params += l.numparams
 
 			indv_node_layers.append(nodeLayers[-1])
+			names.append(nm)
+		print(len(indv_node_layers))
+		print(names)
+		print("************************")
 		if(len(self.graphLayers)):
 			cv = Concatenate_Node_Layers()
 			cv.connect(indv_node_layers)
@@ -163,27 +167,33 @@ class DRA(object):
 	
 		indx = 0
 		out = {}
-		for nm in nodeNames:
-			layers = self.finalLayer[nm]
-			if(len(self.graphLayers)):
-				layers[0].connect(self.graphLayers[-1], indx)
-			else:
-				layers[0].connect(indv_node_layers[indx])
-			for i in range(1,len(layers)):
-				layers[i].connect(layers[i-1])
-				if layers[i].__class__.__name__ == 'AddNoiseToInput':
-					layers[i].std = self.std
-			print("======---------=======")
-			indx+=1
-			for l in layers:
-				if hasattr(l,'params'):
-					if(len(self.graphLayers)):
-						self.params_all.extend(l.params)
-					else:
-						self.params_all[nm].extend(l.params)
-					self.num_params += l.numparams
 
-			out[nm] =  layers[-1].output()
+		for nm in nodeNames:
+			if(len(self.finalLayer[nm])):
+				layers = self.finalLayer[nm]
+				if(len(self.graphLayers)):
+					layers[0].connect(self.graphLayers[-1], indx)
+				else:
+					layers[0].connect(indv_node_layers[indx])
+				for i in range(1,len(layers)):
+					layers[i].connect(layers[i-1])
+					if layers[i].__class__.__name__ == 'AddNoiseToInput':
+						layers[i].std = self.std
+				print("======---------=======")
+			
+				for l in layers:
+					if hasattr(l,'params'):
+						if(len(self.graphLayers)):
+							self.params_all.extend(l.params)
+						else:
+							self.params_all[nm].extend(l.params)
+						self.num_params += l.numparams
+				out[nm] = layers[-1].output() 
+			else:
+				out[nm] =  indv_node_layers[indx].output()
+			indx+=1
+
+	
 
 		if(len(self.graphLayers)):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
@@ -201,8 +211,8 @@ class DRA(object):
 			print "=-==-=-=-=-=-=-=--=---=-==-=-==--=-=-"
 			print 'Number of parameters in GCNN: ',self.num_params
 			for nm in nodeNames:
-				k = out[nm].shape
-				out[nm] = out[nm].reshape((k[0],k[1],k[3]))
+				# k = out[nm].shape
+				# out[nm] = out[nm].reshape((k[0],k[1],k[3]))
 				self.Y_pr[nm] = out[nm]#nodeLayers[-1].output()
 				self.cost[nm] = cost(self.Y_pr[nm],self.Y_all[nm]) + self.weight_decay * nodeLayers[-1].L2_sqr
 				[self.updates[nm],self.grads[nm]] = self.update_type.get_updates(self.params_all[nm],self.cost[nm])
@@ -442,48 +452,23 @@ class DRA(object):
 						        "{0}checkpoint.{1}".format(pathD, int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-					if(len(self.graphLayers)):
-				 		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-					else:
-					 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-						forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+				# 	if(len(self.graphLayers)):
+				#  		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# 	else:
+				# 	 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+				# 		forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
-				 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-				 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-				 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+				#  	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+				#  	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+				#  		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
 					
-					if (int(iterations) % snapshot_rate == 0):
-				 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-				 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
-				 	print("-------------------------")
+				# 	if (int(iterations) % snapshot_rate == 0):
+				#  		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+				#  		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
+				#  	print("-------------------------")
 
-
-			# '''Computing error on validation set'''
-			# if (trX_validation is not None) and (trY_validation is not None) and (not poseDataset.drop_features):
-			# 	validation_error = 0.0
-			# 	Tvalidation = 0
-			# 	for nm in trX_validation.keys():
-			# 		validation_error += self.predict_node_loss[nm](trX_validation[nm],trY_validation[nm],std)
-			# 		Tvalidation = trX_validation[nm].shape[0]
-			# 	validation_set[-1] = validation_error
-			# 	termout = 'Validation: loss={0} normalized={1} skel_err={2}'.format(validation_error,(validation_error*1.0/(Tvalidation*skel_dim)),np.sqrt(validation_error*1.0/Tvalidation))
-			# 	complete_logger += termout + '\n'
-			# 	print termout
-		
-			# if (trX_validation is not None) and (trY_validation is not None) and (poseDataset.drop_features) and (unNormalizeData is not None):
-			# 	prediction = self.predict_nextstep(trX_validation)
-			# 	prediction = self.convertToSingleVec(prediction,new_idx,featureRange)
-			# 	prediction_new = np.zeros((T1,N1,poseDataset.data_mean.shape[0]))
-			# 	for i in range(N1):
-			# 		prediction_new[:,i,:] = np.float32(unNormalizeData(prediction[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore))
-			# 	predict = prediction_new[poseDataset.drop_start-1:poseDataset.drop_end-1,:,poseDataset.drop_id]
-			# 	joint_error = np.linalg.norm(predict - gth)
-			# 	validation_set[-1] = joint_error
-			# 	termout = 'Missing joint error {0}'.format(joint_error )
-			# 	complete_logger += termout + '\n'
-			# 	print termout
 
 			'''Saving the learned model so far'''
 			

@@ -173,17 +173,12 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng)
 			]
 
-			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
-							  FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
-							 ]
-
 		else:
 			print("BOOM")
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
-							FCLayer('rectify', args.fc_init, size=100, rng=rng),
-							FCLayer('linear', args.fc_init, size=100, rng=rng)
+							FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 							]
 			et = nm+'_temporal'
 			edgeListComplete.append(et)
@@ -199,42 +194,49 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng),
 							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
 							]
-			finalLayer[nm] = [FCLayer_out('linear',args.fc_init,size=args.fc_size,rng=rng,flag=1),
-							FCLayer('rectify',args.fc_init,size=100,rng=rng),
-							FCLayer('rectify',args.fc_init,size=num_classes,rng=rng),
-							]
 
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 		if(int(args.test)):
 			graphLayers = [
-				# GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)
+				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value)
 				]
 		else:
 			graphLayers = [
-							# GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
+							GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(args.fc_size, adjacency,
-							# drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(
-							# args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(args.fc_size, adjacency,
-							# drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(
-							# args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							# # # AddNoiseToInput(rng=rng),
+							# GraphConvolution(len(nodeNames)*args.fc_size,adjacency, drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
 							# # GraphConvolution(len(nodeNames)*args.fc_size,
 							# # adjacency, drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
-							# # GraphConvolution(len(nodeNames)*args.fc_size,
-							# # adjacency, drop_value=args.drop_value),
-							# # # AddNoiseToInput(rng=rng),
-							# # GraphConvolution(
-							# # args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
 						]
+		for nm in nodeNames:
+			num_classes = nodeList[nm]
+			if(int(args.test)):
+				finalLayer[nm] = [
+								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
+								# FCLayer('rectify',args.fc_init,size=100,rng=rng),
+								FCLayer('linear',args.fc_init,size=num_classes,rng=rng),
+								]
+			else:
+				finalLayer[nm] = [
+								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
+								FCLayer('rectify',args.fc_init,size=100,rng=rng),
+								FCLayer('linear',args.fc_init,size=num_classes,rng=rng),
+								]
+
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
 	

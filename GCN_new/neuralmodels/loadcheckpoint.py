@@ -273,8 +273,8 @@ def saveDRA(model,path,pathD):
 			weights = [p.get_value() for p in layer.params]
 			layer_config['weights'] = weights
 			layer_configs.append({'layer':layer_name, 'config':layer_config})
-			print(layer_configs)
-			print(-1)
+			# print(layer_configs)
+			# print(-1)
 		nodeRNN_saver[k] = layer_configs
 	model.settings['nodeRNNs'] = nodeRNN_saver
 
@@ -291,8 +291,8 @@ def saveDRA(model,path,pathD):
 			weights = [p.get_value() for p in layer.params]
 			layer_config['weights'] = weights
 			layer_configs.append({'layer': layer_name, 'config': layer_config})
-			print(layer_configs)
-			print(-1)
+			# print(layer_configs)
+			# print(-1)
 		nodeRNN_saver[k] = layer_configs
 	model.settings['finalLayer'] = nodeRNN_saver
 	serializable_model = {
