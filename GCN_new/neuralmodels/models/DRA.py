@@ -444,30 +444,30 @@ class DRA(object):
 					tr_X[nm] = []
 					tr_Y[nm] = []
 
-				if(len(self.graphLayers)):
-					if int(iterations) % (snapshot_rate*4) == 0:
-						print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-						print("{0}checkpoint.{1}".format(pathD,int(iterations)))
-						saveDRA(self, "{0}checkpoint.{1}".format(path, int(iterations)),
-						        "{0}checkpoint.{1}".format(pathD, int(iterations)))
+				# if(len(self.graphLayers)):
+				# 	if int(iterations) % (snapshot_rate*4) == 0:
+				# 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+				# 		print("{0}checkpoint.{1}".format(pathD,int(iterations)))
+				# 		saveDRA(self, "{0}checkpoint.{1}".format(path, int(iterations)),
+				# 		        "{0}checkpoint.{1}".format(pathD, int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				# if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
-				# 	if(len(self.graphLayers)):
-				#  		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-				# 	else:
-				# 	 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
-				# 		forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+					if(len(self.graphLayers)):
+				 		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+					else:
+					 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
+						forecasted_motion = self.convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
-				#  	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-				#  	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-				#  		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+				 	test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+				 	for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+				 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
 					
-				# 	if (int(iterations) % snapshot_rate == 0):
-				#  		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-				#  		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
-				#  	print("-------------------------")
+					if (int(iterations) % snapshot_rate == 0):
+				 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+				 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
+				 	print("-------------------------")
 
 
 			'''Saving the learned model so far'''
