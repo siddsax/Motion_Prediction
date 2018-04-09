@@ -231,7 +231,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0):
+		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0,log=False):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -427,6 +427,13 @@ class DRA(object):
 				else:
 					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(
 					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
+
+				if log:
+					if int(ssh_f):
+						ssh("echo " + "'" + termout + "'" + " >> " + path + "/logger.txt")
+					else:
+						thefile = open(path + "/logger.txt", 'a')
+						thefile.write(termout)
 
 				complete_logger += termout + '\n'
 				print termout

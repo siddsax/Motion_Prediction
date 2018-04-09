@@ -247,7 +247,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 	return dra
 
 def trainDRA():
-	crf_file = './CRFProblems/H3.6m/crf' + args.crf
+	
 	path_to_checkpoint = '{0}/'.format(args.checkpoint_path)
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
@@ -258,6 +258,7 @@ def trainDRA():
 	else:
 		if not os.path.exists(path_to_checkpoint):
 			os.mkdir(path_to_checkpoint)
+
 
 	[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
 
@@ -281,16 +282,49 @@ def trainDRA():
 		args.iter_to_load = 0
         dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
+	thefile = open('logger.txt', 'w')
+	thefile.write("Edge RNNs TEMPORAL\n")
+	for item in dra.edgeRNNs[nodeNames[0] + "_temporal"]:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
 
+	thefile.write("Edge RNNs Normal\n")
+	for item in dra.edgeRNNs[nodeNames[0] + "_normal"]:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
 
+	thefile.write("Node RNNs \n")
+	for item in dra.nodeRNNs[nodeNames[0]]:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
 
+	thefile.write("graphLayers \n")
+	for item in dra.graphLayers:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
+
+	thefile.write("finalLayer \n")
+	for item in dra.finalLayer[nodeNames[0]]:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
+
+	thefile.write("actions \n")
+	for item in poseDataset.actions:
+		thefile.write("%s\n" % item)
+	thefile.write("--------------------------- \n")
+
+	print "saving log"
+	if(int(args.ssh) == 1):
+		ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
+	else:
+		os.rename("logger.txt", path_to_checkpoint + "/logger.txt")
 
 	dra.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, pathD=path_to_dump, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
 		use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-              new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, ssh_f=args.ssh)
+              new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, ssh_f=args.ssh,log=True)
 
 def saveNormalizationStats(path):
 	activities = {}
