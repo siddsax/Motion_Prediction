@@ -312,10 +312,13 @@ def trainDRA():
 	for item in poseDataset.actions:
 		thefile.write("%s\n" % item)
 	thefile.write("--------------------------- \n")
-
+	thefile.close()
 	print "saving log"
 	if(int(args.ssh) == 1):
-		ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
+	 	file = open("logger.txt", "r")
+		ssh("echo " + "'" + file.read() + "'" + " > " + path_to_checkpoint + "/logger.txt")
+		file.close() 	
+		#ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
 	else:
 		os.rename("logger.txt", path_to_checkpoint + "/logger.txt")
 

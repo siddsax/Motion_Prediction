@@ -434,6 +434,7 @@ class DRA(object):
 					else:
 						thefile = open(path + "/logger.txt", 'a')
 						thefile.write(termout)
+						thefile.close()
 
 				complete_logger += termout + '\n'
 				print termout
