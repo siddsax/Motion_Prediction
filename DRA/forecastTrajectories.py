@@ -197,16 +197,16 @@ for i in range(8):
     predicted_test_full[:,i,:] = unNormalizeData(predicted_test_dropped[:,i,:], processdata.data_stats['mean'], processdata.data_stats['std'], processdata.data_stats['ignore_dimensions'])
 
 # # ----------------------------------------------------------- ERRORS -------------------------------------
-path = '/new_data/gpu/siddsax/motion_pred_checkpoints/forecast/'
+path = '/new_data/gpu/siddsax/motion_pred_checkpoints/forecast2/'
 print(path)
 fname = 'test_ground_truth_unnorm'
-saveForecastedMotion(gt_full,path,fname)
+model.saveForecastedMotion(gt_full,path,fname,flag_ssh=1)
 
 fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-saveForecastedMotion(predicted_test_full,path,fname)
+model.saveForecastedMotion(predicted_test_full,path,fname,flag_ssh=1)
 
 fname = 'motion_prefix_unnorm'#_{0}'.format(int(iterations))
-saveForecastedMotion(beginning_motion_full_,path,fname)
+saveForecastedMotion(beginning_motion_full_,path,fname,flag_ssh=1)
 
 val_error = euler_error(predicted_test_full, gt_full)
 seq_length_out = len(val_error)

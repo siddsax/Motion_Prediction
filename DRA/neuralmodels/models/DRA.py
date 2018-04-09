@@ -378,7 +378,8 @@ class DRA(object):
 					print("-------------------------")
 
 					
-					if (int(iterations) % snapshot_rate == 0):
+					if (int(iterations) % snapshot_rate == 0) or epoch > 100: 
+						print "-------------------- Saving DRA Model ------------------------"
 						fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
 						self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,flag_ssh=f_ssh)
 

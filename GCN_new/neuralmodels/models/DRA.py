@@ -452,7 +452,7 @@ class DRA(object):
 				# 		        "{0}checkpoint.{1}".format(pathD, int(iterations)))
 		
 				'''Trajectory forecasting on validation set'''
-				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and int(iterations) % snapshot_rate == 0:
+				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0) or (epoch > 100)):
 					if(len(self.graphLayers)):
 				 		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph)
 					else:
@@ -464,9 +464,10 @@ class DRA(object):
 				 		test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
 					
-					if (int(iterations) % snapshot_rate == 0):
-				 		fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-				 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
+				
+			 		print("----------------- Saving Forecast--------------------------")
+					fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+			 		self.saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
 				 	
 
 
@@ -482,6 +483,7 @@ class DRA(object):
 
 	def saveForecastedMotion(self,forecast,path,fname,ssh_flag=0):
 		T = forecast.shape[0]
+
 		N = forecast.shape[1]
 		D = forecast.shape[2]
 		for j in range(N):
@@ -591,7 +593,7 @@ class DRA(object):
 	
 	def convertToSingleVec(self,X,new_idx,featureRange):
 		keys = X.keys()
-		print X[keys[0]].shape
+	
 		[T,N,D]  = X[keys[0]].shape
 		D = len(new_idx) - len(np.where(new_idx < 0)[0])
 		single_vec = np.zeros((T,N,D),dtype=np.float32)

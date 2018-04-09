@@ -6,6 +6,7 @@ import copy
 import socket as soc
 from datetime import datetime
 import sys
+sys.setrecursionlimit(5000)
 if(int(sys.argv[1])):
 	from py_server import ssh
 
@@ -44,7 +45,7 @@ else:
 	params['lstm_size'] = 512 #
 	params['node_lstm_size'] = 512 # 
 	params['fc_size'] = 256# 
-	params['snapshot_rate'] = 25 #100# Save the model after every 250 iterations
+	params['snapshot_rate'] = 10 #100# Save the model after every 250 iterations
 params['train_for'] = 'final' 
 params['test'] =  int(sys.argv[2])
 
