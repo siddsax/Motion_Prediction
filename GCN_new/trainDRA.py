@@ -10,8 +10,6 @@ from neuralmodels.costs import softmax_loss, euclidean_loss
 from neuralmodels.models import * 
 from neuralmodels.layers import * 
 from neuralmodels.updates import Adagrad, RMSprop, Momentum, Adadelta
-# from GraphConvolution import GraphConvolution
-# from FCLayer_out import FCLayer_out
 import cPickle
 import pdb
 import socket as soc
@@ -87,7 +85,13 @@ parser.add_argument('--ssh',type=str,default=0)
 parser.add_argument('--test',type=str,default=0)
 parser.add_argument('--dump_path', type=str, default='checkpoint')
 parser.add_argument('--drop_value', type=int, default=.5)
+parser.add_argument('--homo', type=int, default=0)
 args = parser.parse_args()
+
+if(int(args.homo)):
+	from neuralmodels.layers.GraphConvolution import GraphConvolution_homo as GraphConvolution
+else:
+	from neuralmodels.layers.GraphConvolution import GraphConvolution_hetro as GraphConvolution
 if(int(args.test)):
 	theano.config.optimizer='None'
 	theano.exception_verbosity='high'

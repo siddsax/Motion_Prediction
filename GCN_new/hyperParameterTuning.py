@@ -64,19 +64,20 @@ params['dataset_prefix'] = ''
 params['drop_features'] = 0
 params['drop_id'] = '9'
 params['subsample_data'] = 1
-params['ssh'] = int(sys.argv[1])==1
+params['ssh'] = int(int(sys.argv[1])==1)
 my_env = os.environ
 my_env['PATH'] += ':/usr/local/cuda/bin'
 use_gpu = 1 
 
 
+params['homo'] = int(sys.argv[3])
 
 # Setting directory to dump trained models and then executing trainDRA.py
 
 #if params['model_to_train'] == 'dra':
 
-if(len(sys.argv)==4):
-	name = sys.argv[3]
+if(len(sys.argv)==5):
+	name = sys.argv[4]
 else:
 	name = 'checkpoints_{0}_T_{2}_bs_{1}_tg_{3}_ls_{4}_fc_{5}_demo'.format(params['model_to_train'],params['batch_size'],params['sequence_length'],params['truncate_gradient'],params['lstm_size'],params['fc_size'])
 params['checkpoint_path'] = base_dir + '/GCNN/' + name
