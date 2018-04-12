@@ -202,20 +202,20 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 				]
 		else:
 			graphLayers = [
-							GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
 							# GraphConvolution(len(nodeNames)*args.fc_size,adjacency, drop_value=args.drop_value),
@@ -223,7 +223,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							# # GraphConvolution(len(nodeNames)*args.fc_size,
 							# # adjacency, drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
 						]
 		for nm in nodeNames:
