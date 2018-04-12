@@ -202,20 +202,20 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 				]
 		else:
 			graphLayers = [
-							GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
 							# GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
 							# GraphConvolution(len(nodeNames)*args.fc_size,adjacency, drop_value=args.drop_value),
@@ -223,7 +223,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							# # GraphConvolution(len(nodeNames)*args.fc_size,
 							# # adjacency, drop_value=args.drop_value),
 							# # # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
+			#				GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
 							# # AddNoiseToInput(rng=rng),
 						]
 		for nm in nodeNames:
@@ -312,10 +312,13 @@ def trainDRA():
 	for item in poseDataset.actions:
 		thefile.write("%s\n" % item)
 	thefile.write("--------------------------- \n")
-
+	thefile.close()
 	print "saving log"
 	if(int(args.ssh) == 1):
-		ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
+	 	file = open("logger.txt", "r")
+		ssh("echo " + "'" + file.read() + "'" + " > " + path_to_checkpoint + "/logger.txt")
+		file.close() 	
+		#ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
 	else:
 		os.rename("logger.txt", path_to_checkpoint + "/logger.txt")
 

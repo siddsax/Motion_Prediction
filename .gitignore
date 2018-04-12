@@ -3,6 +3,7 @@ predictions
 
 Graph_CNNs/checkpoint*
 checkpoint.pik
+GCN_new/logger.txt
 DRA/checkpoint*
 *.pyc
 DRA/H36M.conf

@@ -512,7 +512,7 @@ class DRA(object):
 
 
 # ==============================================================================================
-	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None,Y=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
@@ -548,7 +548,7 @@ class DRA(object):
 		del teX
 		return teY
 
-	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
+	def predict_sequence(self, teX_original_nodeFeatures, teX_original, featureRange, new_idx, sequence_length=100, poseDataset=None, graph=None, Y=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
