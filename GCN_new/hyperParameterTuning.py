@@ -64,7 +64,7 @@ params['dataset_prefix'] = ''
 params['drop_features'] = 0
 params['drop_id'] = '9'
 params['subsample_data'] = 1
-params['ssh'] = int(sys.argv[1])
+params['ssh'] = int(sys.argv[1])==1
 my_env = os.environ
 my_env['PATH'] += ':/usr/local/cuda/bin'
 use_gpu = 1 

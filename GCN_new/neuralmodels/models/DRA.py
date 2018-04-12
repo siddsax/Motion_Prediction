@@ -429,7 +429,7 @@ class DRA(object):
 					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
 
 				if log:
-					if int(ssh_f):
+					if (int(ssh_f) == 1):
 						ssh("echo " + "'" + termout + "'" + " >> " + path + "/logger.txt")
 					else:
 						thefile = open(path + "/logger.txt", 'a')
@@ -447,7 +447,7 @@ class DRA(object):
 				'''Trajectory forecasting on validation set'''
 				if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0)):# or (epoch > 100)):
 					if(len(self.graphLayers)):
-						tr_Y_all_val = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
+						# tr_Y_all_val = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
 				 		forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
 					else:
 					 	forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting)
@@ -512,7 +512,7 @@ class DRA(object):
 
 
 # ==============================================================================================
-	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None):
+	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None,Y=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
@@ -548,7 +548,7 @@ class DRA(object):
 		del teX
 		return teY
 
-	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None):
+	def predict_sequence(self,teX_original_nodeFeatures,teX_original,featureRange,new_idx,sequence_length=100,poseDataset=None,graph=None,Y=None):
 		teX = copy.deepcopy(teX_original)
 		nodeNames = teX.keys()
 
