@@ -76,7 +76,7 @@ class GraphConvolution_hetro(object):
 		x = self.layer_below.output(seq_output=seq_output)
 		for i in range(np.shape(self.adjacency)[0]):
 			for j in range(1, len(self.nonzeros[i])):
-				if(j==0):
+				if(j==1):
 					out_d = T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
 				else:
 					out_d += T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
