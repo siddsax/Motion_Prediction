@@ -100,16 +100,16 @@ class GraphConvolution_t(object):
 				out = T.concatenate((out, out_d.reshape((out_d.shape[0], out_d.shape[1], 1, out_d.shape[2]))), axis=2)
 
 	
-		return self.activation(out)
-
-		# h_init = T.zeros((x.shape[1], x.shape[2], self.size))
-		# [out, cells], _ = theano.scan(fn=self.recurrence_efficient,
-		# 		sequences=[out],
-		# 		outputs_info=[h_init],
-		# 		n_steps=x.shape[0],
-		# 		# truncate_gradient=self.truncate_gradient
-		# 	)
 		# return self.activation(out)
+
+		h_init = T.zeros((x.shape[1], x.shape[2], self.size))
+		[out, cells], _ = theano.scan(fn=self.recurrence_efficient,
+				sequences=[out],
+				outputs_info=[h_init],
+				n_steps=x.shape[0],
+				# truncate_gradient=self.truncate_gradient
+			)
+		return out
 		# if get_cell:
 			# return cells
 
