@@ -80,75 +80,75 @@ class GraphConvolution_hetro(object):
 		return self.activation(out)
 
 
-class GraphConvolution_homo(object):
+# class GraphConvolution_homo(object):
 
-	def __init__(self, size, adjacency, num_features_nonzero=False, drop_value=None, rng=None, init='glorot', bias=False, sparse_inputs=False, dropout=True, activation_str='rectify', weights=False):
+# 	def __init__(self, size, adjacency, num_features_nonzero=False, drop_value=None, rng=None, init='glorot', bias=False, sparse_inputs=False, dropout=True, activation_str='rectify', weights=False):
 
-		self.settings = locals()
-		del self.settings['self']
-		self.sparse_inputs = sparse_inputs
-		self.size = size
-		self.rng = rng
-		# temp = inits()
-		self.init = getattr(inits, init)
-		# temp = activations()
-		self.activation = getattr(activations, activation_str)
-		self.weights = weights
-		self.bias = bias
-		self.adjacency = adjacency
-		if dropout:
-			self.drop_value = drop_value
-		else:
-			self.drop_value = 0
-		self.numparams = 0
-		if self.sparse_inputs:
-			self.num_features_nonzero = num_features_nonzero
+# 		self.settings = locals()
+# 		del self.settings['self']
+# 		self.sparse_inputs = sparse_inputs
+# 		self.size = size
+# 		self.rng = rng
+# 		# temp = inits()
+# 		self.init = getattr(inits, init)
+# 		# temp = activations()
+# 		self.activation = getattr(activations, activation_str)
+# 		self.weights = weights
+# 		self.bias = bias
+# 		self.adjacency = adjacency
+# 		if dropout:
+# 			self.drop_value = drop_value
+# 		else:
+# 			self.drop_value = 0
+# 		self.numparams = 0
+# 		if self.sparse_inputs:
+# 			self.num_features_nonzero = num_features_nonzero
 
-	def connect(self, layer_below):
-		self.layer_below = layer_below
-		self.inputD = layer_below.size
-		# self.W = list()
-		# for i in range(len(self.adjacency)):
-		# 	self.W.append(self.init((self.inputD,self.size),rng=self.rng))
-		self.W = self.init((self.inputD, self.size), rng=self.rng)
+# 	def connect(self, layer_below):
+# 		self.layer_below = layer_below
+# 		self.inputD = layer_below.size
+# 		# self.W = list()
+# 		# for i in range(len(self.adjacency)):
+# 		# 	self.W.append(self.init((self.inputD,self.size),rng=self.rng))
+# 		self.W = self.init((self.inputD, self.size), rng=self.rng)
 
-		self.numparams += self.inputD * self.size
-		if self.bias:
-			self.b = zero0s((self.size))
-			self.numparams += self.size
-			self.params = [self.W, self.b]
-		else:
-			self.params = [self.W]
+# 		self.numparams += self.inputD * self.size
+# 		if self.bias:
+# 			self.b = zero0s((self.size))
+# 			self.numparams += self.size
+# 			self.params = [self.W, self.b]
+# 		else:
+# 			self.params = [self.W]
 
-		if (self.weights):
-			for param, weight in zip(self.params, self.weights):
-				param.set_value(np.asarray(weight, dtype=theano.config.floatX))
-		self.nonzeros = {}
-                for i in range(np.shape(self.adjacency)[0]):
-                        count = 0
-                        self.nonzeros[i] = []
-                        for j in range(np.shape(self.adjacency)[1]):
-                                if(self.adjacency[i, j]):
-                                        self.nonzeros[i].append(j)
-                                        count += 1
+# 		if (self.weights):
+# 			for param, weight in zip(self.params, self.weights):
+# 				param.set_value(np.asarray(weight, dtype=theano.config.floatX))
+# 		self.nonzeros = {}
+#                 for i in range(np.shape(self.adjacency)[0]):
+#                         count = 0
+#                         self.nonzeros[i] = []
+#                         for j in range(np.shape(self.adjacency)[1]):
+#                                 if(self.adjacency[i, j]):
+#                                         self.nonzeros[i].append(j)
+#                                         count += 1
 		
-		# for i in range(len(self.W)):
-		# 	self.L2_sqr = (self.W[i] ** 2).sum()
-		self.L2_sqr = (self.W ** 2).sum()
+# 		# for i in range(len(self.W)):
+# 		# 	self.L2_sqr = (self.W[i] ** 2).sum()
+# 		self.L2_sqr = (self.W ** 2).sum()
 
-	def output(self, seq_output=True):
-		x = self.layer_below.output(seq_output=seq_output)
-		for i in range(np.shape(self.adjacency)[0]):
-			for j in range(len(self.nonzeros[i])):
-				if(j==0):
-					out_d = T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
-				else:
-					out_d += T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
-				if self.bias:
-					out_d += self.b[i][j, :]
-			if(i == 0):
-				out = out_d.reshape((out_d.shape[0], out_d.shape[1], 1, out_d.shape[2]))
-			else:
-				out = T.concatenate((out, out_d.reshape((out_d.shape[0], out_d.shape[1], 1, out_d.shape[2]))), axis=2)
+# 	def output(self, seq_output=True):
+# 		x = self.layer_below.output(seq_output=seq_output)
+# 		for i in range(np.shape(self.adjacency)[0]):
+# 			for j in range(len(self.nonzeros[i])):
+# 				if(j==0):
+# 					out_d = T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
+# 				else:
+# 					out_d += T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
+# 				if self.bias:
+# 					out_d += self.b[i][j, :]
+# 			if(i == 0):
+# 				out = out_d.reshape((out_d.shape[0], out_d.shape[1], 1, out_d.shape[2]))
+# 			else:
+# 				out = T.concatenate((out, out_d.reshape((out_d.shape[0], out_d.shape[1], 1, out_d.shape[2]))), axis=2)
 
-		return self.activation(out)
+# 		return self.activation(out)
