@@ -1,7 +1,7 @@
 from headers import *
 
 class AddNoiseToInput(object):
-	def __init__(self,weights=None,rng=None,skip_input=False,jump_up=False,dropout_noise=True):
+	def __init__(self,weights=None,rng=None,skip_input=False,jump_up=False,dropout_noise=False,dropout=False):
 		self.settings = locals()
 		del self.settings['self']
 		self.rng = rng
@@ -12,6 +12,7 @@ class AddNoiseToInput(object):
 		self.skip_input = skip_input
 		self.jump_up = jump_up
 		self.dropout_noise = dropout_noise
+		self.dropout = dropout
 		if rng is None:
 			self.rng = np.random
 		self.theano_rng = T.shared_randomstreams.RandomStreams(self.rng.randint(2 ** 30))
@@ -31,6 +32,10 @@ class AddNoiseToInput(object):
 			b = (binomial_probab*self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX))
 			out = T.switch(a,X,X + b)
 			return out
+		elif self.dropout:
+			
+			binomial_probab = T.extra_ops.repeat(self.theano_rng.binomial(size=(X.shape[0],X.shape[1],X.shape[2],1),p=0.5,dtype=theano.config.floatX),X.shape[3],axis=3)
+			return (binomial_probab*X)
 		else:
 			out = T.switch(T.le(self.std,theano.shared(value=0.0)),X,(X + self.theano_rng.normal(size=X.shape,std=self.std,dtype=theano.config.floatX)))
 			return out
