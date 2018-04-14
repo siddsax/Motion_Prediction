@@ -84,7 +84,7 @@ parser.add_argument('--drop_id',type=str,default='')
 parser.add_argument('--ssh',type=str,default=0)
 parser.add_argument('--test',type=str,default=0)
 parser.add_argument('--dump_path', type=str, default='checkpoint')
-parser.add_argument('--drop_value', type=int, default=.5)
+parser.add_argument('--drop_value', type=int, default=.2)
 parser.add_argument('--homo', type=int, default=0)
 args = parser.parse_args()
 
@@ -92,9 +92,12 @@ if(int(args.homo)):
 	from neuralmodels.layers.GraphConvolution import GraphConvolution_homo as GraphConvolution
 else:
 	from neuralmodels.layers.GraphConvolution import GraphConvolution_hetro as GraphConvolution
+from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t
 if(int(args.test)):
 	theano.config.optimizer='None'
 	theano.exception_verbosity='high'
+	# theano.config.compute_test_value = 'warn' # Use 'warn' to activate this feature
+
 	print "---------------------We are in testing phase-------------------------"
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
@@ -202,35 +205,38 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 		if(int(args.test)):
 			graphLayers = [
-				GraphConvolution(args.fc_size, adjacency, drop_value=args.drop_value),
+				GraphConvolution(args.fc_size, adjacency),
+				GraphConvolution_t(args.fc_size, adjacency),
+				AddNoiseToInput(rng=rng, dropout_noise=True),
+				AddNoiseToInput(rng=rng, dropout=True),
 				]
 		else:
 			graphLayers = [
-							GraphConvolution(args.fc_size,adjacency,drop_value=args.drop_value),
-				                        AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),
-						
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							GraphConvolution(args.fc_size,adjacency),
+				                        #AddNoiseToInput(rng=rng, dropout_noise=True),
+							GraphConvolution(args.fc_size, adjacency),
+							#AddNoiseToInput(rng=rng, dropout=True),
+							GraphConvolution(args.fc_size, adjacency),
+							#AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),	
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							AddNoiseToInput(rng=rng, dropout_noise=args.drop_value),
-							GraphConvolution(len(nodeNames)*args.fc_size,adjacency, drop_value=args.drop_value),
-							# # AddNoiseToInput(rng=rng),
-							# GraphConvolution(len(nodeNames)*args.fc_size,
-							# adjacency, drop_value=args.drop_value),
-							# # AddNoiseToInput(rng=rng),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear', drop_value=args.drop_value),
-							# AddNoiseToInput(rng=rng),
+							#AddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							#AddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency,drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency),#,drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency),#,drop_value=args.drop_value),
+							#AddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency),#,drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency),#,drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency),#, activation_str='linear', drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(len(nodeNames)*args.fc_size,adjacency),#, drop_value=args.drop_value),
+							#ddNoiseToInput(rng=rng, dropout=True),
+                                                        GraphConvolution(args.fc_size, adjacency, activation_str='linear'),#, drop_value=args.drop_value),
 						]
 		for nm in nodeNames:
 			num_classes = nodeList[nm]

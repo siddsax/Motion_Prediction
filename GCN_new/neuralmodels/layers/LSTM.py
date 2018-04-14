@@ -129,23 +129,13 @@ class LSTM(object):
 		
 		h_init = T.extra_ops.repeat(self.h0,X.shape[1],axis=0)
 		c_init =  T.extra_ops.repeat(self.c0,X.shape[1],axis=0)
-		[out, cells], ups = theano.scan(fn=self.recurrence_efficient,
+		[out, cells], _ = theano.scan(fn=self.recurrence_efficient,
 				sequences=[X_i,X_f,X_c,X_o],
 				#outputs_info=[T.extra_ops.repeat(self.h0,X.shape[1],axis=0), T.extra_ops.repeat(self.c0,X.shape[1],axis=0)],
 				outputs_info=[h_init,c_init],
 				n_steps=X_i.shape[0],
 				truncate_gradient=self.truncate_gradient
 			)
-		
-		''' 
-		[out, cells], ups = theano.scan(fn=self.recurrence,
-					sequences=[X],
-					outputs_info=[T.extra_ops.repeat(self.h0,X.shape[1],axis=0), T.extra_ops.repeat(self.c0,X.shape[1],axis=0)],
-					n_steps=X.shape[0],
-					truncate_gradient=self.truncate_gradient
-				)
-		'''
-
 		if get_cell:
 			return cells
 
