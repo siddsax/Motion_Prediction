@@ -79,9 +79,11 @@ while(1)
         clr = rand(1,3);
     end;
     if(error_5_val~=error_5_val_old)
-        error_5(iter) = error_5_val
-        it(iter) = iter;
-        scatter(it,error_5,'filled')%,'color',clr,'linewidth',3);
+        txt = sprintf('Errors := %.2f, %.2f, %.2f, %.2f, %.2f', mean_error(8), mean_error(16), mean_error(32), mean_error(56), mean_error(100));
+	disp(txt);
+	%error_5(iter) = error_5_val
+        %it(iter) = iter;
+        %scatter(it,error_5,'filled')%,'color',clr,'linewidth',3);
         iter = iter + 1;
     end;
     % hold on;
