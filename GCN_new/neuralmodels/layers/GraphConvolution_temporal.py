@@ -65,7 +65,7 @@ class GraphConvolution_t(object):
 		for W in self.W:
 			self.L2_sqr += (W ** 2).sum()
 		
-		#self.h0 = zero0s((1, self.size))
+		self.h0 = zero0s((self.size))
 	
 	def recurrence_efficient(self,x,h_tm1):
 	
@@ -102,7 +102,9 @@ class GraphConvolution_t(object):
 	
 		# return self.activation(out)
 
-		h_init = T.zeros((x.shape[1], x.shape[2], self.size))
+		h_init = T.extra_ops.repeat(self.h0, x.shape[2], axis=0)
+		h_init = T.extra_ops.repeat(h_init, x.shape[1], axis=0)
+		#T.zeros((x.shape[1], x.shape[2], self.size))
 		[out, cells], _ = theano.scan(fn=self.recurrence_efficient,
 				sequences=[out],
 				outputs_info=[h_init],
