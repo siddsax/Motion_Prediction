@@ -25,6 +25,19 @@ def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
         origData = np.multiply(origData, stdMat) + meanMat
         return origData
 
+def print_num(x):
+	x = str(x)[::-1]
+	count = 1
+	out = ""
+	for i in x:
+		out += i 
+		if count%3 == 0:
+			if count == len(x):
+				break
+			out += ","
+		count+=1
+	out = out[::-1]
+	return out	
 
 class DRA(object):
 	def __init__(self, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, cost, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=0.0, update_type=RMSprop(), weight_decay=0.0):
@@ -199,7 +212,7 @@ class DRA(object):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
-			print 'Number of parameters in GCNN: ',self.num_params
+			print 'Number of parameters in GCNN: ', print_num(self.num_params)
 			[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
 			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
 			self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
@@ -209,7 +222,7 @@ class DRA(object):
 		
 		else:
 			
-			print 'Number of parameters in GCNN without the graph: ',self.num_params
+			print 'Number of parameters in GCNN without the graph: ', print_num(self.num_params)
 			for nm in nodeNames:
 				# k = out[nm].shape
 				# out[nm] = out[nm].reshape((k[0],k[1],k[3]))

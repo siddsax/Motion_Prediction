@@ -25,6 +25,20 @@ def unNormalizeData(normalizedData,data_mean,data_std,dimensions_to_ignore):
         origData = np.multiply(origData,stdMat) + meanMat
         return origData
 
+def print_num(x):
+	x = str(x)[::-1]
+	count = 1
+	out = ""
+	for i in x:
+		out += i 
+		if count%3 == 0:
+			if count == len(x):
+				break
+			out += ","
+		count+=1
+	out = out[::-1]
+	return out	
+
 
 class DRA(object):
 	def __init__(self,edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,cost,nodeLabels,learning_rate,clipnorm=0.0,update_type=RMSprop(),weight_decay=0.0):
@@ -117,7 +131,7 @@ class DRA(object):
 					self.params[nt].extend(l.params)
 					self.num_params += l.numparams
 			print("======---------=======")
-			print 'Number of parameters in DRA: ',self.num_params
+			print 'Number of parameters in DRA: ',print_num(self.num_params)
 			
 			self.Y_pr[nt] = nodeLayers[-1].output()
 			self.Y[nt] = self.nodeLabels[nt]
@@ -136,7 +150,7 @@ class DRA(object):
 		
 			self.grad_norm[nt] = theano.function([self.X[nt],self.Y[nt],self.std],self.norm[nt],on_unused_input='ignore')
 		
-			self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
+			# self.get_cell[nt] = theano.function([self.X[nt],self.std],nodeLayers[0].layers[0].output(get_cell=True),on_unused_input='ignore')
 		
 
 		print("=============")
@@ -160,7 +174,7 @@ class DRA(object):
 						for i in range(val.ndim):
 							temp *= val.shape[i]		
 						self.num_params += temp
-		print 'Number of parameters in DRA: ',self.num_params
+		print 'Number of parameters in DRA: ', print_num(self.num_params)
 
 	def fitModel(self,trX,trY,snapshot_rate=1,path=None,pathD=None,epochs=30,batch_size=50,learning_rate=1e-3,
 		learning_rate_decay=0.97,std=1e-5,decay_after=-1,trX_validation=None,trY_validation=None,

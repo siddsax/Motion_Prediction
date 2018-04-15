@@ -25,7 +25,7 @@ global rng
 
 
 rng = np.random.RandomState(1234567890)
-# theano.config.optimizer='None'
+theano.config.optimizer='None'
 
 
 
@@ -155,7 +155,7 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 		LSTMs = [LSTM('tanh','sigmoid',args.lstm_init,truncate_gradient=args.truncate_gradient,size=args.node_lstm_size,rng=rng,g_low=-args.g_clip,g_high=args.g_clip)
 			]
 		nodeRNNs[nm] = [
-				multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
+				# multilayerLSTM(LSTMs,skip_input=True,skip_output=True,input_output_fused=True),
 				FCLayer('rectify',args.fc_init,size=args.fc_size,rng=rng),
 				FCLayer('rectify',args.fc_init,size=100,rng=rng),
 				FCLayer('linear',args.fc_init,size=num_classes,rng=rng)
