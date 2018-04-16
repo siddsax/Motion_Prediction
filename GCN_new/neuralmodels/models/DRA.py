@@ -351,7 +351,7 @@ class DRA(object):
 		#for epoch in range(epoch_count,epochs):
 		epoch = 0
 		from tqdm import tqdm
-		for iterations in tqdm(range(iter_sart, maxiter)):
+		for iterations in tqdm(range(iter_start, maxiter)):
 		
 			t0 = time.time()
 

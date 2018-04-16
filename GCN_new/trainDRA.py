@@ -408,8 +408,8 @@ def trainDRA():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		#dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
-		gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
+		gcnn = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
+		#gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
 	thefile = open('logger.txt', 'w')
 	thefile.write("Edge RNNs TEMPORAL\n")
@@ -450,7 +450,9 @@ def trainDRA():
 		file.close() 	
 		#ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)
 	else:
-		os.rename("logger.txt", path_to_checkpoint + "/logger.txt")
+		print path_to_checkpoint
+		import shutil
+		shutil.move("logger.txt", path_to_checkpoint + "/logger.txt")
 
 	gcnn.fitModel(trX, trY, snapshot_rate=args.snapshot_rate, path=path_to_checkpoint, pathD=path_to_dump, epochs=args.epochs, batch_size=args.batch_size,
 		decay_after=args.decay_after, learning_rate=args.initial_lr, learning_rate_decay=args.learning_rate_decay, trX_validation=trX_validation,
