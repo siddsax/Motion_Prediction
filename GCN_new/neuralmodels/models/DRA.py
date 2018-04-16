@@ -1,5 +1,5 @@
 from headers import *
-from py_server import ssh
+
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
@@ -210,16 +210,22 @@ class DRA(object):
 
 		if(len(self.graphLayers)):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
+			
 			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
 			print 'Number of parameters in GCNN: ', print_num(self.num_params)
 			[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
+                        print(1)
 			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
+                        print(2)
 			self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
+                        print(3)
 			self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
+                        print(4)
 			self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
+                        print(5)
 			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-		
+                        print(6)		
 		else:
 			
 			print 'Number of parameters in GCNN without the graph: ', print_num(self.num_params)
@@ -256,6 +262,8 @@ class DRA(object):
 		self.saveForecastedMotion(test_ground_truth_unnorm,path,fname,ssh_flag=int(ssh_f))
 		print("---------- Saved Ground Truth -----------------------")
 
+		if int(ssh_f):
+			from py_server import ssh
 		'''If loading an existing model then some of the parameters needs to be restored'''
 		epoch_count = 0
 		iterations = 0
@@ -263,7 +271,7 @@ class DRA(object):
 		skel_loss_after_each_minibatch = []
 		loss_after_each_minibatch = []
 		complete_logger = ''
-		if iter_start > 0:
+		#if iter_start > 0:
 			# if path:
 			# 	lines = open('{0}logfile'.format(path)).readlines()
 			# 	for i in range(iter_start):
@@ -278,7 +286,7 @@ class DRA(object):
 				#if os.path.exists('{0}complete_log'.format(path)):
 				#	complete_logger = open('{0}complete_log'.format(path)).read()
 				#	complete_logger = complete_logger[:epoch_count]
-			iterations = iter_start + 1
+			#iterations = iter_start + 1
 
 		tr_X = {}
 		tr_Y = {}
@@ -342,7 +350,9 @@ class DRA(object):
 		numrange = np.arange(Nmax)
 		#for epoch in range(epoch_count,epochs):
 		epoch = 0
-		while iterations <= maxiter:
+		from tqdm import tqdm
+		for iterations in tqdm(range(iter_sart, maxiter)):
+		
 			t0 = time.time()
 
 			'''Learning rate decay.'''	
@@ -431,7 +441,7 @@ class DRA(object):
 						loss += loss_for_current_node
 						skel_loss += skel_loss_for_current_node
 					skel_loss_after_each_minibatch.append(skel_loss)
-				iterations += 1
+				#iterations += 1
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
 				if(len(self.graphLayers)):

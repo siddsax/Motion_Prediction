@@ -10,7 +10,7 @@ import sys
 import os
 from neuralmodels.layers import *
 from neuralmodels.models import *
-from py_server import ssh
+
 
 '''
 def loadLayers(model,layers_to_load):
@@ -241,7 +241,7 @@ def saveSharedRNN(model, path):
 	serializable_model = {'model':model.__class__.__name__, 'config':model.settings}
 	cPickle.dump(serializable_model, open(path, 'wb'))
 
-def saveDRA(model,path,pathD):
+def saveDRA(model,path,pathD,ssh_f=0):
 	sys.setrecursionlimit(10000)
 
 	edgeRNNs = getattr(model,'edgeRNNs')
@@ -298,8 +298,10 @@ def saveDRA(model,path,pathD):
 	serializable_model = {
 		'model': model.__class__.__name__, 'config': model.settings}
 	cPickle.dump(serializable_model, open(pathD, 'wb'))
-	ssh(pathD, dst=path, copy=1)
-	os.remove(pathD)
+	if ssh_f:
+		from py_server import ssh
+		ssh(pathD, dst=path, copy=1)
+		os.remove(pathD)
 
 def saveSharedRNNOutput(model, path):
 	sys.setrecursionlimit(10000)

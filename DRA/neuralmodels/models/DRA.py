@@ -1,5 +1,5 @@
 from headers import *
-from py_server import ssh
+
 # import theano.sandbox.cuda
 # theano.sandbox.cuda.use("gpu0")
 def unNormalizeData(normalizedData,data_mean,data_std,dimensions_to_ignore):
@@ -182,7 +182,9 @@ class DRA(object):
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
 		new_idx=None,featureRange=None,poseDataset=None,f_ssh=0,graph=None,maxiter=10000):
-	
+		f_ssh = int(f_ssh)
+		if int(f_ssh):
+			from py_server import ssh	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
 		test_ground_truth_unnorm = np.zeros((np.shape(test_ground_truth)[0],np.shape(test_ground_truth)[1],len(new_idx)))

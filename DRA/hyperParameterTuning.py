@@ -72,6 +72,7 @@ path_to_checkpoint = '{0}/'.format(params['checkpoint_path'])
 
 if(int(sys.argv[1])):
 	script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
+	print sys.argv[1]
 	ssh( "echo " + script + " > file.sh")
 	ssh("bash file.sh")
 else:

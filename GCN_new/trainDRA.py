@@ -16,7 +16,9 @@ import socket as soc
 import copy
 import readCRFgraph as graph
 import sys
-from py_server import ssh
+sys.setrecursionlimit(50000)
+
+
 global rng
 
 # import theano.sandbox.cuda
@@ -33,7 +35,7 @@ global rng
 #theano.config.optimizer.excluding = "scan"
 #theano.config.optimizer='fast_run'
 #theano.config.optimizer_including=local_remove_all_assert
-# theano.config.optimizer='None'
+#theano.config.optimizer='None'
 # theano.config.exception_verbosity='high'
 # theano.config.compute_test_value = 'warn'
 # theano.config.print_test_value = True
@@ -166,7 +168,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 	graphLayers = []
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
-		if(int(args.test)):
+		if(int(args.test)==1):
 
 			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
 
@@ -205,7 +207,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							]
 
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
-		if(int(args.test)):
+		if(int(args.test)==1):
 			graphLayers = [
 				GraphConvolution(args.fc_size, adjacency),
 				GraphConvolution_t(args.fc_size, adjacency),
@@ -217,11 +219,11 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 							GraphConvolution(args.fc_size,adjacency),
 							#AddNoiseToInput(rng=rng, dropout_noise=True),
 							GraphConvolution(args.fc_size, adjacency),
-							#AddNoiseToInput(rng=rng, dropout=True),
+							AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution(args.fc_size, adjacency),
-							#AddNoiseToInput(rng=rng, dropout=True),
+							AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution(args.fc_size, adjacency, activation_str='linear'),
-							#AddNoiseToInput(rng=rng, dropout=True),
+							AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution(args.fc_size, adjacency),
 							#AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution(args.fc_size, adjacency),
@@ -242,7 +244,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 						]
 		for nm in nodeNames:
 			num_classes = nodeList[nm]
-			if(int(args.test)):
+			if(int(args.test)==1):
 				finalLayer[nm] = [
 								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
 								# FCLayer('rectify',args.fc_init,size=100,rng=rng),
@@ -269,7 +271,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 	graphLayers = []
 	for nm in nodeNames:
 		num_classes = nodeList[nm]
-		if(int(args.test)):
+		if(int(args.test)==1):
 
 			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
 
@@ -314,7 +316,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 							]
 
 			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
-		if(int(args.test)):
+		if(int(args.test)==1):
 			graphLayers = [
 							GraphConvolution(args.fc_size, adjacency),
 							GraphConvolution_t(args.fc_size, adjacency),
@@ -351,7 +353,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 						]
 		for nm in nodeNames:
 			num_classes = nodeList[nm]
-			if(int(args.test)):
+			if(int(args.test)==1):
 				finalLayer[nm] = [
 								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
 								FCLayer('linear',args.fc_init,size=num_classes,rng=rng),
@@ -406,7 +408,7 @@ def trainDRA():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		# dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
+		#dra = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 		gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
 	thefile = open('logger.txt', 'w')
@@ -442,7 +444,8 @@ def trainDRA():
 	thefile.close()
 	print "saving log"
 	if(int(args.ssh) == 1):
-	 	file = open("logger.txt", "r")
+	 	from py_server import ssh
+		file = open("logger.txt", "r")
 		ssh("echo " + "'" + file.read() + "'" + " > " + path_to_checkpoint + "/logger.txt")
 		file.close() 	
 		#ssh('logger.txt', dst=path_to_checkpoint + "/logger.txt", copy=1)

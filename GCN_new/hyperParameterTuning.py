@@ -36,7 +36,7 @@ params['truncate_gradient'] = 100
 params['sequence_length'] = 150 # Length of each sequence fed to RNN
 params['sequence_overlap'] = 50 
 params['batch_size'] = 100
-if (int(sys.argv[2])==1):
+if (int(sys.argv[2])):
 	params['lstm_size'] = 1#512 #
 	params['node_lstm_size'] = 1#512 # 
 	params['fc_size'] = 1#256# 
