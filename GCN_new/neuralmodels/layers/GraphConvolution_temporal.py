@@ -75,7 +75,11 @@ class GraphConvolution_t(object):
 		for i in range(np.shape(self.adjacency)[0]):
 			t = x[:, i, :]
 			c = h_tm1[:, i, :]
-			a = t + T.tensordot(c, self.W, axes=[1, 0])
+			#print(self.size.__repr__())
+			#print(self.W_t[i].shape.__repr__())
+			#print("0000000000000000000")
+			b = T.tensordot(c, self.W_t[i], axes=[1, 0])
+			a = t + b
 			a = a.reshape((a.shape[0], 1, a.shape[1]))
 			if(i==0):
 				out = a

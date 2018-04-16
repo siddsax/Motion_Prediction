@@ -100,8 +100,8 @@ from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t
 if(int(args.test)):
 	theano.config.optimizer='None'
 	theano.exception_verbosity='high'
-	# theano.config.compute_test_value = 'warn' # Use 'warn' to activate this feature
-
+	theano.config.compute_test_value = 'warn' # Use 'warn' to activate this feature
+	theano.config.floatX = 'float64'
 	print "---------------------We are in testing phase-------------------------"
 
 convert_list_to_float = ['decay_schedule','decay_rate_schedule','noise_schedule','noise_rate_schedule']
@@ -258,6 +258,7 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 								]
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
+	learning_rate.tag.test_value = 1.0
 	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
 	
 	return dra
@@ -367,6 +368,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 # ---------------------------------------------------------------------------------------------
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
+	learning_rate.tag.test_value = 1.0
 	gcnn = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
 	
 	return gcnn
@@ -408,8 +410,8 @@ def trainDRA():
 		print 'DRA model loaded successfully'
 	else:
 		args.iter_to_load = 0
-		gcnn = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
-		#gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
+		#gcnn = DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
+		gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
 	thefile = open('logger.txt', 'w')
 	thefile.write("Edge RNNs TEMPORAL\n")
