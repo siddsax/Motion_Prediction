@@ -41,7 +41,7 @@ adjacency = np.asmatrix([[1,1,1,1,1],[1,1,1,0,0],[1,1,1,0,0],[1,0,0,1,1],[1,0,0,
 #nodeFeaturesRanges['leg'].extend(range(21, 36))
 #nodeNames = ['torso','arm','leg']
 #nodeTypes = ['torso', 'arm', 'leg']
-adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
+#adjacency = np.asmatrix([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
 
 drop_right_knee = [9,10,11]
 

@@ -96,7 +96,7 @@ if(int(args.homo)):
 	from neuralmodels.layers.GraphConvolution import GraphConvolution_homo as GraphConvolution
 else:
 	from neuralmodels.layers.GraphConvolution import GraphConvolution_hetro as GraphConvolution
-from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t
+	from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t
 if(int(args.test)):
 	theano.config.optimizer='None'
 	theano.exception_verbosity='high'
@@ -292,7 +292,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 
 		else:
 # ---------------------------------------------------------------------------------------------
-			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
+			#LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [
 							# multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
@@ -327,6 +327,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 		else:
 			graphLayers = [
 							GraphConvolution_t(args.fc_size,adjacency),
+							GraphConvolution_t(args.fc_size,adjacency),
 							# #AddNoiseToInput(rng=rng, dropout_noise=True),
 							GraphConvolution_t(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
@@ -348,7 +349,6 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 							# #ddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(len(nodeNames)*args.fc_size,adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution_t(args.fc_size, adjacency, activation_str='linear'),
 						]
