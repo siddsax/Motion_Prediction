@@ -24,6 +24,23 @@ def softmax_loss(p_t,y):
 
 	return - t*(T.mean(T.log(p_t)[T.arange(y.shape[0]), y]))	
 
+def temporal_loss(y_t,offset):
+	delta_t_ignore = 0  # 50
+	scaling = 1
+	if y_t.ndim > 2:
+		scaling = (y_t.shape[0]-delta_t_ignore)*y_t.shape[2]  # = T*D
+
+	# if (y_t.shape[1] > offset):
+	y_fut = y_t[:,offset:,:].flatten()
+	y = y_t[:,:-offset,:].flatten() 
+	return -scaling * T.mean(T.sqr(y_fut-y))
+
+def temp_euc_loss(y_t,y):
+	offset = 5
+	lbda = 1
+	return euclidean_loss(y_t,y) + lbda*temporal_loss(y_t,offset)
+
+
 def softmax_decay_loss(p_t,y):
 
 	shape = p_t.shape

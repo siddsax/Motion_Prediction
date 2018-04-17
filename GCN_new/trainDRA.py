@@ -6,7 +6,7 @@ import theano
 from theano import tensor as T
 from neuralmodels.utils import permute 
 from neuralmodels.loadcheckpoint import *
-from neuralmodels.costs import softmax_loss, euclidean_loss
+from neuralmodels.costs import temp_euc_loss, euclidean_loss
 from neuralmodels.models import * 
 from neuralmodels.layers import * 
 from neuralmodels.updates import Adagrad, RMSprop, Momentum, Adadelta
@@ -187,7 +187,8 @@ def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeat
 		else:
 			
 			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
-			nodeRNNs[nm] = [multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
+			nodeRNNs[nm] = [		
+							#multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
 							FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 							]
@@ -292,9 +293,9 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 
 		else:
 # ---------------------------------------------------------------------------------------------
-			#LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
+			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
 			nodeRNNs[nm] = [
-							# multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
+							#multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
 							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
 							FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
 							]
@@ -320,7 +321,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 		if(int(args.test)==1):
 			graphLayers = [
 							GraphConvolution(args.fc_size, adjacency),
-							GraphConvolution_t(args.fc_size, adjacency),
+							# GraphConvolution_t(args.fc_size, adjacency),
 							AddNoiseToInput(rng=rng, dropout_noise=True),
 							AddNoiseToInput(rng=rng, dropout=True),
 						  ]
@@ -339,15 +340,15 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 							# #AddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution_t(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution_t(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
 							# #ddNoiseToInput(rng=rng, dropout=True),
 							GraphConvolution_t(args.fc_size, adjacency, activation_str='linear'),
@@ -382,6 +383,7 @@ def trainDRA():
 	path_to_dump = '../dump/'
 	print path_to_checkpoint
 	if(int(args.ssh) == 1):
+		from py_server import ssh
 		script = "'if [ ! -d \"" + path_to_checkpoint + "\" ]; \n then mkdir " + path_to_checkpoint + "\nfi'"
 		ssh( "echo " + script + " > file.sh")
 		ssh("bash file.sh")

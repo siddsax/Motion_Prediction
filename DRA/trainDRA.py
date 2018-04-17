@@ -6,7 +6,7 @@ import theano
 from theano import tensor as T
 from neuralmodels.utils import permute 
 from neuralmodels.loadcheckpoint import *
-from neuralmodels.costs import softmax_loss, euclidean_loss
+from neuralmodels.costs import euclidean_loss, temp_euc_loss
 from neuralmodels.models import * 
 from neuralmodels.predictions import OutputMaxProb, OutputSampleFromDiscrete
 from neuralmodels.layers import * 
@@ -167,7 +167,7 @@ def DRAmodelRegression(nodeList,edgeList,edgeListComplete,edgeFeatures,nodeFeatu
 				]
 		nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
 	learning_rate = T.scalar(dtype=theano.config.floatX)
-	dra = DRA(edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,euclidean_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
+	dra = DRA(edgeRNNs,nodeRNNs,nodeToEdgeConnections,edgeListComplete,temp_euc_loss,nodeLabels,learning_rate,clipnorm=args.clipnorm,update_type=gradient_method,weight_decay=args.weight_decay)
 	return dra
 
 def trainDRA():

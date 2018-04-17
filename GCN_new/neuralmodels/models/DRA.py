@@ -1,5 +1,5 @@
 from headers import *
-
+from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
@@ -206,26 +206,27 @@ class DRA(object):
 				out[nm] =  indv_node_layers[indx].output()
 			indx+=1
 
-	
 
 		if(len(self.graphLayers)):
 			self.Y_pr_all = self.theano_convertToSingleVec(out,new_idx,featureRange)
 			
+			cost_t = temporal_loss(self.Y_pr_all,5)
+			cost_e = euclidean_loss(self.Y_pr_all,self.Y_all)
 			self.cost = cost(self.Y_pr_all,self.Y_all)# + normalizing
 
 			print 'Number of parameters in GCNN: ', print_num(self.num_params)
 			[self.updates,self.grads] = self.update_type.get_updates(self.params_all,self.cost)			
-                        print(1)
-			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],self.cost,updates=self.updates,on_unused_input='ignore')
-                        print(2)
+			print(1)
+			self.train_node = theano.function([self.X_all,self.Y_all,self.learning_rate,self.std],[self.cost,cost_t,cost_e],updates=self.updates,on_unused_input='ignore')
+			print(2)
 			self.predict_node = theano.function([self.X_all,self.std],self.Y_pr_all,on_unused_input='ignore')
-                        print(3)
+			print(3)
 			self.predict_node_loss = theano.function([self.X_all,self.Y_all,self.std],self.cost,on_unused_input='ignore')
-                        print(4)
+			print(4)
 			self.norm = T.sqrt(sum([T.sum(g**2) for g in self.grads]))
-                        print(5)
+			print(5)
 			self.grad_norm = theano.function([self.X_all,self.Y_all,self.std],self.norm,on_unused_input='ignore')
-                        print(6)		
+			print(6)		
 		else:
 			
 			print 'Number of parameters in GCNN without the graph: ', print_num(self.num_params)
@@ -423,7 +424,7 @@ class DRA(object):
 					for i in range(1,len(nodeNames)):
 						tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 
-					loss_for_current_node = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
+					loss_for_current_node, cost_t, cost_e = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
 				
 					g = self.grad_norm(tr_X_all,tr_Y_all,std)
 					grad_norms.append(g)
@@ -445,14 +446,15 @@ class DRA(object):
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
 				if(len(self.graphLayers)):
-					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6}  '.format(
-					        loss, epoch, j, grad_norms, learning_rate, std, iterations)
+					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8}'.format(
+					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e)
 				else:
 					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(
 					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
 
 				if log:
 					if (int(ssh_f) == 1):
+						from py_server import ssh
 						ssh("echo " + "'" + termout + "'" + " >> " + path + "/logger.txt")
 					else:
 						thefile = open(path + "/logger.txt", 'a')
@@ -516,7 +518,7 @@ class DRA(object):
 
 	def saveForecastedMotion(self,forecast,path,fname,ssh_flag=0):
 		T = forecast.shape[0]
-
+		
 		N = forecast.shape[1]
 		D = forecast.shape[2]
 		for j in range(N):
@@ -531,6 +533,7 @@ class DRA(object):
 				string += st+'\n'
 			# if(j==0):
 			if(ssh_flag==1):
+				from py_server import ssh
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
 
