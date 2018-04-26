@@ -37,7 +37,7 @@ def temporal_loss(y_t,offset):
 
 def temp_euc_loss(y_t,y):
 	offset = 5
-	lbda = 1
+	lbda = 1 
 	return euclidean_loss(y_t,y) + lbda*temporal_loss(y_t,offset)
 
 

@@ -68,7 +68,7 @@ while(1)
         end
     end;
     % if size(errors,1) > 0
-    toplot = true;
+    %toplot = true;
     error_5_val_old = error_5_val;
     mean_error = mean(errors,2);
     error_5_val = mean_error(5);

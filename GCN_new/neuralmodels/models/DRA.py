@@ -524,6 +524,8 @@ class DRA(object):
 		for j in range(N):
 			motion = forecast[:,j,:]
 			file = '{0}{2}_N_{1}'.format(path,j,fname)
+			if(ssh_flag!=1):
+				f = open(file,'w')
 			string = ''
 			for i in range(T):
 				st = ''
@@ -536,6 +538,10 @@ class DRA(object):
 				from py_server import ssh
 				ssh( "echo " + "'" + string + "'" + " > " + file)
 
+			else:
+				f.write(string)
+		if(ssh_flag!=1):
+			f.close()
 
 # ==============================================================================================
 	def predict_sequence_indep(self,teX_original,teX_original_nodeFeatures,sequence_length=100,poseDataset=None,graph=None,Y=None):
