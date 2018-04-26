@@ -20,8 +20,8 @@ class FCLayer(object):
 		self.params = [self.W, self.b]
 		self.numparams = self.inputD*self.size + self.size
 		print("------------------")
-		print(self.inputD)
-		print(self.size)
+		self.paramstr = "FCLayer_Size = ({0}X{1} + {2})".format(self.inputD,self.size,self.size)
+		print(self.paramstr)
 		print("------------------")
 
 		if self.weights is not None:

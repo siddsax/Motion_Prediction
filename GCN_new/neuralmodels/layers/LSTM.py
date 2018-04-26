@@ -39,7 +39,8 @@ class LSTM(object):
 		self.W_c = self.init((self.inputD,self.size),rng=self.rng)
 		self.numparams += 4*self.inputD*self.size
 		print("====LSTM========")
-		print(self.inputD)
+		self.paramstr = "LSTM_Size = ({0}X{1})".format(self.inputD, self.size)
+		print(self.paramstr)
 		print(self.size)
 		print("====LSTM========")
 

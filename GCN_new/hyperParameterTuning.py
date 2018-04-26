@@ -49,7 +49,6 @@ else:
 params['train_for'] = 'final' 
 params['test'] =  int(sys.argv[2])
 
-
 ## Tweak these hyperparameters only if you want to try out new models etc. This is only for 'Advanced' users
 params['use_pretrained'] = 0
 params['iter_to_load'] = 20
@@ -70,7 +69,7 @@ my_env['PATH'] += ':/usr/local/cuda/bin'
 use_gpu = 1 
 
 
-params['homo'] = int(sys.argv[3])
+params['gcnType'] = int(sys.argv[3])
 
 # Setting directory to dump trained models and then executing trainDRA.py
 

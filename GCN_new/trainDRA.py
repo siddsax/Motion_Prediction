@@ -90,13 +90,19 @@ parser.add_argument('--test',type=str,default=0)
 parser.add_argument('--dump_path', type=str, default='checkpoint')
 parser.add_argument('--drop_value', type=int, default=.2)
 parser.add_argument('--homo', type=int, default=0)
+parser.add_argument('--gcnType', type=int, default=2)
+
 args = parser.parse_args()
 
-if(int(args.homo)):
-	from neuralmodels.layers.GraphConvolution import GraphConvolution_homo as GraphConvolution
-else:
-	from neuralmodels.layers.GraphConvolution import GraphConvolution_hetro as GraphConvolution
-	from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t
+if(int(args.gcnType) == 0):
+	print("-------")
+	from neuralmodels.layers.GraphConvolution import GraphConvolution
+elif(int(args.gcnType) == 1):
+	print("=======")
+	from neuralmodels.layers.GraphConvolution_temporal import GraphConvolution_t as GraphConvolution
+elif(int(args.gcnType) == 2):
+	print("########")
+	from neuralmodels.layers.GraphConvolution_temporal_pairwise import GraphConvolution_tp as GraphConvolution
 if(int(args.test)):
 	theano.config.optimizer='None'
 	theano.exception_verbosity='high'
@@ -159,111 +165,6 @@ def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
 			f.write(st+'\n')
 		f.close()
 
-def DRAmodelRegression(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange, adjacency):
-	edgeRNNs = {}
-	nodeRNNs = {}
-	finalLayer = {}
-	nodeLabels = {}
-	edgeListComplete = []
-	graphLayers = []
-	for nm in nodeNames:
-		num_classes = nodeList[nm]
-		if(int(args.test)==1):
-
-			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
-
-			et = nm+'_temporal'
-			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng)
-			]
-
-			et = nm+'_normal'
-			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng)
-			]
-
-		else:
-			
-			LSTMs = [LSTM('tanh', 'sigmoid', args.lstm_init, truncate_gradient=args.truncate_gradient, size=args.node_lstm_size, rng=rng, g_low=-args.g_clip, g_high=args.g_clip)]
-			nodeRNNs[nm] = [		
-							#multilayerLSTM(LSTMs, skip_input=True,skip_output=True, input_output_fused=True),
-							FCLayer('rectify', args.fc_init, size=args.fc_size, rng=rng),
-							FCLayer('linear',args.fc_init,size=args.fc_size,rng=rng),
-							]
-			et = nm+'_temporal'
-			edgeListComplete.append(et)
-			
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng),
-							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
-							]
-
-			et = nm+'_normal'
-			edgeListComplete.append(et)
-			edgeRNNs[et] = [TemporalInputFeatures(edgeFeatures[et]),
-							FCLayer('rectify', args.fc_init,size=args.fc_size, rng=rng),
-							FCLayer('linear', args.fc_init,size=args.fc_size, rng=rng)
-							]
-
-			nodeLabels[nm] = T.tensor3(dtype=theano.config.floatX)
-		if(int(args.test)==1):
-			graphLayers = [
-				GraphConvolution(args.fc_size, adjacency),
-				GraphConvolution_t(args.fc_size, adjacency),
-				AddNoiseToInput(rng=rng, dropout_noise=True),
-				AddNoiseToInput(rng=rng, dropout=True),
-				]
-		else:
-			graphLayers = [
-							GraphConvolution(args.fc_size,adjacency),
-							#AddNoiseToInput(rng=rng, dropout_noise=True),
-							GraphConvolution(args.fc_size, adjacency),
-							AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear'),
-							AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear'),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(len(nodeNames)*args.fc_size,adjacency),
-							#ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution(args.fc_size, adjacency, activation_str='linear'),
-						]
-		for nm in nodeNames:
-			num_classes = nodeList[nm]
-			if(int(args.test)==1):
-				finalLayer[nm] = [
-								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
-								# FCLayer('rectify',args.fc_init,size=100,rng=rng),
-								FCLayer('linear',args.fc_init,size=num_classes,rng=rng),
-								]
-			else:
-				finalLayer[nm] = [
-								FCLayer_out('rectify', args.fc_init, size=args.fc_size, rng=rng, flag=len(graphLayers)),
-								FCLayer('rectify',args.fc_init,size=100,rng=rng),
-								FCLayer('linear',args.fc_init,size=num_classes,rng=rng),
-								]
-
-	learning_rate = T.scalar(dtype=theano.config.floatX)
-	learning_rate.tag.test_value = 1.0
-	dra = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
-	
-	return dra
-
 def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange, adjacency):
 	edgeRNNs = {}
 	nodeRNNs = {}
@@ -321,37 +222,37 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 		if(int(args.test)==1):
 			graphLayers = [
 							GraphConvolution(args.fc_size, adjacency),
-							# GraphConvolution_t(args.fc_size, adjacency),
+							# GraphConvolution(args.fc_size, adjacency),
 							AddNoiseToInput(rng=rng, dropout_noise=True),
 							AddNoiseToInput(rng=rng, dropout=True),
 						  ]
 		else:
 			graphLayers = [
-							GraphConvolution_t(args.fc_size,adjacency),
-							GraphConvolution_t(args.fc_size,adjacency),
+							GraphConvolution(args.fc_size,adjacency),
+							GraphConvolution(args.fc_size,adjacency),
 							# #AddNoiseToInput(rng=rng, dropout_noise=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+							GraphConvolution(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+							GraphConvolution(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+							GraphConvolution(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency),
+							GraphConvolution(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #AddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-			#				GraphConvolution_t(args.fc_size, adjacency),
+			#				GraphConvolution(args.fc_size, adjacency),
 							# #ddNoiseToInput(rng=rng, dropout=True),
 							# #ddNoiseToInput(rng=rng, dropout=True),
-							GraphConvolution_t(args.fc_size, adjacency, activation_str='linear'),
+							GraphConvolution(args.fc_size, adjacency, activation_str='linear'),
 						]
 		for nm in nodeNames:
 			num_classes = nodeList[nm]
@@ -416,35 +317,49 @@ def trainDRA():
 		gcnn = temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
 	thefile = open('logger.txt', 'w')
+	numparams = 0 
 	thefile.write("Edge RNNs TEMPORAL\n")
 	for item in gcnn.edgeRNNs[nodeNames[0] + "_temporal"]:
-		thefile.write("%s\n" % item)
+		numparams += item.numparams
+		s = item.__class__.__name__ + '        ' + item.paramstr
+		thefile.write(s + '\n')
+		
 	thefile.write("--------------------------- \n")
 
 	thefile.write("Edge RNNs Normal\n")
 	for item in gcnn.edgeRNNs[nodeNames[0] + "_normal"]:
-		thefile.write("%s\n" % item)
+		s = item.__class__.__name__ + '        ' + item.paramstr
+		thefile.write(s + '\n')
+		numparams += item.numparams
 	thefile.write("--------------------------- \n")
 
 	thefile.write("Node RNNs \n")
 	for item in gcnn.nodeRNNs[nodeNames[0]]:
-		thefile.write("%s\n" % item)
+		s = item.__class__.__name__ + '        ' + item.paramstr
+		thefile.write(s + '\n')
+		numparams += item.numparams
 	thefile.write("--------------------------- \n")
 
 	thefile.write("graphLayers \n")
 	for item in gcnn.graphLayers:
-		thefile.write("%s\n" % item)
+		s = item.__class__.__name__ + '        ' + item.paramstr
+		thefile.write(s + '\n')
+		numparams += item.numparams
 	thefile.write("--------------------------- \n")
 
 	thefile.write("finalLayer \n")
 	for item in gcnn.finalLayer[nodeNames[0]]:
-		thefile.write("%s\n" % item)
+		s = item.__class__.__name__ + '        ' + item.paramstr
+		thefile.write(s + '\n')
+		numparams += item.numparams
 	thefile.write("--------------------------- \n")
 
 	thefile.write("actions \n")
 	for item in poseDataset.actions:
 		thefile.write("%s\n" % item)
 	thefile.write("--------------------------- \n")
+	str = "Total Number of Parameters is = {0}".format(numparams)
+	thefile.write(str)
 	thefile.close()
 	print "saving log"
 	if(int(args.ssh) == 1):

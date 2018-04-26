@@ -13,7 +13,7 @@ from theano.tensor.elemwise import CAReduce
 from headers import *
 
 
-class GraphConvolution_t(object):
+class GraphConvolution_tp(object):
 
 	def __init__(self, size, adjacency, rng=None, init='glorot', bias=False, activation_str='rectify', weights=False, g_low=-10.0, g_high=10.0):
 
@@ -30,9 +30,10 @@ class GraphConvolution_t(object):
 		self.g_low = g_low
 		self.g_high = g_high
 
+
 	def connect(self, layer_below):
 		self.layer_below = layer_below
-		self.inputD = layer_below.size
+		self.inputD = 2*layer_below.size # Weights act on the concatenation
 
 		self.W = list()
 		self.W_t = list()
@@ -52,7 +53,7 @@ class GraphConvolution_t(object):
 			if self.bias:
 				self.b = zero0s((count, self.size))
 				self.numparams += count*self.size
-			self.W_t.append(self.init((self.size, self.size), rng=self.rng))
+			self.W_t.append(self.init((2*self.size, self.size), rng=self.rng))
 			self.numparams += self.size*self.size
 		self.params = []
 		self.params += self.W
@@ -60,6 +61,7 @@ class GraphConvolution_t(object):
 		self.paramstr = "Nodes = {0}, Size = ({1}X{2}X{3})".format(np.shape(self.adjacency)[0], count, self.inputD, self.size)
 		print(self.paramstr)
 		print ("====== +++ ===========")
+		
 		if self.bias:
 			self.params += self.b
 
@@ -79,10 +81,8 @@ class GraphConvolution_t(object):
 		for i in range(np.shape(self.adjacency)[0]):
 			t = x[:, i, :]
 			c = h_tm1[:, i, :]
-			#print(self.size.__repr__())
-			#print(self.W_t[i].shape.__repr__())
-			#print("0000000000000000000")
-			b = T.tensordot(c, self.W_t[i], axes=[1, 0])
+			d = T.concatenate((t,c),axis=1)
+			b = T.tensordot(d, self.W_t[i], axes=[1, 0])
 			a = t + b
 			a = a.reshape((a.shape[0], 1, a.shape[1]))
 			if(i==0):
@@ -96,10 +96,12 @@ class GraphConvolution_t(object):
 		x = self.layer_below.output(seq_output=seq_output)
 		for i in range(np.shape(self.adjacency)[0]):
 			for j in range(len(self.nonzeros[i])):
+				
+				d = T.concatenate((x[:, :, i, :], x[:, :, self.nonzeros[i][j], :]),axis=2)
 				if(j==0):
-					out_d = T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
+					out_d = T.tensordot(d,self.W[i][j, :, :], axes=[2, 0])
 				else:
-					out_d += T.tensordot(x[:, :, self.nonzeros[i][j], :],self.W[i][j, :, :], axes=[2, 0])
+					out_d += T.tensordot(d,self.W[i][j, :, :], axes=[2, 0])
 				if self.bias:
 					out_d += self.b[i][j, :]
 			if(i == 0):

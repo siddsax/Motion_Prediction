@@ -17,6 +17,8 @@ class TemporalInputFeatures(object):
 		self.skip_input = skip_input
 		self.jump_up = jump_up
 		self.numparams = 0
+		self.paramstr = "No Params"
+		
 
 	def output(self,seq_output=True):
 		return self.input
