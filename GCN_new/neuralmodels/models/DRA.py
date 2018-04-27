@@ -358,14 +358,16 @@ class DRA(object):
 		from tqdm import tqdm
 		curriculum_no = 1
 		loss = 10000
+		N = trX[nm].shape[1]
 		for iterations in tqdm(range(iter_start, maxiter)):
 		
 			t0 = time.time()
 			if(loss < 150):
 				trX = batchesX[curriculum_no]
 				trY = batchesY[curriculum_no]
-			
-			curriculum_no+=1
+				N = trX[nm].shape[1] 
+				batches_in_one_epoch = int(np.ceil(N*1.0 / batch_size))
+				curriculum_no+=1
 			
 			'''Learning rate decay.'''	
 			if decay_type:
@@ -457,11 +459,11 @@ class DRA(object):
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
 				if(len(self.graphLayers)):
-					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8}'.format(
-					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e)
+					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8} num_samples = {7}'.format(
+					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e, N)
 				else:
-					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(
-					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
+					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6} num_samples = {7}'.format(
+					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations, N)
 
 				if log:
 					if (int(ssh_f) == 1):
