@@ -91,6 +91,7 @@ parser.add_argument('--dump_path', type=str, default='checkpoint')
 parser.add_argument('--drop_value', type=int, default=.2)
 parser.add_argument('--homo', type=int, default=0)
 parser.add_argument('--gcnType', type=int, default=2)
+parser.add_argument('--curriculum', type=int, default=5)
 
 args = parser.parse_args()
 
@@ -378,7 +379,7 @@ def trainDRA():
 		trY_validation=trY_validation, trX_forecasting=trX_forecasting, trY_forecasting=trY_forecasting,trX_forecast_nodeFeatures=trX_forecast_nodeFeatures, iter_start=args.iter_to_load,
 		decay_type=args.decay_type, decay_schedule=args.decay_schedule, decay_rate_schedule=args.decay_rate_schedule,
 		use_noise=args.use_noise, noise_schedule=args.noise_schedule, noise_rate_schedule=args.noise_rate_schedule,
-			  new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, ssh_f=args.ssh,log=True)
+               new_idx=new_idx, featureRange=featureRange, poseDataset=poseDataset, graph=graph, maxiter=args.maxiter, ssh_f=args.ssh, log=True, num_batches= args.curriculum)
 
 def saveNormalizationStats(path):
 	activities = {}

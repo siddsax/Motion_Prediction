@@ -1,7 +1,7 @@
 from headers import *
 from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
-
+from curriculum import curriculum
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
         T = normalizedData.shape[0]
         D = data_mean.shape[0]
@@ -251,7 +251,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0,log=False):
+		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0,log=False, num_batches=5):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -340,6 +340,10 @@ class DRA(object):
 		if unequalSize:
 			batch_size = Nmax
 		
+		batchesX, batchesY = curriculum(num_batches, poseDataset, trX, trY)
+		trX = batchesX[0]
+		trY = batchesY[0]
+
 		batches_in_one_epoch = 1
 		for nm in nodeNames:
 			N = trX[nm].shape[1]
@@ -352,10 +356,17 @@ class DRA(object):
 		#for epoch in range(epoch_count,epochs):
 		epoch = 0
 		from tqdm import tqdm
+		curriculum_no = 1
+		loss = 10000
 		for iterations in tqdm(range(iter_start, maxiter)):
 		
 			t0 = time.time()
-
+			if(loss < 150):
+				trX = batchesX[curriculum_no]
+				trY = batchesY[curriculum_no]
+			
+			curriculum_no+=1
+			
 			'''Learning rate decay.'''	
 			if decay_type:
 				if decay_type == 'continuous' and decay_after > 0 and epoch > decay_after:
