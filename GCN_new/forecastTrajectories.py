@@ -28,7 +28,7 @@ import readCRFgraph as graph
 import time
 from unNormalizeData import unNormalizeData
 from convertToSingleVec import convertToSingleVec 
-from euler_error import euler_error
+
 # from trainDRA import DRAmodelRegression
 global rng
 # from neuralmodels.models.DRA import convertToSingleLongVec
@@ -208,14 +208,14 @@ saveForecastedMotion(predicted_test_full,path,fname)
 fname = 'motion_prefix_unnorm'#_{0}'.format(int(iterations))
 saveForecastedMotion(beginning_motion_full_,path,fname)
 
-val_error = euler_error(predicted_test_full, gt_full)
+#val_error = euler_error(predicted_test_full, gt_full)
 seq_length_out = len(val_error)
-for ms in [1,3,7,9,13,24]:
-    if seq_length_out >= ms+1:
-        print(" {0:.3f} |".format( val_error[ms] ))
-    else:
-        print("   n/a |")
-
+#for ms in [1,3,7,9,13,24]:
+#    if seq_length_out >= ms+1:
+#        print(" {0:.3f} |".format( val_error[ms] ))
+#    else:
+#        print("   n/a |")
+#
 error = 0
 for nm in nodeNames:
     error+=model.predict_node_loss[nm](predicted_test[nm],Y_test[nm],.5)

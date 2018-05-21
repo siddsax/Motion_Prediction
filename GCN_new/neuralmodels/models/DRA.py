@@ -1,7 +1,21 @@
-from headers import *
+import pdb
+import copy
+import math
+import os
+import time
+import theano
+import numpy as np
+from theano import tensor as T
+from neuralmodels.utils import permute
+#from neuralmodels.loadcheckpoint import save, saveSharedRNN, saveSharedRNNVectors, saveSharedRNNOutput, saveMultipleRNNsCombined
+from neuralmodels.updates import RMSprop, Adagrad
+from neuralmodels.layers.ConcatenateVectors import ConcatenateVectors
+from neuralmodels.layers.unConcatenateVectors import unConcatenateVectors
+from neuralmodels.layers.AddNoiseToInput import AddNoiseToInput
 from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 from curriculum import curriculum
+
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
         T = normalizedData.shape[0]
         D = data_mean.shape[0]
@@ -459,10 +473,10 @@ class DRA(object):
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
 				if(len(self.graphLayers)):
-					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8} num_samples = {7}'.format(
+					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8} num_samples = {9}'.format(
 					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e, N)
 				else:
-					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6} num_samples = {7}'.format(
+					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6} num_samples = {9}'.format(
 					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations, N)
 
 				if log:

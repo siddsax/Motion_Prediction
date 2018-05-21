@@ -177,7 +177,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 		num_classes = nodeList[nm]
 		if(int(args.test)==1):
 
-			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=100, rng=rng)]
+			nodeRNNs[nm] = [FCLayer('linear', args.fc_init, size=1, rng=rng)]
 
 			et = nm+'_temporal'
 			edgeListComplete.append(et)
