@@ -318,8 +318,8 @@ def trainDRA():
 
 	thefile = open('logger.txt', 'w')
 	numparams = 0 
-	thefile.write("Edge RNNs TEMPORAL\n")
-	for item in gcnn.edgeRNNs[nodeNames[0] + "_temporal"]:
+	thefile.write("Edge RNNs --- " + nodeNames[i] + " --- TEMPORAL\n")
+	for item in gcnn.edgeRNNs[nodeNames[i] + "_temporal"]:
 		numparams += item.numparams
 		s = item.__class__.__name__ + '        ' + item.paramstr
 		thefile.write(s + '\n')
