@@ -70,7 +70,7 @@ use_gpu = 1
 
 
 params['gcnType'] = int(sys.argv[3])
-
+params['curriculum'] = 5
 # Setting directory to dump trained models and then executing trainDRA.py
 
 #if params['model_to_train'] == 'dra':

@@ -1,6 +1,20 @@
-from headers import *
+import pdb
+import copy
+import math
+import os
+import time
+import theano
+import numpy as np
+from theano import tensor as T
+from neuralmodels.utils import permute
+#from neuralmodels.loadcheckpoint import save, saveSharedRNN, saveSharedRNNVectors, saveSharedRNNOutput, saveMultipleRNNsCombined
+from neuralmodels.updates import RMSprop, Adagrad
+from neuralmodels.layers.ConcatenateVectors import ConcatenateVectors
+from neuralmodels.layers.unConcatenateVectors import unConcatenateVectors
+from neuralmodels.layers.AddNoiseToInput import AddNoiseToInput
 from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
+from curriculum import curriculum
 
 def unNormalizeData(normalizedData, data_mean, data_std, dimensions_to_ignore):
         T = normalizedData.shape[0]
@@ -251,7 +265,7 @@ class DRA(object):
 		trX_forecasting=None,trY_forecasting=None,trX_forecast_nodeFeatures=None,rng=np.random.RandomState(1234567890),iter_start=None,
 		decay_type=None,decay_schedule=None,decay_rate_schedule=None,
 		use_noise=False,noise_schedule=None,noise_rate_schedule=None,
-		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0,log=False):
+		new_idx=None,featureRange=None,poseDataset=None,graph=None,maxiter=10000,ssh_f=0,log=False, num_batches=5):
 	
 		from neuralmodels.loadcheckpoint import saveDRA
 		test_ground_truth = self.convertToSingleVec(trY_forecasting, new_idx, featureRange)
@@ -340,6 +354,10 @@ class DRA(object):
 		if unequalSize:
 			batch_size = Nmax
 		
+		batchesX, batchesY = curriculum(num_batches, poseDataset, trX, trY)
+		trX = batchesX[0]
+		trY = batchesY[0]
+
 		batches_in_one_epoch = 1
 		for nm in nodeNames:
 			N = trX[nm].shape[1]
@@ -352,10 +370,19 @@ class DRA(object):
 		#for epoch in range(epoch_count,epochs):
 		epoch = 0
 		from tqdm import tqdm
+		curriculum_no = 1
+		loss = 10000
+		N = trX[nm].shape[1]
 		for iterations in tqdm(range(iter_start, maxiter)):
 		
 			t0 = time.time()
-
+			if(loss < 150):
+				trX = batchesX[curriculum_no]
+				trY = batchesY[curriculum_no]
+				N = trX[nm].shape[1] 
+				batches_in_one_epoch = int(np.ceil(N*1.0 / batch_size))
+				curriculum_no+=1
+			
 			'''Learning rate decay.'''	
 			if decay_type:
 				if decay_type == 'continuous' and decay_after > 0 and epoch > decay_after:
@@ -446,11 +473,11 @@ class DRA(object):
 				loss_after_each_minibatch.append(loss)
 				validation_set.append(-1)
 				if(len(self.graphLayers)):
-					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8}'.format(
-					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e)
+					termout = 'loss={0} e={1} m={2} g_l2={3} lr={4} noise={5} iter={6} cost_t={7} cost_e={8} num_samples = {9}'.format(
+					        loss, epoch, j, grad_norms, learning_rate, std, iterations, cost_t, cost_e, N)
 				else:
-					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6}'.format(
-					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations)
+					termout = 'e={1} iter={8} m={2} lr={5} g_l2={4} noise={7} loss={0} normalized={3} skel_err={6} num_samples = {9}'.format(
+					        loss, epoch, j, (skel_loss*1.0/(seq_length*skel_dim)), grad_norms, learning_rate, np.sqrt(skel_loss*1.0/seq_length), std, iterations, N)
 
 				if log:
 					if (int(ssh_f) == 1):

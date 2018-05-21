@@ -13,7 +13,7 @@ from theano.tensor.elemwise import CAReduce
 from headers import *
 
 
-class GraphConvolution_hetro(object):
+class GraphConvolution(object):
 
 	def __init__(self, size, adjacency, rng=None, init='glorot', bias=False, activation_str='rectify', weights=False):
 
