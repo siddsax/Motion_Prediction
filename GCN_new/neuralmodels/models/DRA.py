@@ -381,7 +381,8 @@ class DRA(object):
 				trY = batchesY[curriculum_no]
 				N = trX[nm].shape[1] 
 				batches_in_one_epoch = int(np.ceil(N*1.0 / batch_size))
-				curriculum_no+=1
+				if(curriculum_no < len(batchesX)):
+					curriculum_no+=1
 			
 			'''Learning rate decay.'''	
 			if decay_type:
