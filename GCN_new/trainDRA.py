@@ -6,7 +6,7 @@ import theano
 from theano import tensor as T
 from neuralmodels.utils import permute 
 from neuralmodels.loadcheckpoint import *
-from neuralmodels.costs import temp_euc_loss, euclidean_loss
+from neuralmodels.costs import temp_euc_loss, euclidean_loss, hinge_euclidean_loss
 from neuralmodels.models import * 
 from neuralmodels.layers import * 
 from neuralmodels.updates import Adagrad, RMSprop, Momentum, Adadelta
@@ -272,7 +272,7 @@ def temporalGCNN(nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, 
 
 	learning_rate = T.scalar(dtype=theano.config.floatX)
 	learning_rate.tag.test_value = 1.0
-	gcnn = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, euclidean_loss, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
+	gcnn = DRA(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, hinge_euclidean_loss,nodeLabels, learning_rate, new_idx, featureRange, clipnorm=args.clipnorm, update_type=gradient_method, weight_decay=args.weight_decay)
 	
 	return gcnn
 

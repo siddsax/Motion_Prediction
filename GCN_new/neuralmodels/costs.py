@@ -13,6 +13,23 @@ def euclidean_loss(y_t,y):
 
 	return scaling * T.mean(T.sqr(y_new-y_t_new))
 
+
+def hinge_euclidean_loss(y_t, y):
+	delta_t_ignore = 0  # 50
+	if y.ndim > 2:
+		scaling = (y.shape[0]-delta_t_ignore)*y.shape[2]  # = T*D
+		#scaling = y.shape[2] # = T
+	y_new = y[delta_t_ignore:, :, :].flatten()
+	y_t_new = y_t[delta_t_ignore:, :, :].flatten()
+
+	diff = y_new-y_t_new
+	sqrt = T.sqr(diff)
+	mean = T.mean(sqrt)
+	flagv = sqrt > 2*mean
+	sqrt += 10*sqrt*flagv
+	return T.mean(sqrt)
+
+
 def softmax_loss(p_t,y):
 	shape = p_t.shape
 	is_tensor3 = p_t.ndim > 2

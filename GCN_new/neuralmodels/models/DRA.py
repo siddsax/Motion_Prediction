@@ -12,7 +12,7 @@ from neuralmodels.updates import RMSprop, Adagrad
 from neuralmodels.layers.ConcatenateVectors import ConcatenateVectors
 from neuralmodels.layers.unConcatenateVectors import unConcatenateVectors
 from neuralmodels.layers.AddNoiseToInput import AddNoiseToInput
-from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss
+from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss, hinge_euclidean_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
 from curriculum import curriculum
 
