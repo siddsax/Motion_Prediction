@@ -18,8 +18,6 @@ allSubjects = ['S1','S6','S7','S8','S9','S11','S5']
 actions = ['smoking']#['walking']#['discussion']#['walking']#['smoking']#['walking','eating','smoking']
 subactions=['1','2']
 base_dir = '..'
-# base_dir = '/new_data/gpu/siddsax/motion_pred_checkpoints'
-#base_dir = open('basedir','r').readline().strip()
 
 nodeFeaturesRanges={}
 # -----------------------------------
@@ -367,7 +365,6 @@ motion_prefix=50
 motion_suffix=100
 train_for = 'final'
 temporal_features = 1
-dataset_prefix = ''
 crf_file = ''
 drop_features = 0
 drop_id = [9]
@@ -381,7 +378,7 @@ def runall():
 	if not subsample_data:
 		th_len = 4
 
-	path_to_dataset = '{0}/dataset{1}'.format(base_dir,dataset_prefix)
+	path_to_dataset = '../dataset'
 
 	if train_for == 'final':
 		trainSubjects = ['S1','S6','S7','S8','S9','S11']

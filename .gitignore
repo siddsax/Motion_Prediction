@@ -1,6 +1,6 @@
 GCN_new/GCNN/
 predictions
-
+GCN_new/savedModels/
 Graph_CNNs/checkpoint*
 checkpoint.pik
 GCN_new/logger.txt
