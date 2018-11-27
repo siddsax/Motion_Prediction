@@ -95,10 +95,10 @@ if(len(params.remoteBase)):
     ssh("echo " + script + " > file.sh")
     ssh("bash file.sh")
 else:
-    if not os.path.exists('savedModels'):
-        os.mkdir('savedModels')
+    if not os.path.exists('../savedModels'):
+        os.mkdir('../savedModels')
     
-    params.checkpoint_path = 'savedModels/' + params.modelName
+    params.checkpoint_path = '../savedModels/' + params.modelName
     if not os.path.exists(params.checkpoint_path):
         os.mkdir(params.checkpoint_path)
 
