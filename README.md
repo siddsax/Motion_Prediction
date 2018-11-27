@@ -1,2 +1,2 @@
-# GCNN_HMP
-*Even More Under Development* | Very Serious
+# Human motion prediction with Graph-CNNs
+
