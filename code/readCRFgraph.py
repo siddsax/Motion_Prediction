@@ -101,7 +101,7 @@ def readCRFgraph(poseDataset,noise=1e-10,forecast_on_noisy_features=False):
         trY_forecast[nm] = Y_forecast
         trX_nodeFeatures[nm] = X_forecast
         adjacency = poseDataset.adjacency
-    return nodeNames, nodeList, nodeFeatureLength, nodeConnections, edgeList, edgeListComplete, edgeFeatures, nodeToEdgeConnections, trX, trY, trX_validate, trY_validate, trX_forecast, trY_forecast, trX_nodeFeatures, adjacency, poseDataset
+    return nodeNames, nodeList, nodeFeatureLength, nodeConnections, edgeList, edgeListComplete, edgeFeatures, nodeToEdgeConnections, trX, trY, trX_validate, trY_validate, trX_forecast, trY_forecast, trX_nodeFeatures, adjacency
 
 def getNodeFeature(nodeName,nodeFeatures,nodeFeatures_t_1,poseDataset):
     edge_features = {}

@@ -80,7 +80,7 @@ if params.test:
     theano.exception_verbosity='high'
     theano.config.compute_test_value = 'warn' # Use 'warn' to activate this feature
     theano.config.floatX = 'float64'
-    print "---------------------We are in testing phase-------------------------"
+    print("---------------------We are in testing phase-------------------------")
 
 
 if(len(params.remoteBase)):

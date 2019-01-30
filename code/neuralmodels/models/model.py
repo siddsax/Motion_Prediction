@@ -14,10 +14,12 @@ from neuralmodels.layers.unConcatenateVectors import *
 from neuralmodels.layers.AddNoiseToInput import AddNoiseToInput
 from neuralmodels.costs import temp_euc_loss, euclidean_loss, temporal_loss, hinge_euclidean_loss
 from neuralmodels.layers.Concatenate_Node_Layers import Concatenate_Node_Layers
+from neuralmodels.loadcheckpoint import *
 from curriculum import curriculum
 import sys
 sys.path.append('utils')
 from utils import *
+from io import *
 from neuralmodels.loadcheckpoint import *
 from py_server import ssh
 
@@ -451,8 +453,7 @@ class GCNN(object):
                 '''Trajectory forecasting on validation set'''
                 if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0)):
                     if(len(self.graphLayers)):
-                        # tr_Y_all_val = convertToSingleVec(trY_forecasting, new_idx, featureRange)
-                         forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
+                        forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
                     else:
                         forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting)
                         forecasted_motion = convertToSingleVec(forecasted_motion,new_idx,featureRange)
@@ -477,13 +478,13 @@ class GCNN(object):
                     tr_Y[nm] = []
 
 
-                # '''Saving the learned model so far'''
-                # if(len(self.graphLayers)):
-                # 	if int(iterations) % (snapshot_rate*4) == 0:
-                # 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-                # 		print("{0}checkpoint.{1}".format(pathD,int(iterations)))
-                # 		saveModel(self, "{0}checkpoint.{1}".format(path, int(iterations)),
-                # 		        "{0}checkpoint.{1}".format(pathD, int(iterations)))
+                '''Saving the learned model so far'''
+                if(len(self.graphLayers)):
+                	if int(iterations) % (snapshot_rate*4) == 0:
+                 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
+                 		print("{0}checkpoint.{1}".format(pathD,int(iterations)))
+                 		saveModel(self, "{0}checkpoint.{1}".format(path, int(iterations)),
+                 		        "{0}checkpoint.{1}".format(pathD, int(iterations)))
             
 
             t1 = time.time()

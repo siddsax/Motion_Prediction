@@ -49,7 +49,7 @@ def trainModel(params):
         params.batch_size = poseDataset.minibatch_size
 
     path_to_dump = '../dump/'
-    [nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency, poseDataset] = graph.readCRFgraph(poseDataset)
+    [nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
     print '**** H3.6m Loaded ****'
 
     nodeNames = nodeNames.keys()
