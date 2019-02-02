@@ -2,8 +2,8 @@ import theano
 import numpy as np
 import cPickle
 from theano import tensor as T 
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+#import matplotlib.pyplot as plt
+#from matplotlib.backends.backend_pdf import PdfPages
 import math
 import pdb
 import sys 

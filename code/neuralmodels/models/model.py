@@ -19,7 +19,7 @@ from curriculum import curriculum
 import sys
 sys.path.append('utils')
 from utils import *
-from io import *
+from fileIO  import *
 from neuralmodels.loadcheckpoint import *
 from py_server import ssh
 
@@ -438,7 +438,7 @@ class GCNN(object):
                         from py_server import ssh
                         ssh("echo " + "'" + termout + "'" + " >> " + path + "/logger.txt")
                     else:
-                        thefile = open(path + "/logger.txt", 'a')
+                        thefile = open(path + "/logger.txt", 'ab') 
                         thefile.write(termout)
                         thefile.close()
 
@@ -480,11 +480,11 @@ class GCNN(object):
 
                 '''Saving the learned model so far'''
                 if(len(self.graphLayers)):
-                	if int(iterations) % (snapshot_rate*4) == 0:
+                	if int(iterations) % (snapshot_rate*4) == 0 or 1:
                  		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
                  		print("{0}checkpoint.{1}".format(pathD,int(iterations)))
-                 		saveModel(self, "{0}checkpoint.{1}".format(path, int(iterations)),
-                 		        "{0}checkpoint.{1}".format(pathD, int(iterations)))
+                 		saveModel(self, "{0}/checkpoint.{1}".format(path, int(iterations)),
+                 		        "{0}/checkpoint.{1}".format(pathD, int(iterations)))
             
 
             t1 = time.time()

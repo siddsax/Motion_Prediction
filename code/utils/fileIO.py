@@ -77,7 +77,7 @@ def saveModel(model,path,pathD,ssh_f=0):
     model.settings['finalLayer'] = nodeRNN_saver
     serializable_model = {
         'model': model.__class__.__name__, 'config': model.settings}
-    cPickle.dump(serializable_model, open(pathD, 'wb'))
+    cPickle.dump(serializable_model, open(path, 'wb'))
     if ssh_f:
         from py_server import ssh
         ssh(pathD, dst=path, copy=1)
@@ -85,6 +85,8 @@ def saveModel(model,path,pathD,ssh_f=0):
 
 def loadModel(path):
     model = cPickle.load(open(path))
+    from neuralmodels.models import GCNN
+    #import pdb;pdb.set_trace()
     model_class = eval(model['model'])  #getattr(models, model['model'])
 
     edgeRNNs = {}
@@ -105,7 +107,7 @@ def loadModel(path):
     for k in model['config']['nodeRNNs'].keys():
         layerlist = model['config']['nodeRNNs'][k]
         nodeRNNs[k] = []
-        # print(layerlist)
+       # print(layerlist)
         # print(2)
         for layer in layerlist:
             # print layer['config'].keys()

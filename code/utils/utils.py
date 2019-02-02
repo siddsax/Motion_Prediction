@@ -22,22 +22,6 @@ import socket as soc
 import readCRFgraph as graph
 
 
-def saveForecastedMotion(forecast,path,prefix='ground_truth_forecast_N_'):
-    T = forecast.shape[0]
-    N = forecast.shape[1]
-    D = forecast.shape[2]
-    for j in range(N):
-        motion = forecast[:,j,:]
-        f = open('{0}{2}{1}'.format(path,j,prefix),'w')
-        for i in range(T):
-            st = ''
-            for k in range(D):
-                st += str(motion[i,k]) + ','
-            st = st[:-1]
-            f.write(st+'\n')
-        f.close()
-
-
 def saveNormalizationStats(path):
     activities = {}
     activities['walking'] = 14
@@ -49,7 +33,7 @@ def saveNormalizationStats(path):
     cPickle.dump(poseDataset.data_stats,open('{0}h36mstats.pik'.format(path),'wb'))
     forecastidx = poseDataset.data_stats['forecastidx']
     num_forecast_examples = len(forecastidx.keys())
-    f = open('{0}forecastidx'.format(path),'w')
+    f = open('{0}forecastidx'.format(path),'wb')
     for i in range(num_forecast_examples):
         tupl = forecastidx[i]
         st = '{0},{1},{2},{3}\n'.format(i,activities[tupl[0]],tupl[2],tupl[1])
@@ -59,6 +43,7 @@ def saveNormalizationStats(path):
 
 def logModel(params, thefile, nodeNames, model, poseDataset):
     numparams = 0 
+    print("Edge RNNs --- " + nodeNames[0] + " --- TEMPORAL\n")
     thefile.write("Edge RNNs --- " + nodeNames[0] + " --- TEMPORAL\n")
     for item in model.edgeRNNs[nodeNames[0] + "_temporal"]:
         numparams += item.numparams
@@ -158,9 +143,9 @@ def saveForecastedMotion(forecast,path,fname,ssh_flag=0):
     D = forecast.shape[2]
     for j in range(N):
         motion = forecast[:,j,:]
-        file = '{0}{2}_N_{1}'.format(path,j,fname)
+        file = '{0}/{1}_N_{2}'.format(path, fname, j)
         if(ssh_flag!=1):
-            f = open(file,'w')
+            f = open(file,'wb')
         string = ''
         for i in range(T):
             st = ''

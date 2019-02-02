@@ -49,8 +49,8 @@ def trainModel(params):
         params.batch_size = poseDataset.minibatch_size
 
     path_to_dump = '../dump/'
-    [nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset)
-    print '**** H3.6m Loaded ****'
+    [nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset, forecast_on_noisy_features=True) ## Checking the use of noise!!
+    print('**** H3.6m Loaded ****')
 
     nodeNames = nodeNames.keys()
     
@@ -58,15 +58,13 @@ def trainModel(params):
     featureRange = poseDataset.nodeFeaturesRanges
 
     if params.use_pretrained == 1:
-        print 'Loading pre-trained model with iter={0}'.format(params.iter_to_load)
-        params.checkpoint_path = '/users/btech/siddsax/'
-        model = loadModel(params.checkpoint_path+'checkpoint.'+str(params.iter_to_load))
-        print 'DRA model loaded successfully'
+        model = loadModel(params.checkpoint_path)
+        print('DRA model loaded successfully')
     else:
         params.iter_to_load = 0
         model = defineGCN(params, nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatures, nodeFeatureLength, nodeToEdgeConnections, new_idx, featureRange,adjacency)
 
-    thefile = open('logger.txt', 'w')
+    thefile = open('logger.txt', 'wb')
 
     logModel(params, thefile, nodeNames, model, poseDataset)
 

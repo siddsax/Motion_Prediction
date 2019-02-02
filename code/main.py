@@ -29,7 +29,7 @@ parser.add_argument('--lstm_size', type=int, default = 512)
 parser.add_argument('--node_lstm_size', type=int, default = 512)
 parser.add_argument('--fc_size', type=int, default = 256)
 parser.add_argument('--snapshot_rate', type=int, default = 10)
-parser.add_argument('--test', type=int, default = 0)
+parser.add_argument('--test', action="store_true", default=False)
 parser.add_argument('--remoteBase', type=str , default = '')
 parser.add_argument('--learning_rate_decay',type=float,default=1.0)
 
