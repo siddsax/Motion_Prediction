@@ -22,7 +22,7 @@ from utils import *
 from fileIO  import *
 from neuralmodels.loadcheckpoint import *
 from py_server import ssh
-
+from getError import *
 
 class GCNN(object):
     def __init__(self, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, cost, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=0.0, update_type=RMSprop(), weight_decay=0.0):
@@ -452,20 +452,21 @@ class GCNN(object):
         
                 '''Trajectory forecasting on validation set'''
                 if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0)):
-                    if(len(self.graphLayers)):
-                        forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
-                    else:
-                        forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting)
-                        forecasted_motion = convertToSingleVec(forecasted_motion,new_idx,featureRange)
+                    # if(len(self.graphLayers)):
+                    #     forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
+                    # else:
+                    #     forecasted_motion = self.predict_sequence_indep(trX_forecasting,trX_forecast_nodeFeatures,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting)
+                    #     forecasted_motion = convertToSingleVec(forecasted_motion,new_idx,featureRange)
 
-                    test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
-                    for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
-                        test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
+                    # test_forecasted_motion_unnorm = np.zeros(np.shape(test_ground_truth_unnorm))
+                    # for i in range(np.shape(test_forecasted_motion_unnorm)[1]):
+                    #     test_forecasted_motion_unnorm[:,i,:] = unNormalizeData(forecasted_motion[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)	
 
-                    print("----------------- Saving Forecast--------------------------")
-                    fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
-                    saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
+                    # print("----------------- Saving Forecast--------------------------")
+                    # fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
+                    # saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
                      
+                    getError(self.params, poseDataset, model = None)
 
                 del tr_X
                 del tr_Y

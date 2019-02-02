@@ -58,11 +58,11 @@ def saveModel(model,path,pathD,ssh_f=0):
         nodeRNN_saver[k] = layer_configs
     model.settings['nodeRNNs'] = nodeRNN_saver
 
-    nodeRNNs = getattr(model, 'finalLayer')
-    nodeRNN_saver = {}
-    for k in nodeRNNs.keys():
+    finalLayer = getattr(model, 'finalLayer')
+    finalLayer_saver = {}
+    for k in finalLayer.keys():
         layer_configs = []
-        for layer in nodeRNNs[k]:
+        for layer in finalLayer[k]:
             if hasattr(layer, 'nested_layers'):
                 if layer.nested_layers:
                     layer = CreateSaveableModel(layer, ['layers'])
@@ -73,10 +73,29 @@ def saveModel(model,path,pathD,ssh_f=0):
             layer_configs.append({'layer': layer_name, 'config': layer_config})
             # print(layer_configs)
             # print(-1)
-        nodeRNN_saver[k] = layer_configs
-    model.settings['finalLayer'] = nodeRNN_saver
-    serializable_model = {
-        'model': model.__class__.__name__, 'config': model.settings}
+        finalLayer_saver[k] = layer_configs
+    model.settings['finalLayer'] = finalLayer_saver
+    
+    graphLayers = getattr(model, 'graphLayers')
+    graphLayers_saver = {}
+    for k in graphLayers.keys():
+        layer_configs = []
+        for layer in graphLayers[k]:
+            if hasattr(layer, 'nested_layers'):
+                if layer.nested_layers:
+                    layer = CreateSaveableModel(layer, ['layers'])
+            layer_config = layer.settings
+            layer_name = layer.__class__.__name__
+            weights = [p.get_value() for p in layer.params]
+            layer_config['weights'] = weights
+            layer_configs.append({'layer': layer_name, 'config': layer_config})
+            # print(layer_configs)
+            # print(-1)
+        graphLayers_saver[k] = layer_configs
+    model.settings['graphLayers'] = graphLayers_saver
+
+    serializable_model = {'model': model.__class__.__name__, 'config': model.settings}
+    
     cPickle.dump(serializable_model, open(path, 'wb'))
     if ssh_f:
         from py_server import ssh
@@ -87,7 +106,7 @@ def loadModel(path):
     model = cPickle.load(open(path))
     from neuralmodels.models import GCNN
     #import pdb;pdb.set_trace()
-    model_class = eval(model['model'])  #getattr(models, model['model'])
+    model_class = eval(model['model'])
 
     edgeRNNs = {}
     for k in model['config']['edgeRNNs'].keys():
@@ -102,39 +121,37 @@ def loadModel(path):
     model['config']['edgeRNNs'] = edgeRNNs
 
     nodeRNNs = {}
-    # print(model['config']['nodeRNNs'].keys())
-    # print(1)
     for k in model['config']['nodeRNNs'].keys():
         layerlist = model['config']['nodeRNNs'][k]
         nodeRNNs[k] = []
-       # print(layerlist)
-        # print(2)
         for layer in layerlist:
-            # print layer['config'].keys()
-            # print 3
             if 'nested_layers' in layer['config'].keys():
                 if layer['config']['nested_layers']:
                     layer = loadLayers(layer,['layers'])
             nodeRNNs[k].append(eval(layer['layer'])(**layer['config']))
-        #nodeRNNs[k] = [eval(layer['layer'])(**layer['config']) for layer in layerlist]
     model['config']['nodeRNNs'] = nodeRNNs
 
-    nodeRNNs = {}
-    # print(model['config']['finalLayer'].keys())
-    # print 1
+    finalLayer = {}
     for k in model['config']['finalLayer'].keys():
         layerlist = model['config']['finalLayer'][k]
-        nodeRNNs[k] = []
-        # print(layerlist)
-        # print(2)
+        finalLayer[k] = []
         for layer in layerlist:
-            # print layer['config'].keys()
-            # print 3
             if 'nested_layers' in layer['config'].keys():
                 if layer['config']['nested_layers']:
                     layer = loadLayers(layer,['layers'])
-            nodeRNNs[k].append(eval(layer['layer'])(**layer['config']))
-    model['config']['finalLayer'] = nodeRNNs
+            finalLayer[k].append(eval(layer['layer'])(**layer['config']))
+    model['config']['finalLayer'] = finalLayer
+
+    graphLayers = {}
+    for k in model['config']['graphLayers'].keys():
+        layerlist = model['config']['graphLayers'][k]
+        graphLayers[k] = []
+        for layer in layerlist:
+            if 'nested_layers' in layer['config'].keys():
+                if layer['config']['nested_layers']:
+                    layer = loadLayers(layer,['layers'])
+            graphLayers[k].append(eval(layer['layer'])(**layer['config']))
+    model['config']['graphLayers'] = graphLayers
 
     model = model_class(**model['config'])
 
