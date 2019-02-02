@@ -70,7 +70,7 @@ featureRange = poseDataset.nodeFeaturesRanges
 
 model = loadModel(args.checkpoint_path)
 
-[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,trX_forecasting,trY_forecasting,trX_forecast_nodeFeatures,adjacency] = graph.readCRFgraph(poseDataset,noise=0.7,forecast_on_noisy_features=True)
+[nodeNames,nodeList,nodeFeatureLength,nodeConnections,edgeList,edgeListComplete,edgeFeatures,nodeToEdgeConnections,trX,trY,trX_validation,trY_validation,X_test,Y_test,beginning_motion,adjacency] = graph.readCRFgraph(poseDataset,noise=0.7,forecast_on_noisy_features=True)
 
 gt = convertToSingleVec(Y_test,new_idx,featureRange)
 beginning_motion_dropped_ = convertToSingleVec(beginning_motion,new_idx,featureRange)
