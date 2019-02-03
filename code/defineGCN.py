@@ -125,6 +125,6 @@ def defineGCN(params, nodeNames, nodeList, edgeList, edgeListComplete, edgeFeatu
 
     learning_rate = T.scalar(dtype=theano.config.floatX)
     learning_rate.tag.test_value = 1.0
-    gcnn = GCNN(graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, hinge_euclidean_loss,nodeLabels, learning_rate, new_idx, featureRange, clipnorm=params.clipnorm, update_type=gradient_method, weight_decay=params.weight_decay)
+    gcnn = GCNN(params, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, hinge_euclidean_loss,nodeLabels, learning_rate, new_idx, featureRange, clipnorm=params.clipnorm, update_type=gradient_method, weight_decay=params.weight_decay)
     
     return gcnn

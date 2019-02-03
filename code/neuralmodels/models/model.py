@@ -25,7 +25,7 @@ from py_server import ssh
 from getError import *
 
 class GCNN(object):
-    def __init__(self, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, cost, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=0.0, update_type=RMSprop(), weight_decay=0.0):
+    def __init__(self, args, graphLayers, finalLayer, nodeNames, edgeRNNs, nodeRNNs, nodeToEdgeConnections, edgeListComplete, cost, nodeLabels, learning_rate, new_idx, featureRange, clipnorm=0.0, update_type=RMSprop(), weight_decay=0.0):
         '''
         edgeRNNs and nodeRNNs are dictionary with keys as RNN name and value is a list of layers
         
@@ -52,7 +52,7 @@ class GCNN(object):
         self.Y_pr = {}
         self.Y_pr_last_timestep = {}
         self.Y = {}
-        self.params = {}
+        self.args = args
         self.updates = {}
         self.train_node = {}
         self.predict_node = {}
@@ -326,7 +326,7 @@ class GCNN(object):
         curriculum_no = 1
         loss = 10000
         N = trX[nm].shape[1]
-        for iterations in tqdm(range(iter_start, maxiter)):
+        for iterations in range(iter_start, maxiter):
         
             t0 = time.time()
             if(loss < 150):
@@ -391,8 +391,6 @@ class GCNN(object):
                         elif outputDim == 3:
                             tr_Y[nm] = np.concatenate((tr_Y[nm],trY[nm][:,j*batch_size:min((j+1)*batch_size,numExamples[nm]),:]),axis=1)
 
-                loss = 0.0
-                skel_loss = 0.0
                 grad_norms = []
 # ---------------------------------------------------------------------------------------------
 # ------------------------------ Model relted tasks -------------------------------------------
@@ -405,14 +403,14 @@ class GCNN(object):
                     for i in range(1,len(nodeNames)):
                         tr_X_all =  np.concatenate([tr_X_all,tr_X[nodeNames[i]]],axis=2)
 
-                    loss_for_current_node, cost_t, cost_e = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
-                
+                    loss, cost_t, cost_e = self.train_node(tr_X_all,tr_Y_all,learning_rate,std)
                     g = self.grad_norm(tr_X_all,tr_Y_all,std)
+                    
                     grad_norms.append(g)
-                    loss += loss_for_current_node
+                    
                 
                 else:
-                    loss_for_current_node = 0
+                    loss, skel_loss = 0.0, 0.0
                     g = 0
                 
                     for nm in nodeNames:
@@ -423,7 +421,7 @@ class GCNN(object):
                         loss += loss_for_current_node
                         skel_loss += skel_loss_for_current_node
                     skel_loss_after_each_minibatch.append(skel_loss)
-                #iterations += 1
+            
                 loss_after_each_minibatch.append(loss)
                 validation_set.append(-1)
                 if(len(self.graphLayers)):
@@ -441,7 +439,8 @@ class GCNN(object):
                         thefile = open(path + "/logger.txt", 'ab') 
                         thefile.write(termout)
                         thefile.close()
-
+                if int(iterations) % (snapshot_rate*4) == 0: 
+                   termout += getError(self.args, poseDataset, self)
                 complete_logger += termout + '\n'
                 print termout
 
@@ -451,7 +450,7 @@ class GCNN(object):
 
         
                 '''Trajectory forecasting on validation set'''
-                if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0)):
+                # if (trX_forecasting is not None) and (trY_forecasting is not None) and path and ((int(iterations) % snapshot_rate == 0)):
                     # if(len(self.graphLayers)):
                     #     forecasted_motion = self.predict_sequence(trX_forecasting,trX_forecast_nodeFeatures,featureRange,new_idx,sequence_length=trY_forecasting.shape[0],poseDataset=poseDataset,graph=graph,Y=trY_forecasting )
                     # else:
@@ -466,7 +465,7 @@ class GCNN(object):
                     # fname = 'forecast_iteration_unnorm'#_{0}'.format(int(iterations))
                     # saveForecastedMotion(test_forecasted_motion_unnorm,path,fname,ssh_flag=int(ssh_f))
                      
-                    getError(self.params, poseDataset, model = None)
+                    # getError(self.args, poseDataset, self)
 
                 del tr_X
                 del tr_Y
@@ -481,17 +480,13 @@ class GCNN(object):
 
                 '''Saving the learned model so far'''
                 if(len(self.graphLayers)):
-                	if int(iterations) % (snapshot_rate*4) == 0 or 1:
-                 		print 'saving snapshot checkpoint.{0}'.format(int(iterations))
-                 		print("{0}checkpoint.{1}".format(pathD,int(iterations)))
-                 		saveModel(self, "{0}/checkpoint.{1}".format(path, int(iterations)),
-                 		        "{0}/checkpoint.{1}".format(pathD, int(iterations)))
+                	if int(iterations) % (snapshot_rate*4) == 0:
+                 		print ' =======  saving checkpoint.{0} ===== '.format(int(iterations))
+                 		saveModel(self, "{0}/checkpoint.{1}".format(path, int(iterations)), "{0}/checkpoint.{1}".format(pathD, int(iterations)))
             
 
             t1 = time.time()
-            termout = 'Epoch took {0} seconds'.format(t1-t0)
-            #complete_logger += termout + '\n'
-            print termout
+            termout = 'Epoch took {0} seconds'.format(t1-t0)            
             epoch += 1
 
 

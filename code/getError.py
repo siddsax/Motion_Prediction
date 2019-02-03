@@ -23,6 +23,7 @@ from py_server import ssh
 import time
 sys.path.append('utils')
 from utils import *
+from fileIO import *
 from euler_error import euler_error
 global rng
 rng = np.random.RandomState(1234567890)
@@ -66,8 +67,8 @@ if __name__ == '__main__':
     poseDataset.runall()
     print '**** H3.6m Loaded ****'
 
-    getError(args, poseDataset)
-
+    out = getError(args, poseDataset)
+    print(out)
 
 def getError(args, poseDataset, model = None):
     new_idx = poseDataset.new_idx
@@ -80,44 +81,47 @@ def getError(args, poseDataset, model = None):
 
 
     #------------------------------------------------------------------------------------------------------------
+    gt_dropped = convertToSingleVec(Y_test,new_idx,featureRange)
+    beginning_motion_dropped = convertToSingleVec(beginning_motion,new_idx,featureRange)
 
     if os.path.exists(args.checkpoint_path):
-        if(len(self.graphLayers)):
-            predicted_test_dropped = model.predict_sequence(X_test,beginning_motion,featureRange,new_idx, sequence_length=gt.shape[0],poseDataset=poseDataset,graph=graph)
+        if(len(model.graphLayers)):
+            predicted_test_dropped = model.predict_sequence(X_test,beginning_motion,featureRange,new_idx, sequence_length=gt_dropped.shape[0],poseDataset=poseDataset,graph=graph)
         else:
-            predicted_test_dropped = model.predict_sequence_indep(X_test,beginning_motion, sequence_length=gt.shape[0],poseDataset=poseDataset,graph=graph)
+            predicted_test_dropped = model.predict_sequence_indep(X_test,beginning_motion, sequence_length=gt_dropped.shape[0],poseDataset=poseDataset,graph=graph)
             predicted_test_dropped = convertToSingleVec(predicted_test_dropped,new_idx,featureRange)
     # else:
     #     predicted_test = np.zeros((np.shape(gt)[0],np.shape(gt)[1],len(new_idx)))
     #     for i in range(8):
     #         predicted_test[:,i,:] = genfromtxt('../savedModels/checkpoints_dra_T_150_bs_100_tg_100_ls_512_fc_256_demoforecast_iteration_unnorm_N_' + str(i), delimiter=',')
     
-    gt_dropped = convertToSingleVec(Y_test,new_idx,featureRange)
-    beginning_motion_dropped = convertToSingleVec(beginning_motion,new_idx,featureRange)
-    
-    gt_full = np.zeros((np.shape(gt)[0],np.shape(gt)[1],len(new_idx)))
-    beginning_motion_full = np.zeros((np.shape(beginning_motion_dropped)[0],np.shape(beginning_motion_dropped_)[1],len(new_idx)))
+    gt_full = np.zeros((np.shape(gt_dropped)[0],np.shape(gt_dropped)[1],len(new_idx)))
+    beginning_motion_full = np.zeros((np.shape(beginning_motion_dropped)[0],np.shape(beginning_motion_dropped)[1],len(new_idx)))
     predicted_test_full = np.zeros((np.shape(predicted_test_dropped)[0],np.shape(predicted_test_dropped)[1],len(new_idx)))
 
-    for i in range(np.shape(predicted_test)[1]):
+    for i in range(np.shape(predicted_test_dropped)[1]):
         predicted_test_full[:,i,:] = unNormalizeData(predicted_test_dropped[:,i,:],poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
         
         gt_full[:,i,:] = unNormalizeData(gt_dropped[:,i,:], poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
         
         beginning_motion_full[:, i, :] = unNormalizeData(beginning_motion_dropped[:,i,:], poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
+ 
+    saveForecastedMotion(predicted_test_full, args.checkpoint_path, 'test_pred_unnorm')
+    saveForecastedMotion(gt_full, args.checkpoint_path, 'test_gt_unnorm')
 
     val_error = euler_error(predicted_test_full, gt_full)
     seq_length_out = len(val_error)
+    out = ""
     for ms in [1,3,7,9,13,24]:
         if seq_length_out >= ms+1:
-            print(" {0:.3f} |".format( val_error[ms] ))
+            out += " {0:.3f} |".format( val_error[ms] )
         else:
-            print("   n/a |")
+            out += "   n/a |"
 
-    error = 0
-    for nm in nodeNames:
-        error+=model.predict_node_loss[nm](predicted_test[nm],Y_test[nm],.5)
+    #error = 0
+    #for nm in nodeNames:
+    #    error+=model.predict_node_loss[nm](predicted_test[nm],Y_test[nm],.5)
 
-    print("Model loss :{}".format(error))
+    #print("Model loss :{}".format(error))
 
-
+    return out

@@ -13,6 +13,7 @@ import theano
 from theano import tensor as T
 from neuralmodels.utils import permute 
 from neuralmodels.loadcheckpoint import *
+# from neuralmodels.layers.GraphConvolution import GraphConvolution
 from neuralmodels.costs import temp_euc_loss, euclidean_loss, hinge_euclidean_loss
 from neuralmodels.models import * 
 from neuralmodels.layers import * 
@@ -77,10 +78,9 @@ def saveModel(model,path,pathD,ssh_f=0):
     model.settings['finalLayer'] = finalLayer_saver
     
     graphLayers = getattr(model, 'graphLayers')
-    graphLayers_saver = {}
-    for k in graphLayers.keys():
-        layer_configs = []
-        for layer in graphLayers[k]:
+    
+    layer_configs = []
+    for layer in graphLayers:
             if hasattr(layer, 'nested_layers'):
                 if layer.nested_layers:
                     layer = CreateSaveableModel(layer, ['layers'])
@@ -89,10 +89,8 @@ def saveModel(model,path,pathD,ssh_f=0):
             weights = [p.get_value() for p in layer.params]
             layer_config['weights'] = weights
             layer_configs.append({'layer': layer_name, 'config': layer_config})
-            # print(layer_configs)
-            # print(-1)
-        graphLayers_saver[k] = layer_configs
-    model.settings['graphLayers'] = graphLayers_saver
+
+    model.settings['graphLayers'] = layer_configs
 
     serializable_model = {'model': model.__class__.__name__, 'config': model.settings}
     
@@ -142,17 +140,16 @@ def loadModel(path):
             finalLayer[k].append(eval(layer['layer'])(**layer['config']))
     model['config']['finalLayer'] = finalLayer
 
-    graphLayers = {}
-    for k in model['config']['graphLayers'].keys():
-        layerlist = model['config']['graphLayers'][k]
-        graphLayers[k] = []
-        for layer in layerlist:
-            if 'nested_layers' in layer['config'].keys():
-                if layer['config']['nested_layers']:
-                    layer = loadLayers(layer,['layers'])
-            graphLayers[k].append(eval(layer['layer'])(**layer['config']))
+    graphLayers = []
+    layerlist = model['config']['graphLayers']
+    for layer in layerlist:
+        if 'nested_layers' in layer['config'].keys():
+            if layer['config']['nested_layers']:
+                layer = loadLayers(layer,['layers'])
+        graphLayers.append(eval(layer['layer'])(**layer['config']))
     model['config']['graphLayers'] = graphLayers
 
+    
     model = model_class(**model['config'])
-
     return model
+
