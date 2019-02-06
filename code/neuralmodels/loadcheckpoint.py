@@ -1,6 +1,6 @@
 import theano
 import numpy as np
-import cPickle
+import pickle as cPickle
 from theano import tensor as T 
 #import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_pdf import PdfPages
