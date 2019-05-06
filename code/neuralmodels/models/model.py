@@ -439,9 +439,13 @@ class GCNN(object):
                         thefile = open(path + "/logger.txt", 'ab') 
                         thefile.write(termout)
                         thefile.close()
-                if int(iterations) % (snapshot_rate*4) == 0: 
-                   termout += getError(self.args, poseDataset, self)
-                complete_logger += termout + '\n'
+                #if int(iterations) % (snapshot_rate*4) == 0: 
+                out, predicted_test_full, gt_full = getError(self.args, poseDataset, self)
+                if int(iterations) % (snapshot_rate*4) == 0:
+                   saveForecastedMotion(predicted_test_full, self.args.checkpoint_path, 'test_pred_unnorm')
+                   saveForecastedMotion(gt_full, self.args.checkpoint_path, 'test_gt_unnorm')
+                
+                complete_logger += termout + out +'\n'
                 print termout
 
 

@@ -67,7 +67,7 @@ if __name__ == '__main__':
     poseDataset.runall()
     print '**** H3.6m Loaded ****'
 
-    out = getError(args, poseDataset)
+    out, predicted_test_full, gt_full = getError(args, poseDataset)
     print(out)
 
 def getError(args, poseDataset, model = None):
@@ -106,9 +106,6 @@ def getError(args, poseDataset, model = None):
         
         beginning_motion_full[:, i, :] = unNormalizeData(beginning_motion_dropped[:,i,:], poseDataset.data_mean,poseDataset.data_std,poseDataset.dimensions_to_ignore)
  
-    saveForecastedMotion(predicted_test_full, args.checkpoint_path, 'test_pred_unnorm')
-    saveForecastedMotion(gt_full, args.checkpoint_path, 'test_gt_unnorm')
-
     val_error = euler_error(predicted_test_full, gt_full)
     seq_length_out = len(val_error)
     out = ""
@@ -124,4 +121,4 @@ def getError(args, poseDataset, model = None):
 
     #print("Model loss :{}".format(error))
 
-    return out
+    return out, predicted_test_full, gt_full
